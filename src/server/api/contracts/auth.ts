@@ -1,22 +1,26 @@
 import {
+  ForgotPasswordBodySchema,
+  ForgotPasswordResponseSchema,
   LoginBodySchema,
   LoginResponseSchema,
   MeResponseSchema,
   OauthTokenBodySchema,
   OauthTokenResponseSchema,
-} from "@/schemas/auth";
-import { TsRestErrorSchema } from "@/schemas/ts-rest";
-import { initContract } from "@ts-rest/core";
+  ResetPasswordBodySchema,
+  ResetPasswordResponseSchema,
+} from '@/schemas/auth';
+import { TsRestErrorSchema } from '@/schemas/ts-rest';
+import { initContract } from '@ts-rest/core';
 
 const c = initContract();
-import { z } from "zod";
+import { z } from 'zod';
 
 export const auth = c.router(
   {
     login: {
-      method: "POST",
-      path: "/login",
-      summary: "Login to IAM portal with email/password",
+      method: 'POST',
+      path: '/login',
+      summary: 'Login to IAM portal with email/password',
       body: LoginBodySchema,
       responses: {
         200: LoginResponseSchema,
@@ -27,9 +31,9 @@ export const auth = c.router(
     },
 
     me: {
-      method: "GET",
-      path: "/me",
-      summary: "Get current authenticated user + account context",
+      method: 'GET',
+      path: '/me',
+      summary: 'Get current authenticated user + account context',
       query: z
         .object({
           accountId: z.string().uuid().optional(),
@@ -45,9 +49,9 @@ export const auth = c.router(
     },
 
     logout: {
-      method: "POST",
-      path: "/logout",
-      summary: "Logout from IAM portal (invalidate session)",
+      method: 'POST',
+      path: '/logout',
+      summary: 'Logout from IAM portal (invalidate session)',
       body: c.noBody(),
       responses: {
         204: c.noBody(),
@@ -57,9 +61,9 @@ export const auth = c.router(
     },
 
     oauthToken: {
-      method: "POST",
-      path: "/token",
-      summary: "Exchange authorization code or refresh token for access token",
+      method: 'POST',
+      path: '/token',
+      summary: 'Exchange authorization code or refresh token for access token',
       body: OauthTokenBodySchema,
       responses: {
         200: OauthTokenResponseSchema,
@@ -68,6 +72,29 @@ export const auth = c.router(
         500: TsRestErrorSchema,
       },
     },
+    forgotPassword: {
+      method: 'POST',
+      path: '/forgot-password',
+      summary: 'Request password reset email',
+      body: ForgotPasswordBodySchema,
+      responses: {
+        200: ForgotPasswordResponseSchema,
+        429: TsRestErrorSchema,
+        400: TsRestErrorSchema,
+        500: TsRestErrorSchema,
+      },
+    },
+    resetPassword: {
+      method: 'POST',
+      path: '/reset-password',
+      summary: 'Reset password using reset token',
+      body: ResetPasswordBodySchema,
+      responses: {
+        200: ResetPasswordResponseSchema,
+        400: TsRestErrorSchema,
+        500: TsRestErrorSchema,
+      },
+    },
   },
-  { pathPrefix: "/auth" },
+  { pathPrefix: '/auth' }
 );

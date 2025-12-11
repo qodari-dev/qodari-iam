@@ -1,7 +1,7 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { api } from "@/clients/api";
-import { SESSION_COOKIE_NAME } from "@/server/utils/session";
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { api } from '@/clients/api';
+import { SESSION_COOKIE_NAME } from '@/server/utils/session';
 
 export default async function RootPage() {
   const cookieStore = await cookies();
@@ -9,7 +9,7 @@ export default async function RootPage() {
 
   // Si no hay cookie de sesión, ni preguntamos al backend → directo a login
   if (!sessionCookie) {
-    redirect("/auth/login");
+    redirect('/auth/login');
   }
 
   // Construimos el header Cookie solo con esa cookie
@@ -21,12 +21,12 @@ export default async function RootPage() {
   });
 
   if (result.status === 401) {
-    redirect("/auth/login");
+    redirect('/auth/login');
   }
 
   if (result.status !== 200) {
-    throw new Error("Failed to load auth context");
+    throw new Error('Failed to load auth context');
   }
 
-  redirect("/portal");
+  redirect('/portal');
 }

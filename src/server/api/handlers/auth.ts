@@ -1,8 +1,14 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomUUID } from 'node:crypto';
 
-import { tsr } from "@ts-rest/serverless/next";
-import { contract } from "../contracts";
-import { db } from "@/server/db";
+import { env } from '@/env';
+import {
+  ForgotPasswordResponse,
+  LoginResponse,
+  MeResponse,
+  OauthTokenResponse,
+  ResetPasswordResponse,
+} from '@/schemas/auth';
+import { db } from '@/server/db';
 import {
   accountMembers,
   Application,
@@ -12,23 +18,27 @@ import {
   sessions,
   userRoles,
   users,
-} from "@/server/db/schema";
-import { genericTsRestErrorResponse } from "@/server/utils/generic-ts-rest-error";
-import { and, eq } from "drizzle-orm";
-import { LoginResponse, MeResponse, OauthTokenResponse } from "@/schemas/auth";
-import { verifyPassword } from "@/server/utils/password";
-import {
-  clearSessionCookie,
-  createSession,
-  getSessionFromRequest,
-} from "@/server/utils/session";
-import { signAccessToken } from "@/server/utils/jwt";
-import { env } from "@/env";
+} from '@/server/db/schema';
+import { sendPasswordResetEmail } from '@/server/utils/emails';
+import { genericTsRestErrorResponse } from '@/server/utils/generic-ts-rest-error';
+import { signAccessToken } from '@/server/utils/jwt';
+import { hashPassword, verifyPassword } from '@/server/utils/password';
+import { checkRateLimit } from '@/server/utils/rate-limit';
+import { clearSessionCookie, createSession, getSessionFromRequest } from '@/server/utils/session';
+import { tsr } from '@ts-rest/serverless/next';
+import { and, eq, gt } from 'drizzle-orm';
+import { contract } from '../contracts';
+import { getClientIp } from '@/server/utils/get-client-ip';
 
-const REFRESH_TOKEN_HASH_ALG = "sha256";
+const REFRESH_TOKEN_HASH_ALG = 'sha256';
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
 
 function hashRefreshToken(token: string): string {
-  return createHash(REFRESH_TOKEN_HASH_ALG).update(token).digest("hex");
+  return createHash(REFRESH_TOKEN_HASH_ALG).update(token).digest('hex');
+}
+
+function hashResetToken(token: string) {
+  return createHash('sha256').update(token).digest('hex');
 }
 
 function validateClientAuth(app: Application, clientSecretFromBody?: string) {
@@ -43,10 +53,7 @@ async function getUserAppRolesAndPermissions(opts: {
   const { userId, accountId, applicationId } = opts;
 
   const userRolesForAccount = await db.query.userRoles.findMany({
-    where: and(
-      eq(userRoles.userId, userId),
-      eq(userRoles.accountId, accountId),
-    ),
+    where: and(eq(userRoles.userId, userId), eq(userRoles.accountId, accountId)),
     with: {
       role: {
         with: {
@@ -129,7 +136,7 @@ export const auth = tsr.router(contract.auth, {
       if (accountsList.length === 0) {
         return {
           status: 400,
-          body: { message: "User has no associated accounts" },
+          body: { message: 'User has no associated accounts' },
         };
       }
 
@@ -161,8 +168,8 @@ export const auth = tsr.router(contract.auth, {
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: "Something went wrong querying applications.",
-        logPrefix: "[auth.login]",
+        genericMsg: 'Something went wrong querying applications.',
+        logPrefix: '[auth.login]',
       });
     }
   },
@@ -175,7 +182,7 @@ export const auth = tsr.router(contract.auth, {
       if (!session) {
         return {
           status: 401,
-          body: { message: "Not authenticated" },
+          body: { message: 'Not authenticated' },
         };
       }
 
@@ -186,7 +193,7 @@ export const auth = tsr.router(contract.auth, {
       if (!user) {
         return {
           status: 401,
-          body: { message: "User not found" },
+          body: { message: 'User not found' },
         };
       }
 
@@ -205,7 +212,7 @@ export const auth = tsr.router(contract.auth, {
       if (accountsList.length === 0) {
         return {
           status: 400,
-          body: { message: "User has no associated accounts" },
+          body: { message: 'User has no associated accounts' },
         };
       }
 
@@ -252,8 +259,8 @@ export const auth = tsr.router(contract.auth, {
       return { status: 200, body: response };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: "Something went wrong querying applications.",
-        logPrefix: "[auth.me]",
+        genericMsg: 'Something went wrong querying applications.',
+        logPrefix: '[auth.me]',
       });
     }
   }, // --------------------------------------
@@ -275,8 +282,8 @@ export const auth = tsr.router(contract.auth, {
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: "Something went wrong querying applications.",
-        logPrefix: "[auth.logout]",
+        genericMsg: 'Something went wrong querying applications.',
+        logPrefix: '[auth.logout]',
       });
     }
   }, // --------------------------------------
@@ -284,18 +291,17 @@ export const auth = tsr.router(contract.auth, {
   // --------------------------------------
   oauthToken: async ({ body }) => {
     try {
-      if (body.grant_type === "authorization_code") {
-        const { code, client_id, client_secret, redirect_uri, code_verifier } =
-          body;
+      if (body.grant_type === 'authorization_code') {
+        const { code, client_id, client_secret, redirect_uri, code_verifier } = body;
 
         // 1) app
         const app = await db.query.applications.findFirst({
           where: eq(applications.clientId, client_id),
         });
-        if (!app || app.status !== "active") {
+        if (!app || app.status !== 'active') {
           return {
             status: 401,
-            body: { message: "Invalid client", code: "invalid_client" },
+            body: { message: 'Invalid client', code: 'invalid_client' },
           };
         }
 
@@ -304,8 +310,8 @@ export const auth = tsr.router(contract.auth, {
           return {
             status: 401,
             body: {
-              message: "Invalid client credentials",
-              code: "invalid_client",
+              message: 'Invalid client credentials',
+              code: 'invalid_client',
             },
           };
         }
@@ -319,23 +325,19 @@ export const auth = tsr.router(contract.auth, {
           return {
             status: 400,
             body: {
-              message: "Invalid authorization code",
-              code: "invalid_grant",
+              message: 'Invalid authorization code',
+              code: 'invalid_grant',
             },
           };
         }
 
         const now = new Date();
-        if (
-          authCode.applicationId !== app.id ||
-          authCode.used ||
-          authCode.expiresAt < now
-        ) {
+        if (authCode.applicationId !== app.id || authCode.used || authCode.expiresAt < now) {
           return {
             status: 400,
             body: {
-              message: "Invalid or expired authorization code",
-              code: "invalid_grant",
+              message: 'Invalid or expired authorization code',
+              code: 'invalid_grant',
             },
           };
         }
@@ -345,32 +347,30 @@ export const auth = tsr.router(contract.auth, {
             return {
               status: 400,
               body: {
-                message: "Invalid redirect_uri",
-                code: "invalid_request",
+                message: 'Invalid redirect_uri',
+                code: 'invalid_request',
               },
             };
           }
         }
 
         // 4) PKCE
-        if (authCode.codeChallenge && authCode.codeChallengeMethod === "S256") {
+        if (authCode.codeChallenge && authCode.codeChallengeMethod === 'S256') {
           if (!code_verifier) {
             return {
               status: 400,
               body: {
-                message: "code_verifier is required for PKCE",
-                code: "invalid_request",
+                message: 'code_verifier is required for PKCE',
+                code: 'invalid_request',
               },
             };
           }
-          const hash = createHash("sha256")
-            .update(code_verifier)
-            .digest("base64url");
+          const hash = createHash('sha256').update(code_verifier).digest('base64url');
 
           if (hash !== authCode.codeChallenge) {
             return {
               status: 400,
-              body: { message: "Invalid code_verifier", code: "invalid_grant" },
+              body: { message: 'Invalid code_verifier', code: 'invalid_grant' },
             };
           }
         }
@@ -404,9 +404,7 @@ export const auth = tsr.router(contract.auth, {
         const familyId = randomUUID();
         const rawRefreshToken = randomUUID();
         const refreshTokenHash = hashRefreshToken(rawRefreshToken);
-        const refreshExpiresAt = new Date(
-          Date.now() + app.refreshTokenExp * 1000,
-        );
+        const refreshExpiresAt = new Date(Date.now() + app.refreshTokenExp * 1000);
 
         await db.insert(refreshTokens).values({
           familyId,
@@ -421,23 +419,23 @@ export const auth = tsr.router(contract.auth, {
         const response: OauthTokenResponse = {
           accessToken,
           refreshToken: rawRefreshToken,
-          tokenType: "Bearer",
+          tokenType: 'Bearer',
           expiresIn: app.accessTokenExp,
-          scope: authCode.scope ?? "",
+          scope: authCode.scope ?? '',
         };
 
         return { status: 200, body: response };
-      } else if (body.grant_type === "refresh_token") {
+      } else if (body.grant_type === 'refresh_token') {
         const { refresh_token, client_id, client_secret } = body;
 
         // 1) app
         const app = await db.query.applications.findFirst({
           where: eq(applications.clientId, client_id),
         });
-        if (!app || app.status !== "active") {
+        if (!app || app.status !== 'active') {
           return {
             status: 401,
-            body: { message: "Invalid client", code: "invalid_client" },
+            body: { message: 'Invalid client', code: 'invalid_client' },
           };
         }
 
@@ -445,8 +443,8 @@ export const auth = tsr.router(contract.auth, {
           return {
             status: 401,
             body: {
-              message: "Invalid client credentials",
-              code: "invalid_client",
+              message: 'Invalid client credentials',
+              code: 'invalid_client',
             },
           };
         }
@@ -455,16 +453,13 @@ export const auth = tsr.router(contract.auth, {
         const hashed = hashRefreshToken(refresh_token);
 
         const existingRefresh = await db.query.refreshTokens.findFirst({
-          where: and(
-            eq(refreshTokens.tokenHash, hashed),
-            eq(refreshTokens.applicationId, app.id),
-          ),
+          where: and(eq(refreshTokens.tokenHash, hashed), eq(refreshTokens.applicationId, app.id)),
         });
 
         if (!existingRefresh) {
           return {
             status: 401,
-            body: { message: "Invalid refresh token", code: "invalid_grant" },
+            body: { message: 'Invalid refresh token', code: 'invalid_grant' },
           };
         }
 
@@ -478,15 +473,15 @@ export const auth = tsr.router(contract.auth, {
             .set({
               revoked: true,
               revokedAt: now,
-              revokedReason: "REUSE_DETECTED",
+              revokedReason: 'REUSE_DETECTED',
             })
             .where(eq(refreshTokens.familyId, existingRefresh.familyId));
 
           return {
             status: 401,
             body: {
-              message: "Refresh token reuse detected",
-              code: "invalid_grant",
+              message: 'Refresh token reuse detected',
+              code: 'invalid_grant',
             },
           };
         }
@@ -494,16 +489,14 @@ export const auth = tsr.router(contract.auth, {
         if (existingRefresh.expiresAt && existingRefresh.expiresAt < now) {
           return {
             status: 401,
-            body: { message: "Expired refresh token", code: "invalid_grant" },
+            body: { message: 'Expired refresh token', code: 'invalid_grant' },
           };
         }
 
         // 4) Rotar refresh token
         const newRawRefreshToken = randomUUID();
         const newRefreshHash = hashRefreshToken(newRawRefreshToken);
-        const newRefreshExpiresAt = new Date(
-          Date.now() + app.refreshTokenExp * 1000,
-        );
+        const newRefreshExpiresAt = new Date(Date.now() + app.refreshTokenExp * 1000);
 
         // nuevo token, misma familia
         await db.insert(refreshTokens).values({
@@ -522,7 +515,7 @@ export const auth = tsr.router(contract.auth, {
           .set({
             revoked: true,
             revokedAt: now,
-            revokedReason: "ROTATED",
+            revokedReason: 'ROTATED',
             lastUsedAt: now,
           })
           .where(eq(refreshTokens.id, existingRefresh.id));
@@ -549,7 +542,7 @@ export const auth = tsr.router(contract.auth, {
         const response: OauthTokenResponse = {
           accessToken,
           refreshToken: newRawRefreshToken,
-          tokenType: "Bearer",
+          tokenType: 'Bearer',
           expiresIn: app.accessTokenExp,
         };
 
@@ -558,12 +551,159 @@ export const auth = tsr.router(contract.auth, {
 
       return {
         status: 400,
-        body: { message: "Unsupported grant_type" },
+        body: { message: 'Unsupported grant_type' },
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: "Something went wrong querying applications.",
-        logPrefix: "[auth.oauthToken]",
+        genericMsg: 'Something went wrong querying applications.',
+        logPrefix: '[auth.oauthToken]',
+      });
+    }
+  },
+  forgotPassword: async ({ body }, { nextRequest }) => {
+    try {
+      const { email } = body;
+
+      // ----- RATE LIMIT por IP + email -----
+      const ip = getClientIp(nextRequest);
+
+      const emailKey = `forgot:email:${email.toLowerCase()}`;
+      const ipKey = `forgot:ip:${ip}`;
+
+      const windowMs = 15 * 60 * 1000; // 15 min
+
+      const [emailRl, ipRl] = await Promise.all([
+        checkRateLimit({
+          key: emailKey,
+          limit: 3,
+          windowMs,
+        }),
+        checkRateLimit({
+          key: ipKey,
+          limit: 20,
+          windowMs,
+        }),
+      ]);
+
+      if (!emailRl.success || !ipRl.success) {
+        return {
+          status: 429,
+          body: {
+            message: 'Too many requests. Please try again later.',
+            code: 'RATE_LIMIT_EXCEEDED',
+          },
+          headers: {
+            'X-RateLimit-Limit': String(emailRl.limit),
+            'X-RateLimit-Remaining': String(emailRl.remaining),
+            'X-RateLimit-Reset': emailRl.resetAt.toISOString(),
+          },
+        };
+      }
+
+      const user = await db.query.users.findFirst({
+        where: eq(users.email, email),
+      });
+
+      if (!user) {
+        return {
+          status: 200,
+          body: {
+            message:
+              'If an account with that email exists, we have sent instructions to reset your password.',
+          } satisfies ForgotPasswordResponse,
+        };
+      }
+
+      const rawToken = randomUUID();
+      const tokenHash = hashResetToken(rawToken);
+      const expires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+
+      await db
+        .update(users)
+        .set({
+          passwordResetToken: tokenHash,
+          passwordResetExpires: expires,
+        })
+        .where(eq(users.id, user.id));
+
+      const baseUrl = env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+      const resetUrl = new URL('/auth/reset-password', baseUrl);
+      resetUrl.searchParams.set('token', rawToken);
+
+      await sendPasswordResetEmail({
+        to: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        resetUrl: resetUrl.toString(),
+      });
+
+      return {
+        status: 200,
+        body: {
+          message:
+            'If an account with that email exists, we have sent instructions to reset your password.',
+        } satisfies ForgotPasswordResponse,
+      };
+    } catch (e) {
+      return genericTsRestErrorResponse(e, {
+        genericMsg: 'Failed to request password reset.',
+        logPrefix: '[auth.forgotPassword]',
+      });
+    }
+  },
+  resetPassword: async ({ body }) => {
+    try {
+      const { token, password } = body;
+
+      const tokenHash = hashResetToken(token);
+      const now = new Date();
+
+      const user = await db.query.users.findFirst({
+        where: and(eq(users.passwordResetToken, tokenHash), gt(users.passwordResetExpires, now)),
+      });
+
+      if (!user || !user.passwordResetExpires || user.passwordResetExpires < now) {
+        return {
+          status: 400,
+          body: {
+            message: 'Invalid or expired reset token',
+            code: 'INVALID_TOKEN',
+          },
+        };
+      }
+
+      const newPasswordHash = await hashPassword(password);
+
+      await db
+        .update(users)
+        .set({
+          passwordHash: newPasswordHash,
+          passwordResetToken: null,
+          passwordResetExpires: null,
+        })
+        .where(eq(users.id, user.id));
+
+      await db.delete(sessions).where(eq(sessions.userId, user.id));
+      await db
+        .update(refreshTokens)
+        .set({
+          revoked: true,
+          revokedReason: 'PASSWORD_RESET',
+          revokedAt: now,
+        })
+        .where(eq(refreshTokens.userId, user.id));
+
+      const bodyResponse: ResetPasswordResponse = {
+        message: 'Password reset successfully. You can now log in.',
+      };
+
+      return {
+        status: 200,
+        body: bodyResponse,
+      };
+    } catch (e) {
+      return genericTsRestErrorResponse(e, {
+        genericMsg: 'Failed to reset password.',
+        logPrefix: '[auth.resetPassword]',
       });
     }
   },

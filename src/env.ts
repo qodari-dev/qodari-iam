@@ -1,5 +1,5 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod";
+import { createEnv } from '@t3-oss/env-nextjs';
+import { z } from 'zod';
 
 export const env = createEnv({
   /*
@@ -7,13 +7,13 @@ export const env = createEnv({
    * Will throw if you access these variables on the client.
    */
   server: {
-    NODE_ENV: z
-      .enum(["development", "test", "production"])
-      .default("development"),
+    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     DATABASE_URL: z.string().url(),
     IAM_JWT_SECRET: z.string(),
     IAM_ISSUER: z.string(),
     IAM_APP_SLUG: z.string(),
+    RESEND_API_KEY: z.string(),
+    RESEND_MAIL_FROM: z.string(),
   },
   /*
    * Environment variables available on the client (and server).
@@ -39,6 +39,8 @@ export const env = createEnv({
     IAM_JWT_SECRET: process.env.IAM_JWT_SECRET,
     IAM_ISSUER: process.env.IAM_ISSUER,
     IAM_APP_SLUG: process.env.IAM_APP_SLUG,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    RESEND_MAIL_FROM: process.env.RESEND_MAIL_FROM,
   },
   // experimental__runtimeEnv: {
   //   NEXT_PUBLIC_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_PUBLISHABLE_KEY,

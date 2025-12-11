@@ -1,20 +1,18 @@
-import { ReactNode } from "react";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { api } from "@/clients/api";
-import AdminShell from "./admin-shell";
-import { env } from "@/env";
+import { api } from '@/clients/api';
+import { AppSidebar } from '@/components/sidebar/app-sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { env } from '@/env';
+import { AuthStoreProvider } from '@/stores/auth-store-provider';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { ReactNode } from 'react';
 
-export default async function AdminLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default async function AdminLayout({ children }: { children: ReactNode }) {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore
     .getAll()
     .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
+    .join('; ');
 
   const result = await api.auth.me.query({
     query: { appSlug: env.IAM_APP_SLUG },
@@ -22,20 +20,26 @@ export default async function AdminLayout({
   });
 
   if (result.status === 401) {
-    redirect(`/auth/login?next=${encodeURIComponent("/admin")}`);
+    redirect(`/auth/login?next=${encodeURIComponent('/admin')}`);
   }
 
   if (result.status !== 200) {
-    throw new Error("Failed to load auth context");
+    throw new Error('Failed to load auth context');
   }
 
   const auth = result.body;
 
-  const canAccessAdmin =
-    auth.user.isAdmin || auth.permissions?.includes("admin:access");
+  const canAccessAdmin = auth.user.isAdmin || auth.permissions?.includes('admin:access');
   if (!canAccessAdmin) {
-    redirect("/portal");
+    redirect('/portal');
   }
 
-  return <AdminShell auth={auth}>{children}</AdminShell>;
+  return (
+    <AuthStoreProvider initialAuth={auth}>
+      <SidebarProvider>
+        <AppSidebar />
+        {children}
+      </SidebarProvider>
+    </AuthStoreProvider>
+  );
 }

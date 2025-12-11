@@ -1,3 +1,5 @@
+import ForgetPassword from './forget-password';
+
 export default function ForgotPasswordPage() {
-  return <div>forget password page</div>;
+  return <ForgetPassword />;
 }

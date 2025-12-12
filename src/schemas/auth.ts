@@ -1,4 +1,4 @@
-import { Account, User } from '@/server/db/schema';
+import { Account, User, Application } from '@/server/db/schema';
 import { z } from 'zod';
 
 export type PublicUser = Pick<
@@ -24,6 +24,20 @@ export const zAccount: z.ZodType<PublicAccount> = z.object({
   status: z.enum(['active', 'suspended']),
 });
 
+type PublicApplication = Pick<
+  Application,
+  'id' | 'name' | 'slug' | 'status' | 'logo' | 'description' | 'homeUrl'
+>;
+export const zApplication: z.ZodType<PublicApplication> = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  slug: z.string(),
+  status: z.enum(['active', 'suspended']),
+  logo: z.string().nullable(),
+  description: z.string().nullable(),
+  homeUrl: z.string(),
+});
+
 export const LoginBodySchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -43,6 +57,7 @@ export const MeResponseSchema = z.object({
   currentAccountId: z.string().uuid(),
   roles: z.array(z.string()).optional(),
   permissions: z.array(z.string()).optional(),
+  applications: z.array(zApplication).optional(),
 });
 export type MeResponse = z.infer<typeof MeResponseSchema>;
 
@@ -97,3 +112,23 @@ export const ResetPasswordResponseSchema = z.object({
 });
 
 export type ResetPasswordResponse = z.infer<typeof ResetPasswordResponseSchema>;
+
+// ------- Change Password -------
+export const ChangePasswordBodySchema = z
+  .object({
+    currentPassword: z.string().min(8),
+    newPassword: z.string().min(8),
+    confirmPassword: z.string().min(8),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+export type ChangePasswordBody = z.infer<typeof ChangePasswordBodySchema>;
+
+export const ChangePasswordResponseSchema = z.object({
+  message: z.string(),
+});
+
+export type ChangePasswordResponse = z.infer<typeof ChangePasswordResponseSchema>;

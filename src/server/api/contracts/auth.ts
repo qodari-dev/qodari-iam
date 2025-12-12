@@ -95,6 +95,20 @@ export const auth = c.router(
         500: TsRestErrorSchema,
       },
     },
+    changePassword: {
+      method: 'POST',
+      path: '/change-password',
+      body: z.object({
+        currentPassword: z.string().min(8),
+        newPassword: z.string().min(8),
+      }),
+      responses: {
+        204: c.noBody(),
+        429: TsRestErrorSchema,
+        400: TsRestErrorSchema,
+        500: TsRestErrorSchema,
+      },
+    },
   },
   { pathPrefix: '/auth' }
 );

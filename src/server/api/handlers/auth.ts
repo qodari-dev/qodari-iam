@@ -26,7 +26,7 @@ import { hashPassword, verifyPassword } from '@/server/utils/password';
 import { checkRateLimit } from '@/server/utils/rate-limit';
 import { clearSessionCookie, createSession, getSessionFromRequest } from '@/server/utils/session';
 import { tsr } from '@ts-rest/serverless/next';
-import { and, eq, gt } from 'drizzle-orm';
+import { and, eq, gt, inArray } from 'drizzle-orm';
 import { contract } from '../contracts';
 import { getClientIp } from '@/server/utils/get-client-ip';
 
@@ -226,6 +226,38 @@ export const auth = tsr.router(contract.auth, {
         }
       }
 
+      let apps;
+      const applicationSelect = {
+        id: applications.id,
+        name: applications.name,
+        slug: applications.slug,
+        status: applications.status,
+        logo: applications.logo,
+        description: applications.description,
+        homeUrl: applications.homeUrl,
+      };
+      if (user.isAdmin) {
+        apps = await db
+          .select(applicationSelect)
+          .from(applications)
+          .where(
+            and(eq(applications.accountId, currentAccountId), eq(applications.status, 'active'))
+          );
+      } else {
+        const userRolesData = await db.query.userRoles.findMany({
+          where: eq(userRoles.userId, user.id),
+          with: {
+            role: true,
+          },
+        });
+        const appsId = userRolesData.map((userRole) => userRole.role.applicationId);
+
+        apps = await db
+          .select(applicationSelect)
+          .from(applications)
+          .where(and(inArray(applications.id, appsId), eq(applications.status, 'active')));
+      }
+
       const response: MeResponse = {
         user: {
           id: user.id,
@@ -238,6 +270,7 @@ export const auth = tsr.router(contract.auth, {
         },
         accounts: accountsList,
         currentAccountId,
+        applications: apps,
       };
 
       if (query?.appSlug && currentAccountId) {
@@ -703,6 +736,57 @@ export const auth = tsr.router(contract.auth, {
     } catch (e) {
       return genericTsRestErrorResponse(e, {
         genericMsg: 'Failed to reset password.',
+        logPrefix: '[auth.resetPassword]',
+      });
+    }
+  },
+  changePassword: async ({ body: { currentPassword, newPassword } }, { request }) => {
+    try {
+      const session = await getSessionFromRequest(request);
+      if (!session) {
+        return { status: 401, body: { message: 'No autenticado' } };
+      }
+
+      const rate = await checkRateLimit({
+        key: `change-password:${session.userId}`,
+        limit: 5,
+        windowMs: 60 * 60 * 1000,
+      });
+
+      if (!rate.success) {
+        return {
+          status: 429,
+          body: {
+            message: 'Too many requests. Please try again later.',
+            code: 'RATE_LIMIT_EXCEEDED',
+          },
+          headers: {
+            'X-RateLimit-Limit': String(rate.limit),
+            'X-RateLimit-Remaining': String(rate.remaining),
+            'X-RateLimit-Reset': rate.resetAt.toISOString(),
+          },
+        };
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, session.userId));
+
+      if (!user || !user.passwordHash) {
+        throw new Error('Invalid User');
+      }
+
+      const match = await verifyPassword(currentPassword, user.passwordHash);
+      if (!match) {
+        throw new Error('Check Data');
+      }
+
+      const newHash = await hashPassword(newPassword);
+
+      await db.update(users).set({ passwordHash: newHash }).where(eq(users.id, session.userId));
+
+      return { status: 204, body: undefined };
+    } catch (e) {
+      return genericTsRestErrorResponse(e, {
+        genericMsg: 'Failed to change password.',
         logPrefix: '[auth.resetPassword]',
       });
     }

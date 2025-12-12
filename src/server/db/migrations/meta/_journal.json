@@ -15,6 +15,13 @@
       "when": 1765425151237,
       "tag": "0001_hesitant_redwing",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765504462813,
+      "tag": "0002_rainy_tombstone",
+      "breakpoints": true
     }
   ]
 }

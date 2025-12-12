@@ -234,6 +234,7 @@ export const applications = pgTable(
     clientType: clientTypeEnum('client_type').notNull(),
     clientId: text('client_id').notNull().unique(),
     clientSecret: text('client_secret').notNull(),
+    clientJwtSecret: text('client_jwt_secret').notNull(),
     homeUrl: varchar('home_url', { length: 255 }),
     logoutUrl: varchar('logout_url', { length: 255 }),
     callbackUrl: varchar('callback_url', { length: 255 }),
@@ -581,7 +582,10 @@ export const refreshTokens = pgTable(
     ...timestamps,
   },
   (table) => ({
-    userIdx: index('fk_refresh_tokens_users1_idx').on(table.userId),
+    userApplicationsIdx: index('fk_refresh_tokens_users_application_idx').on(
+      table.userId,
+      table.applicationId
+    ),
     applicationIdx: index('fk_refresh_tokens_applications1_idx').on(table.applicationId),
     accountIdx: index('fk_refresh_tokens_accounts1_idx').on(table.accountId),
   })

@@ -14,6 +14,9 @@ export const env = createEnv({
     IAM_APP_SLUG: z.string(),
     RESEND_API_KEY: z.string(),
     RESEND_MAIL_FROM: z.string(),
+    PAUSE_SCHEDULER: z
+      .union([z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')])
+      .optional(),
   },
   /*
    * Environment variables available on the client (and server).
@@ -41,6 +44,7 @@ export const env = createEnv({
     IAM_APP_SLUG: process.env.IAM_APP_SLUG,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_MAIL_FROM: process.env.RESEND_MAIL_FROM,
+    PAUSE_SCHEDULER: process.env.PAUSE_SCHEDULER,
   },
   // experimental__runtimeEnv: {
   //   NEXT_PUBLIC_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_PUBLISHABLE_KEY,

@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 
 import { env } from '@/env';
 import {
@@ -24,25 +24,28 @@ import { genericTsRestErrorResponse } from '@/server/utils/generic-ts-rest-error
 import { signAccessToken } from '@/server/utils/jwt';
 import { hashPassword, verifyPassword } from '@/server/utils/password';
 import { checkRateLimit } from '@/server/utils/rate-limit';
-import { clearSessionCookie, createSession, getSessionFromRequest } from '@/server/utils/session';
+import {
+  clearSessionCookie,
+  createSession,
+  getSessionFromRequest,
+  hashToken,
+} from '@/server/utils/session';
 import { tsr } from '@ts-rest/serverless/next';
 import { and, eq, gt, inArray } from 'drizzle-orm';
 import { contract } from '../contracts';
 import { getClientIp } from '@/server/utils/get-client-ip';
 
-const REFRESH_TOKEN_HASH_ALG = 'sha256';
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
 
-function hashRefreshToken(token: string): string {
-  return createHash(REFRESH_TOKEN_HASH_ALG).update(token).digest('hex');
-}
+function validateClientAuth(app: Application, clientSecret?: string) {
+  if (app.clientType === 'public') return true;
+  if (!clientSecret) return false;
 
-function hashResetToken(token: string) {
-  return createHash('sha256').update(token).digest('hex');
-}
+  const expected = Buffer.from(app.clientSecret);
+  const provided = Buffer.from(clientSecret);
 
-function validateClientAuth(app: Application, clientSecretFromBody?: string) {
-  return !!clientSecretFromBody && clientSecretFromBody === app.clientSecret;
+  if (expected.length !== provided.length) return false;
+  return timingSafeEqual(expected, provided);
 }
 
 async function getUserAppRolesAndPermissions(opts: {
@@ -96,9 +99,45 @@ export const auth = tsr.router(contract.auth, {
   // --------------------------------------
   // POST - /login
   // --------------------------------------
-  login: async ({ body }, { request }) => {
+  login: async ({ body }, { request, nextRequest }) => {
     try {
       const { email, password } = body;
+
+      // ----- RATE LIMIT por IP + email -----
+      const ip = getClientIp(nextRequest);
+
+      const emailKey = `login:email:${email.toLowerCase()}`;
+      const ipKey = `login:ip:${ip}`;
+
+      const windowMs = 5 * 60 * 1000; // 5 min
+
+      const [emailRl, ipRl] = await Promise.all([
+        checkRateLimit({
+          key: emailKey,
+          limit: 3,
+          windowMs,
+        }),
+        checkRateLimit({
+          key: ipKey,
+          limit: 20,
+          windowMs,
+        }),
+      ]);
+
+      if (!emailRl.success || !ipRl.success) {
+        return {
+          status: 429,
+          body: {
+            message: 'Too many requests. Please try again later.',
+            code: 'RATE_LIMIT_EXCEEDED',
+          },
+          headers: {
+            'X-RateLimit-Limit': String(emailRl.limit),
+            'X-RateLimit-Remaining': String(emailRl.remaining),
+            'X-RateLimit-Reset': emailRl.resetAt.toISOString(),
+          },
+        };
+      }
 
       const user = await db.query.users.findFirst({
         where: eq(users.email, email),
@@ -322,8 +361,35 @@ export const auth = tsr.router(contract.auth, {
   }, // --------------------------------------
   // POST - /oauthToken
   // --------------------------------------
-  oauthToken: async ({ body }) => {
+  oauthToken: async ({ body }, { nextRequest }) => {
     try {
+      // ----- RATE LIMIT por IP + email -----
+      const ip = getClientIp(nextRequest);
+
+      const ipKey = `oauthToken:ip:${ip}`;
+
+      const windowMs = 5 * 60 * 1000; // 5 min
+
+      const ipRl = await checkRateLimit({
+        key: ipKey,
+        limit: 5,
+        windowMs,
+      });
+
+      if (!ipRl.success) {
+        return {
+          status: 429,
+          body: {
+            message: 'Too many requests. Please try again later.',
+            code: 'RATE_LIMIT_EXCEEDED',
+          },
+          headers: {
+            'X-RateLimit-Limit': String(ipRl.limit),
+            'X-RateLimit-Remaining': String(ipRl.remaining),
+            'X-RateLimit-Reset': ipRl.resetAt.toISOString(),
+          },
+        };
+      }
       if (body.grant_type === 'authorization_code') {
         const { code, client_id, client_secret, redirect_uri, code_verifier } = body;
 
@@ -388,6 +454,15 @@ export const auth = tsr.router(contract.auth, {
         }
 
         // 4) PKCE
+        if (app.clientType === 'public' && !authCode.codeChallenge) {
+          return {
+            status: 400,
+            body: {
+              message: 'PKCE is required for public clients',
+              code: 'invalid_request',
+            },
+          };
+        }
         if (authCode.codeChallenge && authCode.codeChallengeMethod === 'S256') {
           if (!code_verifier) {
             return {
@@ -431,12 +506,13 @@ export const auth = tsr.router(contract.auth, {
           expiresInSec: app.accessTokenExp,
           issuer: env.IAM_ISSUER,
           audience: app.clientId,
+          jwtSecret: app.clientJwtSecret,
         });
 
         // 7) Refresh + familyId
         const familyId = randomUUID();
         const rawRefreshToken = randomUUID();
-        const refreshTokenHash = hashRefreshToken(rawRefreshToken);
+        const refreshTokenHash = await hashToken(rawRefreshToken);
         const refreshExpiresAt = new Date(Date.now() + app.refreshTokenExp * 1000);
 
         await db.insert(refreshTokens).values({
@@ -483,7 +559,7 @@ export const auth = tsr.router(contract.auth, {
         }
 
         // 2) Buscar RT por hash + app
-        const hashed = hashRefreshToken(refresh_token);
+        const hashed = await hashToken(refresh_token);
 
         const existingRefresh = await db.query.refreshTokens.findFirst({
           where: and(eq(refreshTokens.tokenHash, hashed), eq(refreshTokens.applicationId, app.id)),
@@ -528,30 +604,29 @@ export const auth = tsr.router(contract.auth, {
 
         // 4) Rotar refresh token
         const newRawRefreshToken = randomUUID();
-        const newRefreshHash = hashRefreshToken(newRawRefreshToken);
+        const newRefreshHash = await hashToken(newRawRefreshToken);
         const newRefreshExpiresAt = new Date(Date.now() + app.refreshTokenExp * 1000);
 
-        // nuevo token, misma familia
-        await db.insert(refreshTokens).values({
-          familyId: existingRefresh.familyId,
-          userId: existingRefresh.userId,
-          accountId: existingRefresh.accountId,
-          applicationId: existingRefresh.applicationId,
-          tokenHash: newRefreshHash,
-          expiresAt: newRefreshExpiresAt,
-          revoked: false,
-        });
+        await db.transaction(async (tx) => {
+          // Primero marcar como usado
+          // marcar viejo como ROTATED
+          await tx
+            .update(refreshTokens)
+            .set({ revoked: true, revokedAt: now, revokedReason: 'ROTATED', lastUsedAt: now })
+            .where(eq(refreshTokens.id, existingRefresh.id));
 
-        // marcar viejo como ROTATED
-        await db
-          .update(refreshTokens)
-          .set({
-            revoked: true,
-            revokedAt: now,
-            revokedReason: 'ROTATED',
-            lastUsedAt: now,
-          })
-          .where(eq(refreshTokens.id, existingRefresh.id));
+          // Luego insertar el nuevo
+          // nuevo token, misma familia
+          await tx.insert(refreshTokens).values({
+            familyId: existingRefresh.familyId,
+            userId: existingRefresh.userId,
+            accountId: existingRefresh.accountId,
+            applicationId: existingRefresh.applicationId,
+            tokenHash: newRefreshHash,
+            expiresAt: newRefreshExpiresAt,
+            revoked: false,
+          });
+        });
 
         // 5) nuevo access token
         const { roles, permissions } = await getUserAppRolesAndPermissions({
@@ -570,6 +645,7 @@ export const auth = tsr.router(contract.auth, {
           expiresInSec: app.accessTokenExp,
           issuer: env.IAM_ISSUER,
           audience: app.clientId,
+          jwtSecret: app.clientJwtSecret,
         });
 
         const response: OauthTokenResponse = {
@@ -648,7 +724,7 @@ export const auth = tsr.router(contract.auth, {
       }
 
       const rawToken = randomUUID();
-      const tokenHash = hashResetToken(rawToken);
+      const tokenHash = await hashToken(rawToken);
       const expires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
 
       await db
@@ -683,11 +759,38 @@ export const auth = tsr.router(contract.auth, {
       });
     }
   },
-  resetPassword: async ({ body }) => {
+  resetPassword: async ({ body }, { nextRequest }) => {
     try {
+      // ----- RATE LIMIT por IP + email -----
+      const ip = getClientIp(nextRequest);
+
+      const ipKey = `resetPassword:ip:${ip}`;
+
+      const windowMs = 15 * 60 * 1000; // 15 min
+
+      const ipRl = await checkRateLimit({
+        key: ipKey,
+        limit: 20,
+        windowMs,
+      });
+
+      if (!ipRl.success) {
+        return {
+          status: 429,
+          body: {
+            message: 'Too many requests. Please try again later.',
+            code: 'RATE_LIMIT_EXCEEDED',
+          },
+          headers: {
+            'X-RateLimit-Limit': String(ipRl.limit),
+            'X-RateLimit-Remaining': String(ipRl.remaining),
+            'X-RateLimit-Reset': ipRl.resetAt.toISOString(),
+          },
+        };
+      }
       const { token, password } = body;
 
-      const tokenHash = hashResetToken(token);
+      const tokenHash = await hashToken(token);
       const now = new Date();
 
       const user = await db.query.users.findFirst({

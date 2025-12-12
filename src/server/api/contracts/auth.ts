@@ -26,6 +26,7 @@ export const auth = c.router(
         200: LoginResponseSchema,
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
+        429: TsRestErrorSchema,
         500: TsRestErrorSchema,
       },
     },
@@ -69,6 +70,7 @@ export const auth = c.router(
         200: OauthTokenResponseSchema,
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
+        429: TsRestErrorSchema,
         500: TsRestErrorSchema,
       },
     },
@@ -79,8 +81,8 @@ export const auth = c.router(
       body: ForgotPasswordBodySchema,
       responses: {
         200: ForgotPasswordResponseSchema,
-        429: TsRestErrorSchema,
         400: TsRestErrorSchema,
+        429: TsRestErrorSchema,
         500: TsRestErrorSchema,
       },
     },
@@ -92,6 +94,7 @@ export const auth = c.router(
       responses: {
         200: ResetPasswordResponseSchema,
         400: TsRestErrorSchema,
+        429: TsRestErrorSchema,
         500: TsRestErrorSchema,
       },
     },
@@ -104,8 +107,8 @@ export const auth = c.router(
       }),
       responses: {
         204: c.noBody(),
-        429: TsRestErrorSchema,
         400: TsRestErrorSchema,
+        429: TsRestErrorSchema,
         500: TsRestErrorSchema,
       },
     },

@@ -1,14 +1,10 @@
-import { env } from "@/env";
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT, jwtVerify } from 'jose';
+import { JWSSignatureVerificationFailed, JWTExpired } from 'jose/errors';
 
-const JWT_ALG = "HS256";
+const JWT_ALG = 'HS256';
 
-function getJwtSecretKey(): Uint8Array {
-  const secret = env.IAM_JWT_SECRET;
-  if (!secret) {
-    throw new Error("IAM_JWT_SECRET env var is required");
-  }
-  return new TextEncoder().encode(secret);
+function getJwtSecretKey(jwtSecret: string): Uint8Array {
+  return new TextEncoder().encode(jwtSecret);
 }
 
 export type AccessTokenPayload = {
@@ -24,8 +20,9 @@ export async function signAccessToken(opts: {
   expiresInSec: number;
   issuer: string;
   audience: string;
+  jwtSecret: string;
 }) {
-  const { payload, expiresInSec, issuer, audience } = opts;
+  const { payload, expiresInSec, issuer, audience, jwtSecret } = opts;
   const now = Math.floor(Date.now() / 1000);
 
   return await new SignJWT(payload)
@@ -34,17 +31,27 @@ export async function signAccessToken(opts: {
     .setExpirationTime(now + expiresInSec)
     .setIssuer(issuer)
     .setAudience(audience)
-    .sign(getJwtSecretKey());
+    .sign(getJwtSecretKey(jwtSecret));
 }
 
-export async function verifyAccessToken(token: string) {
-  const { payload } = await jwtVerify(token, getJwtSecretKey(), {
-    algorithms: [JWT_ALG],
-  });
-  return payload as AccessTokenPayload & {
-    iss: string;
-    aud: string | string[];
-    exp: number;
-    iat: number;
-  };
+export async function verifyAccessToken(token: string, jwtSecret: string) {
+  try {
+    const { payload } = await jwtVerify(token, getJwtSecretKey(jwtSecret), {
+      algorithms: [JWT_ALG],
+    });
+    return payload as AccessTokenPayload & {
+      iss: string;
+      aud: string | string[];
+      exp: number;
+      iat: number;
+    };
+  } catch (error) {
+    if (error instanceof JWTExpired) {
+      throw new Error('Token expired');
+    }
+    if (error instanceof JWSSignatureVerificationFailed) {
+      throw new Error('Invalid signature');
+    }
+    throw new Error('Invalid token');
+  }
 }

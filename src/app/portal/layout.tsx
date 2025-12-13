@@ -18,7 +18,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   });
 
   if (result.status === 401) {
-    redirect(`/auth/login?next=${encodeURIComponent('/admin')}`);
+    redirect(`/auth/login?next=${encodeURIComponent('/portal')}`);
   }
 
   if (result.status !== 200) {

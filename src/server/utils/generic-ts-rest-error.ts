@@ -14,16 +14,20 @@ export function isError(e: unknown): e is Error {
   return e instanceof Error;
 }
 
-type HttpLikeError = {
+type HttpError = {
   status: number;
   message?: unknown;
   code?: unknown;
 };
 
-function isHttpLikeError(e: unknown): e is HttpLikeError {
+function isHttpError(e: unknown): e is HttpError {
   if (typeof e !== 'object' || e === null) return false;
   const candidate = e as { status?: unknown };
   return typeof candidate.status === 'number';
+}
+
+export function throwHttpError(err: HttpError): never {
+  throw err;
 }
 
 // ---- MAIN HELPER ----
@@ -56,7 +60,7 @@ export function genericTsRestErrorResponse(
   }
 
   // 2) Objeto con status explícito (HTTP-like error)
-  if (isHttpLikeError(error)) {
+  if (isHttpError(error)) {
     const status = normalizeStatus(error.status);
 
     const message =

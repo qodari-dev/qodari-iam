@@ -1,13 +1,14 @@
-import { contract } from "@/server/api/contracts";
-import { createNextHandler } from "@ts-rest/serverless/next";
-import { auth } from "./auth";
+import { contract } from '@/server/api/contracts';
+import { createNextHandler } from '@ts-rest/serverless/next';
+import { auth } from './auth';
+import { user } from './user';
 
 export const handler = createNextHandler(
   contract,
-  { auth },
+  { auth, user },
   {
     jsonQuery: true,
     responseValidation: true,
-    handlerType: "app-router",
-  },
+    handlerType: 'app-router',
+  }
 );

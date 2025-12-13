@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const TsRestErrorSchema = z.object({
   message: z.string(),
@@ -7,3 +7,10 @@ export const TsRestErrorSchema = z.object({
 });
 
 export type TsRestError = z.infer<typeof TsRestErrorSchema>;
+
+export type TsRestMetaData =
+  | { auth: 'public' }
+  | {
+      auth: 'required';
+      permissionKey?: string;
+    };

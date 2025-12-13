@@ -1,16 +1,6 @@
 'use client';
 
-import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
-} from 'lucide-react';
+import { AudioWaveform, GalleryVerticalEnd, Settings2 } from 'lucide-react';
 import * as React from 'react';
 
 import { NavMain } from '@/components/sidebar/nav-main';
@@ -28,6 +18,8 @@ import { useAuthUser, useHasPermission } from '@/stores/auth-store-provider';
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useAuthUser();
   const canSeeUsers = useHasPermission('users:read');
+  const canSeeApplications = useHasPermission('applications:read');
+  const canSeeRoles = useHasPermission('roles:read');
 
   const data = React.useMemo(() => {
     return {
@@ -50,114 +42,40 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       ],
       navMain: [
         {
-          title: 'Playground',
+          title: 'Settings',
           url: '#',
-          icon: SquareTerminal,
+          icon: Settings2,
           isActive: true,
           items: [
             ...(canSeeUsers
               ? [
                   {
-                    title: 'History',
-                    url: '#',
+                    title: 'Users',
+                    url: '/admin/users',
                   },
                 ]
               : []),
-            {
-              title: 'Starred',
-              url: '#',
-            },
-            {
-              title: 'Settings',
-              url: '#',
-            },
+            ...(canSeeApplications
+              ? [
+                  {
+                    title: 'Applications',
+                    url: '/admin/aplications',
+                  },
+                ]
+              : []),
+            ...(canSeeRoles
+              ? [
+                  {
+                    title: 'Roles',
+                    url: '/admin/roles',
+                  },
+                ]
+              : []),
           ],
-        },
-        {
-          title: 'Models',
-          url: '#',
-          icon: Bot,
-          items: [
-            {
-              title: 'Genesis',
-              url: '#',
-            },
-            {
-              title: 'Explorer',
-              url: '#',
-            },
-            {
-              title: 'Quantum',
-              url: '#',
-            },
-          ],
-        },
-        {
-          title: 'Documentation',
-          url: '#',
-          icon: BookOpen,
-          items: [
-            {
-              title: 'Introduction',
-              url: '#',
-            },
-            {
-              title: 'Get Started',
-              url: '#',
-            },
-            {
-              title: 'Tutorials',
-              url: '#',
-            },
-            {
-              title: 'Changelog',
-              url: '#',
-            },
-          ],
-        },
-        {
-          title: 'Settings',
-          url: '#',
-          icon: Settings2,
-          items: [
-            {
-              title: 'General',
-              url: '#',
-            },
-            {
-              title: 'Team',
-              url: '#',
-            },
-            {
-              title: 'Billing',
-              url: '#',
-            },
-            {
-              title: 'Limits',
-              url: '#',
-            },
-          ],
-        },
-      ],
-      projects: [
-        {
-          name: 'Design Engineering',
-          url: '#',
-          icon: Frame,
-        },
-        {
-          name: 'Sales & Marketing',
-          url: '#',
-          icon: PieChart,
-        },
-        {
-          name: 'Travel',
-          url: '#',
-          icon: Map,
         },
       ],
     };
-  }, [user, canSeeUsers]);
+  }, [user, canSeeUsers, canSeeApplications, canSeeRoles]);
 
   return (
     <Sidebar collapsible="icon" {...props}>

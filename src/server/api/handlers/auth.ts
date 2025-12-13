@@ -4,7 +4,6 @@ import { env } from '@/env';
 import {
   ForgotPasswordResponse,
   LoginResponse,
-  MeResponse,
   OauthTokenResponse,
   ResetPasswordResponse,
 } from '@/schemas/auth';
@@ -16,11 +15,12 @@ import {
   authorizationCodes,
   refreshTokens,
   sessions,
-  userRoles,
   users,
 } from '@/server/db/schema';
+import { getAuthContextFromRequest } from '@/server/utils/auth-context';
 import { sendPasswordResetEmail } from '@/server/utils/emails';
 import { genericTsRestErrorResponse } from '@/server/utils/generic-ts-rest-error';
+import { getClientIp } from '@/server/utils/get-client-ip';
 import { signAccessToken } from '@/server/utils/jwt';
 import { hashPassword, verifyPassword } from '@/server/utils/password';
 import { checkRateLimit } from '@/server/utils/rate-limit';
@@ -31,9 +31,9 @@ import {
   hashToken,
 } from '@/server/utils/session';
 import { tsr } from '@ts-rest/serverless/next';
-import { and, eq, gt, inArray } from 'drizzle-orm';
+import { and, eq, gt } from 'drizzle-orm';
 import { contract } from '../contracts';
-import { getClientIp } from '@/server/utils/get-client-ip';
+import { getUserRolesAndPermissions } from '@/server/utils/get-user-roles-and-permissions';
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
 
@@ -46,53 +46,6 @@ function validateClientAuth(app: Application, clientSecret?: string) {
 
   if (expected.length !== provided.length) return false;
   return timingSafeEqual(expected, provided);
-}
-
-async function getUserAppRolesAndPermissions(opts: {
-  userId: string;
-  accountId: string;
-  applicationId: string;
-}) {
-  const { userId, accountId, applicationId } = opts;
-
-  const userRolesForAccount = await db.query.userRoles.findMany({
-    where: and(eq(userRoles.userId, userId), eq(userRoles.accountId, accountId)),
-    with: {
-      role: {
-        with: {
-          rolePermissions: {
-            with: {
-              permission: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  const roleSlugs = new Set<string>();
-  const permSet = new Set<string>();
-
-  for (const ur of userRolesForAccount) {
-    const role = ur.role;
-    if (!role) continue;
-    if (role.applicationId !== applicationId) continue;
-
-    // roles
-    roleSlugs.add(role.slug);
-
-    // permisos (resource:action)
-    for (const rp of role.rolePermissions ?? []) {
-      const p = rp.permission;
-      if (!p) continue;
-      permSet.add(`${p.resource}:${p.action}`);
-    }
-  }
-
-  return {
-    roles: Array.from(roleSlugs),
-    permissions: Array.from(permSet),
-  };
 }
 
 export const auth = tsr.router(contract.auth, {
@@ -217,125 +170,20 @@ export const auth = tsr.router(contract.auth, {
   // --------------------------------------
   me: async ({ query }, { request }) => {
     try {
-      const session = await getSessionFromRequest(request);
-      if (!session) {
-        return {
-          status: 401,
-          body: { message: 'Not authenticated' },
-        };
-      }
-
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, session.userId),
+      const ctx = await getAuthContextFromRequest(request, {
+        accountIdOverride: query?.accountId,
+        appSlug: query?.appSlug,
       });
-
-      if (!user) {
-        return {
-          status: 401,
-          body: { message: 'User not found' },
-        };
-      }
-
-      const memberships = await db.query.accountMembers.findMany({
-        where: eq(accountMembers.userId, user.id),
-        with: { account: true },
-      });
-
-      const accountsList = memberships.map((m) => ({
-        id: m.account.id,
-        name: m.account.name,
-        slug: m.account.slug,
-        status: m.account.status,
-      }));
-
-      if (accountsList.length === 0) {
-        return {
-          status: 400,
-          body: { message: 'User has no associated accounts' },
-        };
-      }
-
-      let currentAccountId = session.accountId ?? accountsList[0]?.id;
-
-      const requestedAccountId = query?.accountId;
-      if (requestedAccountId) {
-        const match = accountsList.find((a) => a.id === requestedAccountId);
-        if (match) {
-          currentAccountId = match.id;
-        }
-      }
-
-      let apps;
-      const applicationSelect = {
-        id: applications.id,
-        name: applications.name,
-        slug: applications.slug,
-        status: applications.status,
-        logo: applications.logo,
-        description: applications.description,
-        homeUrl: applications.homeUrl,
-      };
-      if (user.isAdmin) {
-        apps = await db
-          .select(applicationSelect)
-          .from(applications)
-          .where(
-            and(eq(applications.accountId, currentAccountId), eq(applications.status, 'active'))
-          );
-      } else {
-        const userRolesData = await db.query.userRoles.findMany({
-          where: eq(userRoles.userId, user.id),
-          with: {
-            role: true,
-          },
-        });
-        const appsId = userRolesData.map((userRole) => userRole.role.applicationId);
-
-        apps = await db
-          .select(applicationSelect)
-          .from(applications)
-          .where(and(inArray(applications.id, appsId), eq(applications.status, 'active')));
-      }
-
-      const response: MeResponse = {
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          avatar: user.avatar,
-          isAdmin: user.isAdmin,
-          status: user.status,
-        },
-        accounts: accountsList,
-        currentAccountId,
-        applications: apps,
-      };
-
-      if (query?.appSlug && currentAccountId) {
-        const app = await db.query.applications.findFirst({
-          where: eq(applications.slug, query.appSlug),
-        });
-
-        if (app) {
-          const { roles, permissions } = await getUserAppRolesAndPermissions({
-            userId: user.id,
-            accountId: currentAccountId,
-            applicationId: app.id,
-          });
-
-          response.roles = roles;
-          response.permissions = permissions;
-        }
-      }
-      return { status: 200, body: response };
+      const { session: _, ...body } = ctx;
+      return { status: 200, body };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
         genericMsg: 'Something went wrong querying applications.',
         logPrefix: '[auth.me]',
       });
     }
-  }, // --------------------------------------
+  },
+  // --------------------------------------
   // POST - /logout
   // --------------------------------------
   logout: async ({}, { request }) => {
@@ -490,7 +338,7 @@ export const auth = tsr.router(contract.auth, {
           .where(eq(authorizationCodes.id, authCode.id));
 
         // 6) Access token
-        const { roles, permissions } = await getUserAppRolesAndPermissions({
+        const { roles, permissions } = await getUserRolesAndPermissions({
           userId: authCode.userId,
           accountId: authCode.accountId,
           applicationId: authCode.applicationId,
@@ -629,7 +477,7 @@ export const auth = tsr.router(contract.auth, {
         });
 
         // 5) nuevo access token
-        const { roles, permissions } = await getUserAppRolesAndPermissions({
+        const { roles, permissions } = await getUserRolesAndPermissions({
           userId: existingRefresh.userId,
           accountId: existingRefresh.accountId,
           applicationId: existingRefresh.applicationId,

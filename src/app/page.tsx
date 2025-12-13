@@ -7,12 +7,10 @@ export default async function RootPage() {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME);
 
-  // Si no hay cookie de sesión, ni preguntamos al backend → directo a login
   if (!sessionCookie) {
     redirect('/auth/login');
   }
 
-  // Construimos el header Cookie solo con esa cookie
   const cookieHeader = `${SESSION_COOKIE_NAME}=${sessionCookie.value}`;
 
   const result = await api.auth.me.query({

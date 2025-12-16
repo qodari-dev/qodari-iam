@@ -155,13 +155,7 @@ export async function prefetchUsers(
 
   await queryClient.prefetchQuery({
     queryKey: usersKeys.list(query),
-    queryFn: async () => {
-      const result = await api.user.list.query({ query });
-      if (result.status !== 200) {
-        throw new Error('Error prefetching');
-      }
-      return result.body;
-    },
+    queryFn: () => api.user.list.query({ query }),
   });
   return;
 }

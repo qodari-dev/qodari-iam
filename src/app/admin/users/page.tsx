@@ -6,11 +6,12 @@ import { Users } from './components/users';
 export default async function AdminPage() {
   const queryClient = new QueryClient();
   await prefetchUsers(queryClient);
+
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <PageLayout
-        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Usuarios' }]}
-        permissionKey="xxxxx"
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Users' }]}
+        permissionKey="users:read"
       >
         <Users />
       </PageLayout>

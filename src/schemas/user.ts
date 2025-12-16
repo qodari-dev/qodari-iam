@@ -1,3 +1,4 @@
+import { Contract } from '@/server/api/contracts';
 import {
   BooleanOperatorsSchema,
   createIncludeSchema,
@@ -7,6 +8,7 @@ import {
   StringOperatorsSchema,
   UUIDOperatorsSchema,
 } from '@/server/utils/query/schemas';
+import { ClientInferResponseBody } from '@ts-rest/core';
 import { z } from 'zod';
 
 // ============================================
@@ -116,3 +118,7 @@ export const SetUserPasswordBodySchema = z.object({
 //export type CreateUserBody = z.infer<typeof CreateUserBodySchema>;
 //export type UpdateUserBody = z.infer<typeof UpdateUserBodySchema>;
 //export type SetUserPasswordBody = z.infer<typeof SetUserPasswordBodySchema>;
+
+export type UserPaginated = ClientInferResponseBody<Contract['user']['list'], 200>;
+
+export type User = UserPaginated['data'][number];

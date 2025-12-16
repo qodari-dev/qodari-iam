@@ -87,9 +87,7 @@ export const accounts = pgTable(
     status: statusEnum('status').default('active').notNull(),
     ...timestamps,
   },
-  (table) => ({
-    planIdx: index('fk_accounts_plan_idx').on(table.planId),
-  })
+  (table) => [index('fk_accounts_plan_idx').on(table.planId)]
 );
 
 export const accountsRelations = relations(accounts, ({ one, many }) => ({
@@ -146,10 +144,10 @@ export const subscriptions = pgTable(
     cancelAt: timestamp('cancel_at', { withTimezone: true }),
     ...timestamps,
   },
-  (table) => ({
-    accountsIdx: index('fk_subscriptions_accounts1_idx').on(table.accountId),
-    planIdx: index('fk_subscriptions_plan1_idx').on(table.planId),
-  })
+  (table) => [
+    index('fk_subscriptions_accounts1_idx').on(table.accountId),
+    index('fk_subscriptions_plan1_idx').on(table.planId),
+  ]
 );
 
 export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
@@ -259,10 +257,10 @@ export const applications = pgTable(
     refreshTokenExp: integer('refresh_token_exp').notNull().default(1296000),
     ...timestamps,
   },
-  (table) => ({
-    accountsIdx: index('fk_applications_accounts_idx').on(table.accountId),
-    uniqueAccountSlug: uniqueIndex('apps_account_slug_uniq').on(table.accountId, table.slug),
-  })
+  (table) => [
+    index('fk_applications_accounts_idx').on(table.accountId),
+    uniqueIndex('apps_account_slug_uniq').on(table.accountId, table.slug),
+  ]
 );
 
 export const applicationsRelations = relations(applications, ({ one, many }) => ({
@@ -311,15 +309,11 @@ export const roles = pgTable(
     isSystem: boolean('is_system').notNull().default(false),
     ...timestamps,
   },
-  (table) => ({
-    accountIdx: index('fk_roles_accounts1_idx').on(table.accountId),
-    applicationIdx: index('fk_roles_applications1_idx').on(table.applicationId),
-    uniqueSlug: uniqueIndex('roles_account_app_slug_uniq').on(
-      table.accountId,
-      table.applicationId,
-      table.slug
-    ),
-  })
+  (table) => [
+    index('fk_roles_accounts1_idx').on(table.accountId),
+    index('fk_roles_applications1_idx').on(table.applicationId),
+    uniqueIndex('roles_account_app_slug_uniq').on(table.accountId, table.applicationId, table.slug),
+  ]
 );
 
 export const rolesRelations = relations(roles, ({ one, many }) => ({
@@ -367,17 +361,17 @@ export const permissions = pgTable(
     description: text('description'),
     ...timestamps,
   },
-  (table) => ({
-    nameIdx: index('permissions_name_idx').on(table.name),
-    accountIdx: index('fk_permissions_accounts1_idx').on(table.accountId),
-    applicationIdx: index('fk_permissions_applications1_idx').on(table.applicationId),
-    uniquePermission: uniqueIndex('permissions_account_app_res_act_uniq').on(
+  (table) => [
+    index('permissions_name_idx').on(table.name),
+    index('fk_permissions_accounts1_idx').on(table.accountId),
+    index('fk_permissions_applications1_idx').on(table.applicationId),
+    uniqueIndex('permissions_account_app_res_act_uniq').on(
       table.accountId,
       table.applicationId,
       table.resource,
       table.action
     ),
-  })
+  ]
 );
 
 export const permissionsRelations = relations(permissions, ({ one, many }) => ({
@@ -418,11 +412,11 @@ export const rolePermissions = pgTable(
       }),
     ...timestamps,
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.roleId, table.permissionId] }),
-    roleIdx: index('fk_role_permissions_roles1_idx').on(table.roleId),
-    permissionIdx: index('fk_role_permissions_permissions1_idx').on(table.permissionId),
-  })
+  (table) => [
+    primaryKey({ columns: [table.roleId, table.permissionId] }),
+    index('fk_role_permissions_roles1_idx').on(table.roleId),
+    index('fk_role_permissions_permissions1_idx').on(table.permissionId),
+  ]
 );
 
 export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
@@ -467,12 +461,12 @@ export const userRoles = pgTable(
       }),
     ...timestamps,
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.userId, table.roleId, table.accountId] }),
-    userIdx: index('fk_user_roles_users1_idx').on(table.userId),
-    roleIdx: index('fk_user_roles_roles1_idx').on(table.roleId),
-    accountIdx: index('fk_user_roles_accounts1_idx').on(table.accountId),
-  })
+  (table) => [
+    primaryKey({ columns: [table.userId, table.roleId, table.accountId] }),
+    index('fk_user_roles_users1_idx').on(table.userId),
+    index('fk_user_roles_roles1_idx').on(table.roleId),
+    index('fk_user_roles_accounts1_idx').on(table.accountId),
+  ]
 );
 
 export const userRolesRelations = relations(userRoles, ({ one }) => ({
@@ -533,11 +527,11 @@ export const authorizationCodes = pgTable(
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     ...timestamps,
   },
-  (table) => ({
-    userIdx: index('fk_authorization_codes_users1_idx').on(table.userId),
-    applicationIdx: index('fk_authorization_codes_applications1_idx').on(table.applicationId),
-    accountIdx: index('fk_authorization_codes_accounts1_idx').on(table.accountId),
-  })
+  (table) => [
+    index('fk_authorization_codes_users1_idx').on(table.userId),
+    index('fk_authorization_codes_applications1_idx').on(table.applicationId),
+    index('fk_authorization_codes_accounts1_idx').on(table.accountId),
+  ]
 );
 
 export const authorizationCodesRelations = relations(authorizationCodes, ({ one }) => ({
@@ -596,14 +590,11 @@ export const refreshTokens = pgTable(
     lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
     ...timestamps,
   },
-  (table) => ({
-    userApplicationsIdx: index('fk_refresh_tokens_users_application_idx').on(
-      table.userId,
-      table.applicationId
-    ),
-    applicationIdx: index('fk_refresh_tokens_applications1_idx').on(table.applicationId),
-    accountIdx: index('fk_refresh_tokens_accounts1_idx').on(table.accountId),
-  })
+  (table) => [
+    index('fk_refresh_tokens_users_application_idx').on(table.userId, table.applicationId),
+    index('fk_refresh_tokens_applications1_idx').on(table.applicationId),
+    index('fk_refresh_tokens_accounts1_idx').on(table.accountId),
+  ]
 );
 
 export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
@@ -653,9 +644,7 @@ export const sessions = pgTable(
     expiresAt: timestamp('expires_at', { withTimezone: true }),
     ...timestamps,
   },
-  (table) => ({
-    userIdx: index('fk_sessions_users1_idx').on(table.userId),
-  })
+  (table) => [index('fk_sessions_users1_idx').on(table.userId)]
 );
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -690,14 +679,11 @@ export const accountMembers = pgTable(
       }),
     ...timestamps,
   },
-  (table) => ({
-    accountIdx: index('fk_account_members_accounts1_idx').on(table.accountId),
-    userIdx: index('fk_account_members_users1_idx').on(table.userId),
-    uniqueMember: uniqueIndex('account_members_account_user_uniq').on(
-      table.accountId,
-      table.userId
-    ),
-  })
+  (table) => [
+    index('fk_account_members_accounts1_idx').on(table.accountId),
+    index('fk_account_members_users1_idx').on(table.userId),
+    uniqueIndex('account_members_account_user_uniq').on(table.accountId, table.userId),
+  ]
 );
 
 export const accountMembersRelations = relations(accountMembers, ({ one }) => ({
@@ -744,12 +730,12 @@ export const auditLogs = pgTable(
 
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => ({
-    accountIdx: index('audit_account_idx').on(table.accountId),
-    userIdx: index('audit_user_idx').on(table.userId),
-    actionIdx: index('audit_action_idx').on(table.action),
-    createdAtIdx: index('audit_created_idx').on(table.createdAt),
-  })
+  (table) => [
+    index('audit_account_idx').on(table.accountId),
+    index('audit_user_idx').on(table.userId),
+    index('audit_action_idx').on(table.action),
+    index('audit_created_idx').on(table.createdAt),
+  ]
 );
 
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
@@ -782,9 +768,7 @@ export const rateLimits = pgTable(
     count: integer('count').notNull().default(1),
     ...timestamps,
   },
-  (table) => ({
-    windowStartIdx: index('window_start_idx').on(table.windowStart),
-  })
+  (table) => [index('window_start_idx').on(table.windowStart)]
 );
 
 export type RateLimit = typeof rateLimits.$inferSelect;

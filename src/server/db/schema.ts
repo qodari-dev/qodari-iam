@@ -205,6 +205,21 @@ export const usersRelations = relations(users, ({ many }) => ({
   auditLogs: many(auditLogs),
 }));
 
+export const USER_SENSITIVE_FIELDS = [
+  'passwordHash',
+  'emailVerificationToken',
+  'passwordResetToken',
+] as const;
+
+export type UserSensitiveField = (typeof USER_SENSITIVE_FIELDS)[number];
+
+export type SafeUser = Omit<typeof users.$inferSelect, UserSensitiveField> & {
+  userRoles?: UserRole[];
+  sessions?: Session[];
+  accountMembers?: AccountMember[];
+  auditLogs?: AuditLog[];
+};
+
 export type User = typeof users.$inferSelect & {
   userRoles?: UserRole[];
   authorizationCodes?: AuthorizationCode[];

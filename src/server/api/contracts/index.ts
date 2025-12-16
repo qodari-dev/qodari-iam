@@ -11,7 +11,6 @@ export const contract = c.router(
   },
   {
     pathPrefix: '/api/v1',
-    baseHeaders: c.type<{ cookie?: string | null }>(),
   }
 );
 

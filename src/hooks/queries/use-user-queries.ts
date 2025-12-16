@@ -18,7 +18,7 @@ function defaultQuery(filters: Partial<ListUsersQuery>) {
   const query = {
     page: filters.page ?? 1,
     limit: filters.limit ?? 20,
-    include: filters.include ?? ['roles', 'sessions'],
+    include: filters.include ?? ['roles'],
     sort: filters.sort ?? [],
     where: filters.where,
   } as ListUsersQuery;
@@ -60,10 +60,10 @@ export function useUpdateUser() {
   const queryClient = api.useQueryClient();
 
   return api.user.update.useMutation({
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       const userId = variables.params.id;
-      queryClient.setQueryData(usersKeys.detail(userId), data.body);
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
       toast.success('Usuario actualizado');
     },
     onError: (error) => {
@@ -103,10 +103,10 @@ export function useSuspendUser() {
   const queryClient = api.useQueryClient();
 
   return api.user.suspend.useMutation({
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       const userId = variables.params.id;
-      queryClient.setQueryData(usersKeys.detail(userId), data.body);
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
       toast.success('Usuario suspendido');
     },
     onError: (error) => {
@@ -119,10 +119,10 @@ export function useActivateUser() {
   const queryClient = api.useQueryClient();
 
   return api.user.activate.useMutation({
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       const userId = variables.params.id;
-      queryClient.setQueryData(usersKeys.detail(userId), data.body);
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
       toast.success('Usuario activado');
     },
     onError: (error) => {
@@ -135,10 +135,10 @@ export function useUnlockUser() {
   const queryClient = api.useQueryClient();
 
   return api.user.unlock.useMutation({
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       const userId = variables.params.id;
-      queryClient.setQueryData(usersKeys.detail(userId), data.body);
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
       toast.success('Usuario desbloqueado');
     },
     onError: (error) => {

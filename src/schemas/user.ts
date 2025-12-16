@@ -2,8 +2,6 @@ import {
   BooleanOperatorsSchema,
   createIncludeSchema,
   createListQuerySchema,
-  createSortSchema,
-  createWhereSchema,
   DateOperatorsSchema,
   EnumOperatorsSchema,
   StringOperatorsSchema,
@@ -12,18 +10,21 @@ import {
 import { z } from 'zod';
 
 // ============================================
+// SCHEMAS
+// ============================================
+
+// ============================================
 // CONSTANTES Y ENUMS
 // ============================================
 
-export const USER_STATUS = ['active', 'suspended', 'pending_verification'] as const;
-export const UserStatusEnum = z.enum(USER_STATUS);
-export type UserStatus = z.infer<typeof UserStatusEnum>;
+const USER_STATUS = ['active', 'suspended', 'pending_verification'] as const;
+const UserStatusEnum = z.enum(USER_STATUS);
 
 // ============================================
 // WHERE
 // ============================================
 
-export const UserWhereFieldsSchema = z
+const UserWhereFieldsSchema = z
   .object({
     id: z.union([z.string().uuid(), UUIDOperatorsSchema]).optional(),
     email: z.union([z.string().email(), StringOperatorsSchema]).optional(),
@@ -37,14 +38,11 @@ export const UserWhereFieldsSchema = z
   })
   .strict();
 
-export const UserWhereSchema = createWhereSchema(UserWhereFieldsSchema);
-export type UserWhere = z.infer<typeof UserWhereSchema>;
-
 // ============================================
 // SORT
 // ============================================
 
-export const USER_SORT_FIELDS = [
+const USER_SORT_FIELDS = [
   'id',
   'email',
   'firstName',
@@ -56,18 +54,12 @@ export const USER_SORT_FIELDS = [
   'lastLoginAt',
 ] as const;
 
-export const UserSortSchema = createSortSchema(USER_SORT_FIELDS, { max: 3 });
-export type UserSort = z.infer<typeof UserSortSchema>;
-
 // ============================================
 // INCLUDE
 // ============================================
 
-export const USER_INCLUDE_OPTIONS = ['roles', 'accounts', 'sessions', 'auditLogs'] as const;
-export type UserIncludeOption = (typeof USER_INCLUDE_OPTIONS)[number];
-
-export const UserIncludeSchema = createIncludeSchema(USER_INCLUDE_OPTIONS);
-export type UserInclude = z.infer<typeof UserIncludeSchema>;
+const USER_INCLUDE_OPTIONS = ['roles', 'accounts', 'sessions', 'auditLogs'] as const;
+const UserIncludeSchema = createIncludeSchema(USER_INCLUDE_OPTIONS);
 
 // ============================================
 // QUERY SCHEMAS
@@ -86,33 +78,41 @@ export const GetUserQuerySchema = z.object({
   include: UserIncludeSchema,
 });
 
-export type GetUserQuery = z.infer<typeof GetUserQuerySchema>;
-
 // ============================================
 // MUTATIONS
 // ============================================
 
 export const CreateUserBodySchema = z.object({
-  email: z.string().email('Invalid email'),
-  firstName: z.string().min(1, 'First name required').max(45),
-  lastName: z.string().min(1, 'Last name required').max(45),
-  password: z.string().min(8, 'Minimum 8 characters'),
+  email: z.string().email(),
+  firstName: z.string().min(1).max(45),
+  lastName: z.string().min(1).max(45),
+  password: z.string().min(8),
   phone: z.string().max(45).optional(),
   isAdmin: z.boolean().default(false),
   status: UserStatusEnum.default('pending_verification'),
 });
-
-export type CreateUserBody = z.infer<typeof CreateUserBodySchema>;
 
 export const UpdateUserBodySchema = CreateUserBodySchema.omit({
   email: true,
   password: true,
 }).partial();
 
-export type UpdateUserBody = z.infer<typeof UpdateUserBodySchema>;
-
 export const SetUserPasswordBodySchema = z.object({
-  password: z.string().min(8, 'Minimum 8 characters'),
+  password: z.string().min(8),
 });
 
-export type SetUserPasswordBody = z.infer<typeof SetUserPasswordBodySchema>;
+// ============================================
+// TYPES
+// ============================================
+
+//export type UserStatus = z.infer<typeof UserStatusEnum>;
+//export const UserWhereSchema = createWhereSchema(UserWhereFieldsSchema);
+//export type UserWhere = z.infer<typeof UserWhereSchema>;
+//export const UserSortSchema = createSortSchema(USER_SORT_FIELDS, { max: 3 });
+//export type UserSort = z.infer<typeof UserSortSchema>;
+//export type UserIncludeOption = (typeof USER_INCLUDE_OPTIONS)[number];
+//export type UserInclude = z.infer<typeof UserIncludeSchema>;
+//export type GetUserQuery = z.infer<typeof GetUserQuerySchema>;
+//export type CreateUserBody = z.infer<typeof CreateUserBodySchema>;
+//export type UpdateUserBody = z.infer<typeof UpdateUserBodySchema>;
+//export type SetUserPasswordBody = z.infer<typeof SetUserPasswordBodySchema>;

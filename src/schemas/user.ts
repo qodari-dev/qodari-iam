@@ -19,8 +19,15 @@ import { z } from 'zod';
 // CONSTANTES Y ENUMS
 // ============================================
 
+export const userStatusOptions = [
+  { label: 'Active', value: 'active' },
+  { label: 'Suspended', value: 'suspended' },
+  { label: 'Pending Verification', value: 'pending_verification' },
+] as const;
+
 const USER_STATUS = ['active', 'suspended', 'pending_verification'] as const;
 const UserStatusEnum = z.enum(USER_STATUS);
+export type UserStatus = z.infer<typeof UserStatusEnum>;
 
 // ============================================
 // WHERE
@@ -107,7 +114,6 @@ export const SetUserPasswordBodySchema = z.object({
 // TYPES
 // ============================================
 
-//export type UserStatus = z.infer<typeof UserStatusEnum>;
 //export const UserWhereSchema = createWhereSchema(UserWhereFieldsSchema);
 //export type UserWhere = z.infer<typeof UserWhereSchema>;
 //export const UserSortSchema = createSortSchema(USER_SORT_FIELDS, { max: 3 });
@@ -122,3 +128,6 @@ export const SetUserPasswordBodySchema = z.object({
 export type UserPaginated = ClientInferResponseBody<Contract['user']['list'], 200>;
 
 export type User = UserPaginated['data'][number];
+
+export type UserSortField = (typeof USER_SORT_FIELDS)[number];
+export type UserInclude = (typeof USER_INCLUDE_OPTIONS)[number];

@@ -1,21 +1,111 @@
 'use client';
 
-import { User } from '@/schemas/user';
-import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
+import type { ColumnDef } from '@tanstack/react-table';
+import { format } from 'date-fns';
+import { CheckCircle, XCircle, Clock, ShieldCheck, User as UserIcon } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { DataTableColumnHeader } from '@/components/data-table';
+import { UserRowActions } from './user-row-actions';
+import { User, UserStatus } from '@/schemas/user';
 
-export const columns: ColumnDef<User>[] = [
+// ============================================================================
+// Status Badge Component
+// ============================================================================
+
+const statusConfig: Record<
+  UserStatus,
+  {
+    label: string;
+    variant: 'default' | 'secondary' | 'outline' | 'destructive';
+    icon: typeof CheckCircle;
+  }
+> = {
+  active: {
+    label: 'Active',
+    variant: 'default',
+    icon: CheckCircle,
+  },
+  suspended: {
+    label: 'Suspended',
+    variant: 'destructive',
+    icon: XCircle,
+  },
+  pending_verification: {
+    label: 'Pending',
+    variant: 'outline',
+    icon: Clock,
+  },
+};
+
+function StatusBadge({ status }: { status: UserStatus }) {
+  const config = statusConfig[status];
+  const Icon = config.icon;
+
+  return (
+    <Badge variant={config.variant} className="gap-1">
+      <Icon className="h-3 w-3" />
+      {config.label}
+    </Badge>
+  );
+}
+
+// ============================================================================
+// Admin Badge
+// ============================================================================
+
+function AdminBadge({ isAdmin }: { isAdmin: boolean }) {
+  if (isAdmin) {
+    return (
+      <Badge variant="default" className="gap-1 bg-amber-600 hover:bg-amber-700">
+        <ShieldCheck className="h-3 w-3" />
+        Admin
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge variant="outline" className="text-muted-foreground gap-1">
+      <UserIcon className="h-3 w-3" />
+      User
+    </Badge>
+  );
+}
+
+// ============================================================================
+// Roles Display
+// ============================================================================
+
+function RolesBadges({ roles }: { roles?: User['userRoles'] }) {
+  if (!roles || roles.length === 0) {
+    return <span className="text-muted-foreground text-sm">No roles</span>;
+  }
+
+  const displayRoles = roles.slice(0, 2);
+  const remaining = roles.length - 2;
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {displayRoles.map((ur) => (
+        <Badge key={ur.role?.id} variant="secondary" className="text-xs">
+          {ur.role?.name}
+        </Badge>
+      ))}
+      {remaining > 0 && (
+        <Badge variant="outline" className="text-xs">
+          +{remaining}
+        </Badge>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// Column Definitions
+// ============================================================================
+
+export const userColumns: ColumnDef<User>[] = [
+  // Selection Column
   {
     id: 'select',
     header: ({ table }) => (
@@ -25,6 +115,7 @@ export const columns: ColumnDef<User>[] = [
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
+        className="translate-y-0.5"
       />
     ),
     cell: ({ row }) => (
@@ -32,64 +123,110 @@ export const columns: ColumnDef<User>[] = [
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Select row"
+        className="translate-y-0.5"
       />
     ),
     enableSorting: false,
     enableHiding: false,
   },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-  },
+
+  // Email + Name Column (combined for better display)
   {
     accessorKey: 'email',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Email
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-  },
-  {
-    accessorKey: 'firstName',
-    header: () => <div className="text-right">Name</div>,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
     cell: ({ row }) => {
+      const { email, firstName, lastName } = row.original;
+      const fullName = [firstName, lastName].filter(Boolean).join(' ');
+
       return (
-        <div className="text-right font-medium">
-          {row.original.firstName} {row.original.lastName}
+        <div className="flex flex-col">
+          <span className="font-medium">{email}</span>
+          {fullName && <span className="text-muted-foreground text-sm">{fullName}</span>}
         </div>
       );
     },
   },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const payment = row.original;
 
+  // First Name Column (hideable)
+  {
+    accessorKey: 'firstName',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="First Name" />,
+    cell: ({ row }) => row.getValue('firstName') ?? '—',
+    enableHiding: true,
+  },
+
+  // Last Name Column (hideable)
+  {
+    accessorKey: 'lastName',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Name" />,
+    cell: ({ row }) => row.getValue('lastName') ?? '—',
+    enableHiding: true,
+  },
+
+  // Status Column
+  {
+    accessorKey: 'status',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    cell: ({ row }) => <StatusBadge status={row.getValue('status')} />,
+    filterFn: (row, id, value: string[]) => {
+      return value.includes(row.getValue(id));
+    },
+  },
+
+  // Is Admin Column
+  {
+    accessorKey: 'isAdmin',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
+    cell: ({ row }) => <AdminBadge isAdmin={row.getValue('isAdmin')} />,
+    filterFn: (row, id, value: boolean) => {
+      return row.getValue(id) === value;
+    },
+  },
+
+  // Roles Column (from include)
+  {
+    id: 'roles',
+    header: 'Assigned Roles',
+    cell: ({ row }) => <RolesBadges roles={row.original.userRoles} />,
+    enableSorting: false,
+  },
+
+  // Created At Column
+  {
+    accessorKey: 'createdAt',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
+    cell: ({ row }) => {
+      const date = row.getValue('createdAt') as string;
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(payment.id)}>
-              Copy payment ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex flex-col">
+          <span>{format(new Date(date), 'MMM d, yyyy')}</span>
+          <span className="text-muted-foreground text-xs">{format(new Date(date), 'h:mm a')}</span>
+        </div>
       );
     },
+  },
+
+  // Last Login Column
+  {
+    accessorKey: 'lastLoginAt',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Login" />,
+    cell: ({ row }) => {
+      const date = row.getValue('lastLoginAt') as string | null;
+      if (!date) {
+        return <span className="text-muted-foreground">Never</span>;
+      }
+      return (
+        <div className="flex flex-col">
+          <span>{format(new Date(date), 'MMM d, yyyy')}</span>
+          <span className="text-muted-foreground text-xs">{format(new Date(date), 'h:mm a')}</span>
+        </div>
+      );
+    },
+  },
+
+  // Actions Column
+  {
+    id: 'actions',
+    cell: ({ row }) => <UserRowActions user={row.original} />,
   },
 ];

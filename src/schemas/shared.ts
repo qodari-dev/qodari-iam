@@ -9,3 +9,8 @@ export const IdParamSchema = z.object({
 });
 
 export type IdParam = z.infer<typeof IdParamSchema>;
+
+export const booleanOptions = [
+  { label: 'Yes', value: 'true' },
+  { label: 'No', value: 'false' },
+] as const;

@@ -21,6 +21,7 @@ function defaultQuery(filters: Partial<ListUsersQuery>) {
     include: filters.include ?? ['roles'],
     sort: filters.sort ?? [],
     where: filters.where,
+    search: filters.search,
   } as ListUsersQuery;
   return query;
 }

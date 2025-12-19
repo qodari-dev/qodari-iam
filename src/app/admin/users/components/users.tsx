@@ -1,26 +1,45 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import { DataTable, useDataTable } from '@/components/data-table';
 import { userColumns } from './columns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // ============================================================================
 // Importar tus hooks existentes
 // ============================================================================
-import { useUsers } from '@/hooks/queries/use-user-queries';
+import { useDeleteUser, useUsers } from '@/hooks/queries/use-user-queries';
 import { PageContent, PageHeader } from '@/components/layout';
 import { UsersToolbar } from './user-toolbar';
-import { UserInclude, UserSortField } from '@/schemas/user';
-import { DataTableSimple } from '@/components/data-table/data-table-simple';
-import { userColumnsSimple } from './columns-simple';
+import { User, UserInclude, UserSortField } from '@/schemas/user';
+import { RowData, TableMeta } from '@tanstack/react-table';
+import { UserInfo } from './user-info';
+import { Spinner } from '@/components/ui/spinner';
+import { UserForm } from './user-form';
+
+declare module '@tanstack/table-core' {
+  interface TableMeta<TData extends RowData> {
+    onRowView?: (row: TData) => void;
+    onRowEdit?: (row: TData) => void;
+    onRowDelete?: (row: TData) => void;
+  }
+}
 
 // ============================================================================
 // Page Component
 // ============================================================================
 
 export function Users() {
-  const router = useRouter();
+  const [user, setUser] = React.useState<User>();
 
   // ---- Data Table State ----
   const {
@@ -45,13 +64,9 @@ export function Users() {
   const { data, isLoading, isFetching, refetch } = useUsers(queryParams);
 
   // ---- Mutations con tus hooks existentes ----
-  //const deleteUserMutation = useDeleteUser();
-  //const updateUserMutation = useUpdateUser();
+  const { mutateAsync: deleteUser, isPending: isDeleting } = useDeleteUser();
 
   // ---- Handlers ----
-  const handleCreate = () => {
-    router.push('/admin/users/new');
-  };
 
   const handleExport = () => {
     console.log('Export users with params:', queryParams);
@@ -74,6 +89,61 @@ export function Users() {
     if (isAdmin === false) return 'false';
     return undefined;
   }, [filters.isAdmin]);
+
+  const [openedInfoSheet, setOpenedInfoSheet] = React.useState(false);
+  const handleInfoSheetChange = React.useCallback(
+    (open: boolean) => {
+      if (open === false) {
+        setUser(undefined);
+      }
+      setOpenedInfoSheet(open);
+    },
+    [setUser, setOpenedInfoSheet]
+  );
+
+  const [openedFormSheet, setOpenedFormSheet] = React.useState(false);
+  const handleFormSheetChange = React.useCallback(
+    (open: boolean) => {
+      if (open === false) {
+        setUser(undefined);
+      }
+      setOpenedFormSheet(open);
+    },
+    [setUser, setOpenedFormSheet]
+  );
+
+  const [openedDeleteDialog, setOpenedDeleteDialog] = React.useState(false);
+  const handleDelete = React.useCallback(async () => {
+    if (!user?.id) return;
+    await deleteUser({ params: { id: user.id } });
+    setUser(undefined);
+    setOpenedDeleteDialog(false);
+  }, [user, setUser, setOpenedDeleteDialog, deleteUser]);
+
+  const handleCreate = () => {
+    handleFormSheetChange(true);
+  };
+  const handleRowOpen = React.useCallback((row: User) => {
+    setUser(row);
+    setOpenedInfoSheet(true);
+  }, []);
+  const handleRowEdit = React.useCallback((row: User) => {
+    setUser(row);
+    setOpenedFormSheet(true);
+  }, []);
+  const handleRowDelete = React.useCallback((row: User) => {
+    setUser(row);
+    setOpenedDeleteDialog(true);
+  }, []);
+
+  const tableMeta = React.useMemo<TableMeta<User>>(
+    () => ({
+      onRowView: handleRowOpen,
+      onRowDelete: handleRowDelete,
+      onRowEdit: handleRowEdit,
+    }),
+    [handleRowOpen, handleRowDelete, handleRowEdit]
+  );
 
   return (
     <>
@@ -120,29 +190,33 @@ export function Users() {
             />
           }
           emptyMessage="No users found. Try adjusting your filters."
-        />
-        <DataTableSimple
-          columns={userColumnsSimple}
-          data={data?.body?.data ?? []}
-          // Search (client-side)
-          searchable // Mostrar input de búsqueda
-          //searchPlaceholder // Placeholder del input
-          searchColumn="global" // "global" = todas las columnas, o nombre de columna específica
-          // Pagination (client-side)
-          paginated={true} // Habilitar paginación
-          defaultPageSize={2} // Tamaño por defecto
-          pageSizeOptions={[2, 5, 10, 20]}
-          // Selection
-          enableRowSelection
-          onRowSelectionChange={(rows) => {
-            console.log(rows);
-          }}
-          // Customization
-          compact // Modo compacto para nested tables
-          toolbar // Slot para toolbar adicional
-          //emptyMessage
+          meta={tableMeta}
         />
       </PageContent>
+
+      <UserInfo user={user} opened={openedInfoSheet} onOpened={handleInfoSheetChange} />
+      <UserForm user={user} opened={openedFormSheet} onOpened={handleFormSheetChange} />
+
+      <AlertDialog open={openedDeleteDialog} onOpenChange={setOpenedDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your account and remove
+              your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setOpenedDeleteDialog(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction disabled={isDeleting} onClick={handleDelete}>
+              {isDeleting && <Spinner />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

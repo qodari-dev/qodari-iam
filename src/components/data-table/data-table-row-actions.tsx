@@ -20,7 +20,7 @@ import {
 export interface RowAction<TData> {
   label: string;
   icon?: React.ComponentType<{ className?: string }>;
-  onClick: (row: TData) => void | Promise<void>;
+  onClick?: (row: TData) => void | Promise<void>;
   variant?: 'default' | 'destructive';
   disabled?: boolean | ((row: TData) => boolean);
   hidden?: boolean | ((row: TData) => boolean);
@@ -61,7 +61,7 @@ export function DataTableRowActions<TData>({
   const handleClick = async (action: RowAction<TData>) => {
     try {
       setIsLoading(true);
-      await action.onClick(row);
+      await action.onClick?.(row);
     } finally {
       setIsLoading(false);
     }

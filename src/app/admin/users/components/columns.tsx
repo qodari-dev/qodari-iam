@@ -227,6 +227,6 @@ export const userColumns: ColumnDef<User>[] = [
   // Actions Column
   {
     id: 'actions',
-    cell: ({ row }) => <UserRowActions user={row.original} />,
+    cell: ({ table, row }) => <UserRowActions row={row} table={table} />,
   },
 ];

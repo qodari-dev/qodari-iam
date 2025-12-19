@@ -45,7 +45,7 @@ export const Providers = ({ children }: ProvidersProps) => {
           disableTransitionOnChange
         >
           {children}
-          <Toaster />
+          <Toaster richColors />
         </ThemeProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </api.ReactQueryProvider>

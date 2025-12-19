@@ -65,21 +65,6 @@ interface DataTableSimpleProps<TData, TValue> {
 }
 
 // ============================================================================
-// Global Filter Function
-// ============================================================================
-
-const globalFilterFn: FilterFn<unknown> = (row, columnId, filterValue) => {
-  const search = String(filterValue).toLowerCase();
-
-  // Check all columns
-  return row.getAllCells().some((cell) => {
-    const value = cell.getValue();
-    if (value == null) return false;
-    return String(value).toLowerCase().includes(search);
-  });
-};
-
-// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -117,7 +102,14 @@ export function DataTableSimple<TData, TValue>({
       rowSelection,
     },
     enableRowSelection,
-    globalFilterFn,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const search = String(filterValue).toLowerCase();
+      return row.getAllCells().some((cell) => {
+        const value = cell.getValue();
+        if (value == null) return false;
+        return String(value).toLowerCase().includes(search);
+      });
+    },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,

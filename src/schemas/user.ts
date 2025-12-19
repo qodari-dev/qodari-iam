@@ -97,8 +97,8 @@ export const CreateUserBodySchema = z.object({
   lastName: z.string().min(1).max(45),
   password: z.string().min(8),
   phone: z.string().max(45).optional(),
-  isAdmin: z.boolean().default(false),
-  status: UserStatusEnum.default('pending_verification'),
+  isAdmin: z.boolean(),
+  status: UserStatusEnum,
 });
 
 export const UpdateUserBodySchema = CreateUserBodySchema.omit({

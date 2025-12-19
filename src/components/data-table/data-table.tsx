@@ -10,6 +10,7 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
+  TableMeta,
 } from '@tanstack/react-table';
 import {
   Table,
@@ -50,6 +51,7 @@ interface DataTableProps<TData, TValue> {
 
   // Customization
   pageSizeOptions?: number[];
+  meta?: TableMeta<TData>;
 }
 
 // ============================================================================
@@ -92,6 +94,7 @@ export function DataTable<TData, TValue>({
   enableRowSelection = false,
   onRowSelectionChange,
   pageSizeOptions = [10, 20, 30, 50],
+  meta,
 }: DataTableProps<TData, TValue>) {
   // Local state
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -142,6 +145,7 @@ export function DataTable<TData, TValue>({
 
     // Row models
     getCoreRowModel: getCoreRowModel(),
+    meta,
   });
 
   return (

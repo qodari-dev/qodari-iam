@@ -3,7 +3,7 @@ import { prefetchUsers } from '@/hooks/queries/use-user-queries';
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import { Users } from './components/users';
 
-export default async function AdminPage() {
+export default async function UserPage() {
   const queryClient = new QueryClient();
   await prefetchUsers(queryClient);
 

@@ -47,12 +47,12 @@ export function onSubmitError<T extends FieldValues>(errors: FieldErrors<T>) {
   toast.error('Validation errors:', {
     description: (
       <ul className="mt-2 list-disc pl-4">
-        {errorMessages.slice(0, 5).map(({ path, message }) => (
+        {errorMessages.slice(0, 8).map(({ path, message }) => (
           <li key={path}>
             <b>{path}:</b> {message}
           </li>
         ))}
-        {errorMessages.length > 5 && <li>+{errorMessages.length - 5} more errors</li>}
+        {errorMessages.length > 8 && <li>+{errorMessages.length - 5} more errors</li>}
       </ul>
     ),
   });

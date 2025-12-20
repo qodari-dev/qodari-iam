@@ -99,6 +99,7 @@ export const CreateUserBodySchema = z.object({
   phone: z.string().max(45).optional(),
   isAdmin: z.boolean(),
   status: UserStatusEnum,
+  roles: z.object({ roleId: z.string() }).array().optional(),
 });
 
 export const UpdateUserBodySchema = CreateUserBodySchema.omit({

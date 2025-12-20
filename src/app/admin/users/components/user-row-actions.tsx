@@ -1,10 +1,11 @@
 'use client';
 
-import { toast } from 'sonner';
-import { Eye, Pencil, Trash, Copy, UserCheck, Ban, ShieldCheck, ShieldOff } from 'lucide-react';
 import { DataTableRowActions, type RowAction, type RowActionGroup } from '@/components/data-table';
 import { User } from '@/schemas/user';
+import { useHasPermission } from '@/stores/auth-store-provider';
 import { Row, Table } from '@tanstack/react-table';
+import { Ban, Copy, Eye, Pencil, Trash, UserCheck } from 'lucide-react';
+import { toast } from 'sonner';
 
 // ============================================================================
 // Props Interface
@@ -22,6 +23,9 @@ interface UserRowActionsProps {
 export function UserRowActions({ row, table }: UserRowActionsProps) {
   const user = row.original;
   const meta = table.options.meta;
+  const canUpdateUsers = useHasPermission('users:update');
+  const canDeleteUsers = useHasPermission('users:delete');
+
   // ---- Action Handlers ----
 
   const handleCopyEmail = () => {
@@ -38,22 +42,16 @@ export function UserRowActions({ row, table }: UserRowActionsProps) {
       icon: Copy,
       onClick: handleCopyEmail,
     },
-
-    // Navigation Group
     {
-      label: 'Navigation',
-      actions: [
-        {
-          label: 'View Details',
-          icon: Eye,
-          onClick: meta?.onRowView,
-        },
-        {
-          label: 'Edit User',
-          icon: Pencil,
-          onClick: meta?.onRowEdit,
-        },
-      ],
+      label: 'View Details',
+      icon: Eye,
+      onClick: meta?.onRowView,
+    },
+    {
+      label: 'Edit User',
+      icon: Pencil,
+      onClick: meta?.onRowEdit,
+      hidden: !canUpdateUsers,
     },
 
     // Status Group
@@ -63,30 +61,28 @@ export function UserRowActions({ row, table }: UserRowActionsProps) {
         {
           label: 'Activate',
           icon: UserCheck,
-          onClick: meta?.onRowDelete,
+          onClick: meta?.onRowActivate,
+          hidden:
+            !canUpdateUsers || user.status === 'active' || user.status === 'pending_verification',
         },
         {
           label: 'Suspend',
           icon: Ban,
+          onClick: meta?.onRowSuspend,
+          variant: 'destructive',
+          hidden:
+            !canUpdateUsers ||
+            user.status === 'suspended' ||
+            user.status === 'pending_verification',
+        },
+        {
+          label: 'Delete User',
+          icon: Trash,
           onClick: meta?.onRowDelete,
           variant: 'destructive',
+          hidden: !canDeleteUsers,
         },
       ],
-    },
-
-    // Admin Toggle
-    {
-      label: user.isAdmin ? 'Remove Admin' : 'Make Admin',
-      icon: user.isAdmin ? ShieldOff : ShieldCheck,
-      onClick: meta?.onRowDelete,
-    },
-
-    // Delete
-    {
-      label: 'Delete User',
-      icon: Trash,
-      onClick: meta?.onRowDelete,
-      variant: 'destructive',
     },
   ];
 

@@ -82,7 +82,7 @@ function DescriptionSection({
     <div className="space-y-3">
       {(section.title || section.description) && (
         <div>
-          {section.title && <h4 className="text-sm font-semibold">{section.title}</h4>}
+          {section.title && <h4 className="text-md font-semibold">{section.title}</h4>}
           {section.description && (
             <p className="text-muted-foreground text-sm">{section.description}</p>
           )}

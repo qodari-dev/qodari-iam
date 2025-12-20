@@ -1,14 +1,8 @@
 import { DescriptionList, DescriptionSection } from '@/components/description-list';
 import { Badge } from '@/components/ui/badge';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
-import { Mail, User as UserIcon, Phone, Shield, Calendar, Clock, Users } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { User } from '@/schemas/user';
+import { formatDate } from '@/utils/formatters';
 import { format } from 'date-fns';
 
 export function UserInfo({
@@ -27,10 +21,10 @@ export function UserInfo({
       title: 'Basic Information',
       columns: 2,
       items: [
-        { label: 'Email', value: user.email, icon: <Mail /> },
-        { label: 'Phone', value: user.phone, icon: <Phone /> },
-        { label: 'First Name', value: user.firstName, icon: <UserIcon /> },
-        { label: 'Last Name', value: user.lastName, icon: <UserIcon /> },
+        { label: 'First Name', value: user.firstName },
+        { label: 'Last Name', value: user.lastName },
+        { label: 'Email', value: user.email },
+        { label: 'Phone', value: user.phone },
       ],
     },
     {
@@ -39,7 +33,6 @@ export function UserInfo({
       items: [
         {
           label: 'Status',
-          icon: <Shield />,
           value: (
             <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
               {user.status}
@@ -48,7 +41,6 @@ export function UserInfo({
         },
         {
           label: 'Admin',
-          icon: <Shield />,
           value: (
             <Badge variant={user.isAdmin ? 'default' : 'outline'}>
               {user.isAdmin ? 'Yes' : 'No'}
@@ -62,7 +54,6 @@ export function UserInfo({
       items: [
         {
           label: 'Assigned Roles',
-          icon: <Users />,
           value: user.userRoles?.length ? (
             <div className="flex flex-wrap gap-1">
               {user.userRoles.map(({ role }) => (
@@ -82,12 +73,14 @@ export function UserInfo({
       items: [
         {
           label: 'Created',
-          icon: <Calendar />,
-          value: format(new Date(user.createdAt), 'PPP'),
+          value: formatDate(user.createdAt),
+        },
+        {
+          label: 'Updated',
+          value: formatDate(user.updatedAt),
         },
         {
           label: 'Last Login',
-          icon: <Clock />,
           value: user.lastLoginAt ? format(new Date(user.lastLoginAt), 'PPP p') : null,
         },
       ],
@@ -96,13 +89,9 @@ export function UserInfo({
 
   return (
     <Sheet open={opened} onOpenChange={(open) => onOpened(open)}>
-      <SheetContent>
+      <SheetContent className="sm:max-w-xl">
         <SheetHeader>
-          <SheetTitle>Are you absolutely sure {user?.email}?</SheetTitle>
-          <SheetDescription>
-            This action cannot be undone. This will permanently delete your account and remove your
-            data from our servers.
-          </SheetDescription>
+          <SheetTitle>Info</SheetTitle>
         </SheetHeader>
         <div className="px-4">
           <DescriptionList sections={sections} columns={2} />

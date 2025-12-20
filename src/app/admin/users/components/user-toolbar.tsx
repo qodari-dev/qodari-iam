@@ -1,11 +1,12 @@
 'use client';
 
-import { Plus, Download, RefreshCw, X } from 'lucide-react';
+import { Plus, RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTableFacetedFilter, SimpleSelectFilter } from '@/components/data-table';
 import { userStatusOptions } from '@/schemas/user';
 import { booleanOptions } from '@/schemas/shared';
+import { useHasPermission } from '@/stores/auth-store-provider';
 
 // ============================================================================
 // Props Interface
@@ -27,7 +28,6 @@ interface UsersToolbarProps {
   // Actions
   onReset: () => void;
   onRefresh?: () => void;
-  onExport?: () => void;
   onCreate?: () => void;
 
   // Loading states
@@ -47,11 +47,11 @@ export function UsersToolbar({
   onIsAdminFilterChange,
   onReset,
   onRefresh,
-  onExport,
   onCreate,
   isRefreshing = false,
 }: UsersToolbarProps) {
   const isFiltered = searchValue || statusFilter.length > 0 || isAdminFilter;
+  const canCreateUsers = useHasPermission('users:create');
 
   return (
     <div className="flex items-center justify-between">
@@ -104,16 +104,8 @@ export function UsersToolbar({
           </Button>
         )}
 
-        {/* Export Button */}
-        {onExport && (
-          <Button variant="outline" size="sm" onClick={onExport} className="h-8">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-        )}
-
         {/* Create Button */}
-        {onCreate && (
+        {onCreate && canCreateUsers && (
           <Button size="sm" onClick={onCreate} className="h-8">
             <Plus className="mr-2 h-4 w-4" />
             Add User

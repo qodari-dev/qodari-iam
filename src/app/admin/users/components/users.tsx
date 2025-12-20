@@ -1,8 +1,6 @@
 'use client';
 
-import * as React from 'react';
 import { DataTable, useDataTable } from '@/components/data-table';
-import { userColumns } from './columns';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,24 +11,33 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import * as React from 'react';
+import { userColumns } from './user-columns';
 
 // ============================================================================
 // Importar tus hooks existentes
 // ============================================================================
-import { useDeleteUser, useUsers } from '@/hooks/queries/use-user-queries';
 import { PageContent, PageHeader } from '@/components/layout';
-import { UsersToolbar } from './user-toolbar';
+import { Spinner } from '@/components/ui/spinner';
+import {
+  useActivateUser,
+  useDeleteUser,
+  useSuspendUser,
+  useUsers,
+} from '@/hooks/queries/use-user-queries';
 import { User, UserInclude, UserSortField } from '@/schemas/user';
 import { RowData, TableMeta } from '@tanstack/react-table';
-import { UserInfo } from './user-info';
-import { Spinner } from '@/components/ui/spinner';
 import { UserForm } from './user-form';
+import { UserInfo } from './user-info';
+import { UsersToolbar } from './user-toolbar';
 
 declare module '@tanstack/table-core' {
   interface TableMeta<TData extends RowData> {
     onRowView?: (row: TData) => void;
     onRowEdit?: (row: TData) => void;
     onRowDelete?: (row: TData) => void;
+    onRowSuspend?: (row: TData) => void;
+    onRowActivate?: (row: TData) => void;
   }
 }
 
@@ -65,12 +72,10 @@ export function Users() {
 
   // ---- Mutations con tus hooks existentes ----
   const { mutateAsync: deleteUser, isPending: isDeleting } = useDeleteUser();
+  const { mutateAsync: activateUser, isPending: isActivating } = useActivateUser();
+  const { mutateAsync: suspendUser, isPending: isSuspending } = useSuspendUser();
 
   // ---- Handlers ----
-
-  const handleExport = () => {
-    console.log('Export users with params:', queryParams);
-  };
 
   // Extraer filtros para el toolbar
   const statusFilter = React.useMemo(() => {
@@ -120,6 +125,22 @@ export function Users() {
     setOpenedDeleteDialog(false);
   }, [user, setUser, setOpenedDeleteDialog, deleteUser]);
 
+  const [openedSuspendDialog, setOpenedSuspendDialog] = React.useState(false);
+  const handleSuspend = React.useCallback(async () => {
+    if (!user?.id) return;
+    await suspendUser({ params: { id: user.id } });
+    setUser(undefined);
+    setOpenedSuspendDialog(false);
+  }, [user, setUser, setOpenedSuspendDialog, suspendUser]);
+
+  const [openedActivateDialog, setOpenedActivateDialog] = React.useState(false);
+  const handleActivate = React.useCallback(async () => {
+    if (!user?.id) return;
+    await activateUser({ params: { id: user.id } });
+    setUser(undefined);
+    setOpenedActivateDialog(false);
+  }, [user, setUser, setOpenedActivateDialog, activateUser]);
+
   const handleCreate = () => {
     handleFormSheetChange(true);
   };
@@ -135,14 +156,24 @@ export function Users() {
     setUser(row);
     setOpenedDeleteDialog(true);
   }, []);
+  const handleRowSuspend = React.useCallback((row: User) => {
+    setUser(row);
+    setOpenedSuspendDialog(true);
+  }, []);
+  const handleRowActivate = React.useCallback((row: User) => {
+    setUser(row);
+    setOpenedActivateDialog(true);
+  }, []);
 
   const tableMeta = React.useMemo<TableMeta<User>>(
     () => ({
       onRowView: handleRowOpen,
       onRowDelete: handleRowDelete,
       onRowEdit: handleRowEdit,
+      onRowSuspend: handleRowSuspend,
+      onRowActivate: handleRowActivate,
     }),
-    [handleRowOpen, handleRowDelete, handleRowEdit]
+    [handleRowOpen, handleRowDelete, handleRowEdit, handleRowSuspend, handleRowActivate]
   );
 
   return (
@@ -184,7 +215,6 @@ export function Users() {
               }}
               onReset={resetFilters}
               onRefresh={() => refetch()}
-              onExport={handleExport}
               onCreate={handleCreate}
               isRefreshing={isFetching && !isLoading}
             />
@@ -213,6 +243,45 @@ export function Users() {
             <AlertDialogAction disabled={isDeleting} onClick={handleDelete}>
               {isDeleting && <Spinner />}
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={openedSuspendDialog} onOpenChange={setOpenedSuspendDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will suspend this account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setOpenedSuspendDialog(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction disabled={isSuspending} onClick={handleSuspend}>
+              {isDeleting && <Spinner />}
+              Suspend
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={openedActivateDialog} onOpenChange={setOpenedActivateDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will activate this account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setOpenedActivateDialog(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction disabled={isActivating} onClick={handleActivate}>
+              {isActivating && <Spinner />}
+              Activate
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

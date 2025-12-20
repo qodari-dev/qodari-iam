@@ -1,6 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import {
   Sheet,
   SheetClose,
@@ -10,14 +8,17 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Spinner } from '@/components/ui/spinner';
 import { useCreateUser, useUpdateUser } from '@/hooks/queries/use-user-queries';
 import { CreateUserBodySchema, User } from '@/schemas/user';
 import { onSubmitError } from '@/utils/on-submit-error';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCallback, useEffect, useId, useMemo } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { UserMainForm } from './user-main-form';
+import { UserRolesForm } from './user-roles-form';
 
 type FormValues = z.infer<typeof CreateUserBodySchema>;
 
@@ -43,6 +44,10 @@ export function UserForm({
         firstName: user?.firstName ?? '',
         lastName: user?.lastName ?? '',
         phone: user?.phone ?? '',
+        status: user?.status ?? 'pending_verification',
+        isAdmin: user?.isAdmin ?? false,
+        roles: user?.userRoles?.map(({ roleId }) => ({ roleId })) ?? [],
+        password: '',
       });
     }
   }, [opened, user, form]);
@@ -73,38 +78,22 @@ export function UserForm({
             Make changes to your profile here. Click save when you&apos;re done.
           </SheetDescription>
         </SheetHeader>
-        <form id={formId} onSubmit={form.handleSubmit(onSubmit, onSubmitError)}>
-          <FieldGroup className="px-4">
-            <Controller
-              name="firstName"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="firstName">Email</FieldLabel>
-                  <Input id="firstName" {...field} aria-invalid={fieldState.invalid} />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
-              )}
-            />
-            <Controller
-              name="email"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="login-email">Email</FieldLabel>
-                  <Input
-                    {...field}
-                    type="email"
-                    autoComplete="email"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="tu@email.com"
-                  />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
-              )}
-            />
-          </FieldGroup>
-        </form>
+        <FormProvider {...form}>
+          <form id={formId} onSubmit={form.handleSubmit(onSubmit, onSubmitError)}>
+            <Tabs defaultValue="main" className="w-[400px]">
+              <TabsList>
+                <TabsTrigger value="main">Main</TabsTrigger>
+                <TabsTrigger value="roles">Roles</TabsTrigger>
+              </TabsList>
+              <TabsContent value="main">
+                <UserMainForm />
+              </TabsContent>
+              <TabsContent value="roles">
+                <UserRolesForm />
+              </TabsContent>
+            </Tabs>
+          </form>
+        </FormProvider>
 
         <SheetFooter>
           <Button type="submit" form={formId} disabled={isLoading}>

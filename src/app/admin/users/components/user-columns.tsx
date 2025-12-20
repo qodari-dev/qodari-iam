@@ -1,13 +1,12 @@
 'use client';
 
+import { DataTableColumnHeader } from '@/components/data-table';
+import { Badge } from '@/components/ui/badge';
+import { User, UserStatus } from '@/schemas/user';
 import type { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { CheckCircle, XCircle, Clock, ShieldCheck, User as UserIcon } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { DataTableColumnHeader } from '@/components/data-table';
+import { CheckCircle, Clock, ShieldCheck, User as UserIcon, XCircle } from 'lucide-react';
 import { UserRowActions } from './user-row-actions';
-import { User, UserStatus } from '@/schemas/user';
 
 // ============================================================================
 // Status Badge Component
@@ -105,43 +104,13 @@ function RolesBadges({ roles }: { roles?: User['userRoles'] }) {
 // ============================================================================
 
 export const userColumns: ColumnDef<User>[] = [
-  // Selection Column
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="translate-y-0.5"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-0.5"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-
-  // Email + Name Column (combined for better display)
   {
     accessorKey: 'email',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
     cell: ({ row }) => {
-      const { email, firstName, lastName } = row.original;
-      const fullName = [firstName, lastName].filter(Boolean).join(' ');
-
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{email}</span>
-          {fullName && <span className="text-muted-foreground text-sm">{fullName}</span>}
+          <span className="font-medium">{row.original.email}</span>
         </div>
       );
     },

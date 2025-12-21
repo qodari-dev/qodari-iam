@@ -1,10 +1,10 @@
 import { db } from '@/server/db';
-import { USER_SENSITIVE_FIELDS, users, UserSensitiveField } from '@/server/db/schema';
+import { USER_SENSITIVE_FIELDS, userRoles, users, UserSensitiveField } from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
 import { hashPassword } from '@/server/utils/password';
 import { requireAdminPermission } from '@/server/utils/require-permission';
 import { tsr } from '@ts-rest/serverless/next';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, notInArray, sql } from 'drizzle-orm';
 import { contract } from '../contracts';
 
 import {
@@ -184,6 +184,15 @@ export const user = tsr.router(contract.user, {
   // ==========================================
   create: async ({ body }, { request, appRoute }) => {
     try {
+      const session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
+      const { roles, ...data } = body;
       await requireAdminPermission(request, appRoute.metadata);
 
       const existing = await db.query.users.findFirst({
@@ -198,16 +207,28 @@ export const user = tsr.router(contract.user, {
         });
       }
 
-      const passwordHash = await hashPassword(body.password);
+      const passwordHash = await hashPassword(data.password);
 
-      const [newUser] = await db
-        .insert(users)
-        .values({
-          ...body,
-          email: body.email.toLowerCase(),
-          passwordHash,
-        })
-        .returning();
+      const newUser = await db.transaction(async (tx) => {
+        const [newUser] = await tx
+          .insert(users)
+          .values({
+            ...data,
+            email: data.email.toLowerCase(),
+            passwordHash,
+          })
+          .returning();
+        if (roles && roles.length > 0) {
+          await tx.insert(userRoles).values(
+            roles.map(({ roleId }) => ({
+              userId: newUser.id,
+              roleId,
+              accountId: session.currentAccountId,
+            }))
+          );
+        }
+        return newUser;
+      });
 
       const {
         passwordHash: _,
@@ -229,7 +250,15 @@ export const user = tsr.router(contract.user, {
   // ==========================================
   update: async ({ params: { id }, body }, { request, appRoute }) => {
     try {
-      await requireAdminPermission(request, appRoute.metadata);
+      const session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
+      const { roles, ...data } = body;
 
       const existing = await db.query.users.findFirst({
         where: eq(users.id, id),
@@ -243,13 +272,26 @@ export const user = tsr.router(contract.user, {
         });
       }
 
-      const [updated] = await db
-        .update(users)
-        .set({
-          ...body,
-        })
-        .where(eq(users.id, id))
-        .returning();
+      const updated = await db.transaction(async (tx) => {
+        const [updated] = await db.update(users).set(data).where(eq(users.id, id)).returning();
+        if (roles && roles.length > 0) {
+          await tx
+            .insert(userRoles)
+            .values(
+              roles.map(({ roleId }) => ({
+                userId: id,
+                roleId,
+                accountId: session.currentAccountId,
+              }))
+            )
+            .onConflictDoNothing();
+        }
+        const rolesIds = roles?.map(({ roleId }) => roleId) ?? [];
+        await tx
+          .delete(userRoles)
+          .where(and(eq(userRoles.userId, id), notInArray(userRoles.roleId, rolesIds)));
+        return updated;
+      });
 
       const {
         passwordHash: _,

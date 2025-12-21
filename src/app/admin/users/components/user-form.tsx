@@ -35,6 +35,16 @@ export function UserForm({
 
   const form = useForm<FormValues>({
     resolver: zodResolver(CreateUserBodySchema),
+    defaultValues: {
+      email: '',
+      firstName: '',
+      lastName: '',
+      phone: '',
+      status: 'pending_verification',
+      isAdmin: false,
+      roles: [],
+      password: '',
+    },
   });
 
   useEffect(() => {
@@ -71,7 +81,7 @@ export function UserForm({
 
   return (
     <Sheet open={opened} onOpenChange={onOpened}>
-      <SheetContent>
+      <SheetContent className="sm:max-w-lg">
         <SheetHeader>
           <SheetTitle>User</SheetTitle>
           <SheetDescription>
@@ -79,9 +89,9 @@ export function UserForm({
           </SheetDescription>
         </SheetHeader>
         <FormProvider {...form}>
-          <form id={formId} onSubmit={form.handleSubmit(onSubmit, onSubmitError)}>
-            <Tabs defaultValue="main" className="w-[400px]">
-              <TabsList>
+          <form id={formId} onSubmit={form.handleSubmit(onSubmit, onSubmitError)} className="px-4">
+            <Tabs defaultValue="main" className="">
+              <TabsList className="mb-4 w-full">
                 <TabsTrigger value="main">Main</TabsTrigger>
                 <TabsTrigger value="roles">Roles</TabsTrigger>
               </TabsList>

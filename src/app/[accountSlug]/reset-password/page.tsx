@@ -2,7 +2,10 @@ import { Spinner } from '@/components/ui/spinner';
 import { Suspense } from 'react';
 import ResetPassword from './reset-password';
 
-export default function ResetPasswordPage() {
+export default async function ResetPasswordPage({
+  params,
+}: PageProps<'/[accountSlug]/reset-password'>) {
+  const { accountSlug } = await params;
   return (
     <Suspense
       fallback={
@@ -11,7 +14,7 @@ export default function ResetPasswordPage() {
         </div>
       }
     >
-      <ResetPassword />
+      <ResetPassword accountSlug={accountSlug} />
     </Suspense>
   );
 }

@@ -97,7 +97,6 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
   }),
   subscriptions: many(subscriptions),
   applications: many(applications),
-  accountMembers: many(accountMembers),
   userRoles: many(userRoles),
   roles: many(roles),
   permissions: many(permissions),
@@ -110,7 +109,6 @@ export type Account = typeof accounts.$inferSelect & {
   plan?: Plan;
   subscriptions?: Subscription[];
   applications?: Application[];
-  accountMembers?: AccountMember[];
   userRoles?: UserRole[];
   roles?: Role[];
   permissions?: Permission[];
@@ -169,37 +167,46 @@ export type NewSubscription = typeof subscriptions.$inferInsert;
 
 // ---------- users ----------
 
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  email: varchar('email', { length: 255 }).notNull().unique(),
-  firstName: varchar('first_name', { length: 45 }).notNull(),
-  lastName: varchar('last_name', { length: 45 }).notNull(),
-  passwordHash: varchar('password_hash', { length: 255 }).notNull(),
-  phone: varchar('phone', { length: 45 }),
-  avatar: text('avatar'),
-  status: userStatusEnum('status').notNull().default('pending_verification'),
-  lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
-  lastLoginIp: varchar('last_login_ip', { length: 45 }),
-  failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
-  lockedUntil: timestamp('locked_until', { withTimezone: true }),
-  isAdmin: boolean('is_admin').notNull().default(false),
-  emailVerificationToken: varchar('email_verification_token', { length: 255 }),
-  emailVerificationExpires: timestamp('email_verification_expires', {
-    withTimezone: true,
-  }),
-  passwordResetToken: varchar('password_reset_token', { length: 255 }),
-  passwordResetExpires: timestamp('password_reset_expires', {
-    withTimezone: true,
-  }),
-  ...timestamps,
-});
+export const users = pgTable(
+  'users',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    accountId: uuid('account_id')
+      .notNull()
+      .references(() => accounts.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+    email: varchar('email', { length: 255 }).notNull(),
+    firstName: varchar('first_name', { length: 45 }).notNull(),
+    lastName: varchar('last_name', { length: 45 }).notNull(),
+    passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+    phone: varchar('phone', { length: 45 }),
+    avatar: text('avatar'),
+    status: userStatusEnum('status').notNull().default('pending_verification'),
+    lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
+    lastLoginIp: varchar('last_login_ip', { length: 45 }),
+    failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+    isAdmin: boolean('is_admin').notNull().default(false),
+    emailVerificationToken: varchar('email_verification_token', { length: 255 }),
+    emailVerificationExpires: timestamp('email_verification_expires', {
+      withTimezone: true,
+    }),
+    passwordResetToken: varchar('password_reset_token', { length: 255 }),
+    passwordResetExpires: timestamp('password_reset_expires', {
+      withTimezone: true,
+    }),
+    ...timestamps,
+  },
+  (table) => [uniqueIndex('user_account_idx').on(table.accountId, table.email)]
+);
 
 export const usersRelations = relations(users, ({ many }) => ({
   userRoles: many(userRoles),
   authorizationCodes: many(authorizationCodes),
   refreshTokens: many(refreshTokens),
   sessions: many(sessions),
-  accountMembers: many(accountMembers),
   auditLogs: many(auditLogs),
 }));
 
@@ -214,7 +221,6 @@ export type UserSensitiveField = (typeof USER_SENSITIVE_FIELDS)[number];
 export type SafeUser = Omit<typeof users.$inferSelect, UserSensitiveField> & {
   userRoles?: UserRole[];
   sessions?: Session[];
-  accountMembers?: AccountMember[];
   auditLogs?: AuditLog[];
 };
 
@@ -223,7 +229,6 @@ export type User = typeof users.$inferSelect & {
   authorizationCodes?: AuthorizationCode[];
   refreshTokens?: RefreshToken[];
   sessions?: Session[];
-  accountMembers?: AccountMember[];
   auditLogs?: AuditLog[];
 };
 export type NewUser = typeof users.$inferInsert;
@@ -306,7 +311,6 @@ export const roles = pgTable(
     name: varchar('name', { length: 45 }).notNull(),
     slug: varchar('slug', { length: 45 }).notNull(),
     description: text('description'),
-    isSystem: boolean('is_system').notNull().default(false),
     ...timestamps,
   },
   (table) => [
@@ -453,19 +457,12 @@ export const userRoles = pgTable(
         onDelete: 'cascade',
         onUpdate: 'cascade',
       }),
-    accountId: uuid('account_id')
-      .notNull()
-      .references(() => accounts.id, {
-        onDelete: 'cascade',
-        onUpdate: 'cascade',
-      }),
     ...timestamps,
   },
   (table) => [
-    primaryKey({ columns: [table.userId, table.roleId, table.accountId] }),
+    primaryKey({ columns: [table.userId, table.roleId] }),
     index('fk_user_roles_users1_idx').on(table.userId),
     index('fk_user_roles_roles1_idx').on(table.roleId),
-    index('fk_user_roles_accounts1_idx').on(table.accountId),
   ]
 );
 
@@ -477,10 +474,6 @@ export const userRolesRelations = relations(userRoles, ({ one }) => ({
   role: one(roles, {
     fields: [userRoles.roleId],
     references: [roles.id],
-  }),
-  account: one(accounts, {
-    fields: [userRoles.accountId],
-    references: [accounts.id],
   }),
 }));
 
@@ -658,50 +651,6 @@ export type Session = typeof sessions.$inferSelect & {
   user?: User;
 };
 export type NewSession = typeof sessions.$inferInsert;
-
-// ---------- account_members ----------
-
-export const accountMembers = pgTable(
-  'account_members',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    accountId: uuid('account_id')
-      .notNull()
-      .references(() => accounts.id, {
-        onDelete: 'cascade',
-        onUpdate: 'cascade',
-      }),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, {
-        onDelete: 'cascade',
-        onUpdate: 'cascade',
-      }),
-    ...timestamps,
-  },
-  (table) => [
-    index('fk_account_members_accounts1_idx').on(table.accountId),
-    index('fk_account_members_users1_idx').on(table.userId),
-    uniqueIndex('account_members_account_user_uniq').on(table.accountId, table.userId),
-  ]
-);
-
-export const accountMembersRelations = relations(accountMembers, ({ one }) => ({
-  account: one(accounts, {
-    fields: [accountMembers.accountId],
-    references: [accounts.id],
-  }),
-  user: one(users, {
-    fields: [accountMembers.userId],
-    references: [users.id],
-  }),
-}));
-
-export type AccountMember = typeof accountMembers.$inferSelect & {
-  account?: Account;
-  user?: User;
-};
-export type NewAccountMember = typeof accountMembers.$inferInsert;
 
 export const auditLogs = pgTable(
   'audit_logs',

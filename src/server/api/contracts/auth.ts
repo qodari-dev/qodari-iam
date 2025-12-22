@@ -37,7 +37,6 @@ export const auth = c.router(
       summary: 'Get current authenticated user + account context',
       query: z
         .object({
-          accountId: z.string().uuid().optional(),
           appSlug: z.string().optional(),
         })
         .optional(),

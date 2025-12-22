@@ -1,14 +1,12 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
 
 import { api } from '@/clients/api';
-import { ResetPasswordBodySchema } from '@/schemas/auth';
+import { ForgotPasswordBodySchema } from '@/schemas/auth';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
@@ -20,61 +18,37 @@ import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-type ResetFormValues = z.infer<typeof ResetPasswordBodySchema>;
+type ForgotFormValues = z.infer<typeof ForgotPasswordBodySchema>;
 
-export default function ResetPassword() {
-  const searchParams = useSearchParams();
-  const tokenFromUrl = searchParams.get('token') ?? '';
-  const router = useRouter();
-
-  const form = useForm<ResetFormValues>({
-    resolver: zodResolver(ResetPasswordBodySchema),
+export default function ForgetPassword({ accountSlug }: { accountSlug: string }) {
+  const form = useForm<ForgotFormValues>({
+    resolver: zodResolver(ForgotPasswordBodySchema),
     defaultValues: {
-      token: tokenFromUrl,
-      password: '',
+      accountSlug,
+      email: '',
     },
   });
 
-  const { mutateAsync: resetPassword, isPending } = api.auth.resetPassword.useMutation({
+  const { mutateAsync: forgotPassword, isPending } = api.auth.forgotPassword.useMutation({
     onError(error) {
       toast.error('Error', { description: getTsRestErrorMessage(error) });
     },
     onSuccess(data) {
-      toast.success('Contraseña actualizada', {
+      toast.success('Solicitud enviada', {
         description: data.body.message,
       });
-      router.push('/auth/login');
     },
   });
 
   const onSubmit = useCallback(
-    async (values: ResetFormValues) => {
-      await resetPassword({
+    async (values: ForgotFormValues) => {
+      await forgotPassword({
         body: values,
       });
+      form.reset();
     },
-    [resetPassword]
+    [forgotPassword, form]
   );
-
-  if (!tokenFromUrl) {
-    return (
-      <div className="bg-background flex min-h-screen items-center justify-center px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Enlace inválido</CardTitle>
-            <CardDescription>
-              El enlace para restablecer la contraseña no es válido o está incompleto.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/auth/forgot-password">Solicitar un nuevo enlace</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
@@ -98,32 +72,32 @@ export default function ResetPassword() {
               </div>
               <FieldGroup>
                 <Controller
-                  name="password"
+                  name="email"
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="reset-password">Nueva contraseña</FieldLabel>
+                      <FieldLabel htmlFor="login-email">Email</FieldLabel>
                       <Input
                         {...field}
-                        id="reset-password"
-                        type="password"
-                        autoComplete="new-password"
+                        type="email"
+                        autoComplete="email"
                         aria-invalid={fieldState.invalid}
-                        placeholder="••••••••"
+                        placeholder="tu@email.com"
                       />
                       {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
               </FieldGroup>
+
               <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending ? (
                   <div className="flex items-center justify-center gap-2">
                     <Spinner className="h-4 w-4" />
-                    <span>Loading...</span>
+                    <span>Login...</span>
                   </div>
                 ) : (
-                  'Save New Password'
+                  'Forget Password'
                 )}
               </Button>
 

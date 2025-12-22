@@ -39,22 +39,22 @@ export const zApplication: z.ZodType<PublicApplication> = z.object({
 });
 
 export const LoginBodySchema = z.object({
+  accountSlug: z.string(),
+  appSlug: z.string(),
   email: z.string().email(),
   password: z.string().min(8),
 });
 
 export const LoginResponseSchema = z.object({
   user: zUser,
-  accounts: z.array(zAccount),
-  currentAccountId: z.string().uuid(),
+  accountId: z.string().uuid(),
 });
 
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 
 export const MeResponseSchema = z.object({
   user: zUser,
-  accounts: z.array(zAccount),
-  currentAccountId: z.string().uuid(),
+  accountId: z.string().uuid(),
   roles: z.array(z.string()).optional(),
   permissions: z.array(z.string()).optional(),
   applications: z.array(zApplication).optional(),
@@ -89,6 +89,7 @@ export type OauthTokenResponse = z.infer<typeof OauthTokenResponseSchema>;
 
 // ---------- Forgot / Reset password ----------
 export const ForgotPasswordBodySchema = z.object({
+  accountSlug: z.string(),
   email: z.string().email(),
 });
 
@@ -101,6 +102,7 @@ export const ForgotPasswordResponseSchema = z.object({
 export type ForgotPasswordResponse = z.infer<typeof ForgotPasswordResponseSchema>;
 
 export const ResetPasswordBodySchema = z.object({
+  accountSlug: z.string(),
   token: z.string().min(10), // el token UUID/base64 suele ser largo
   password: z.string().min(8),
 });

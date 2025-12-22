@@ -21,13 +21,15 @@ import { z } from 'zod';
 
 type LoginFormValues = z.infer<typeof LoginBodySchema>;
 
-export default function Login() {
+export default function Login({ accountSlug, appSlug }: { accountSlug: string; appSlug: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(LoginBodySchema),
     defaultValues: {
+      accountSlug,
+      appSlug,
       email: '',
       password: '',
     },
@@ -35,7 +37,6 @@ export default function Login() {
 
   const { mutateAsync: login, isPending } = api.auth.login.useMutation({
     onError(error) {
-      console.log(error);
       toast.error('Error', { description: getTsRestErrorMessage(error) });
     },
   });

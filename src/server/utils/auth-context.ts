@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { and, eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/server/db';
-import { accountMembers, applications, userRoles, users, type Session } from '@/server/db/schema';
+import { applications, userRoles, users, type Session } from '@/server/db/schema';
 import { getSessionFromRequest } from '@/server/utils/session';
 import type { MeResponse } from '@/schemas/auth';
 import { getUserRolesAndPermissions } from './get-user-roles-and-permissions';
@@ -10,7 +10,6 @@ import { throwHttpError } from './generic-ts-rest-error';
 import { TsRestRequest } from '@ts-rest/serverless/next';
 
 type AuthContextOptions = {
-  accountIdOverride?: string;
   appSlug?: string;
 };
 
@@ -43,35 +42,8 @@ export async function getAuthContextFromRequest(
     });
   }
 
-  const memberships = await db.query.accountMembers.findMany({
-    where: eq(accountMembers.userId, user.id),
-    with: { account: true },
-  });
-
-  const accountsList = memberships.map((m) => ({
-    id: m.account.id,
-    name: m.account.name,
-    slug: m.account.slug,
-    status: m.account.status,
-  }));
-
-  if (accountsList.length === 0) {
-    throwHttpError({
-      status: 400,
-      message: 'User has no associated accounts',
-      code: 'NO_ACCOUNTS',
-    });
-  }
-
   // 1) Determinar cuenta actual
-  let currentAccountId = session.accountId ?? accountsList[0].id;
-
-  if (options?.accountIdOverride) {
-    const match = accountsList.find((a) => a.id === options.accountIdOverride);
-    if (match) {
-      currentAccountId = match.id;
-    }
-  }
+  const currentAccountId = session.accountId;
 
   // 2) Determinar aplicaciones visibles para ese usuario en esa cuenta
   const applicationSelect = {
@@ -124,7 +96,6 @@ export async function getAuthContextFromRequest(
     if (app) {
       const r = await getUserRolesAndPermissions({
         userId: user.id,
-        accountId: currentAccountId,
         applicationId: app.id,
       });
 
@@ -144,8 +115,7 @@ export async function getAuthContextFromRequest(
       isAdmin: user.isAdmin,
       status: user.status,
     },
-    accounts: accountsList,
-    currentAccountId,
+    accountId: currentAccountId,
     applications: apps,
     roles,
     permissions,

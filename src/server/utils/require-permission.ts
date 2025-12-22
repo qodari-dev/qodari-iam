@@ -8,14 +8,13 @@ import { TsRestRequest } from '@ts-rest/serverless/next';
 async function requirePermission(
   request: NextRequest | TsRestRequest,
   metadata: TsRestMetaData,
-  opts?: { appSlug?: string; accountIdOverride?: string }
+  opts?: { appSlug?: string }
 ) {
   if (metadata.auth === 'public') {
     return;
   }
   const ctx = await getAuthContextFromRequest(request, {
     appSlug: opts?.appSlug,
-    accountIdOverride: opts?.accountIdOverride,
   });
 
   if (!metadata.permissionKey || ctx.user.isAdmin) {

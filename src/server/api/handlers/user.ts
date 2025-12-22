@@ -58,16 +58,6 @@ const USER_INCLUDES = createIncludeMap<typeof db.query.users>()({
       },
     },
   },
-  accounts: {
-    relation: 'accountMembers',
-    config: {
-      with: {
-        account: {
-          columns: selectCols<typeof db.query.accounts>()('id', 'name', 'slug', 'status'),
-        },
-      },
-    },
-  },
   sessions: {
     relation: 'sessions',
     config: {
@@ -215,6 +205,7 @@ export const user = tsr.router(contract.user, {
           .values({
             ...data,
             email: data.email.toLowerCase(),
+            accountId: session.accountId,
             passwordHash,
           })
           .returning();
@@ -223,7 +214,6 @@ export const user = tsr.router(contract.user, {
             roles.map(({ roleId }) => ({
               userId: newUser.id,
               roleId,
-              accountId: session.currentAccountId,
             }))
           );
         }
@@ -281,7 +271,6 @@ export const user = tsr.router(contract.user, {
               roles.map(({ roleId }) => ({
                 userId: id,
                 roleId,
-                accountId: session.currentAccountId,
               }))
             )
             .onConflictDoNothing();

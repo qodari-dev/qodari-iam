@@ -146,7 +146,7 @@ export const role = tsr.router(contract.role, {
 
       const [newRole] = await db
         .insert(roles)
-        .values({ ...body, accountId: session?.currentAccountId })
+        .values({ ...body, accountId: session?.accountId })
         .returning();
 
       return { status: 201, body: newRole };

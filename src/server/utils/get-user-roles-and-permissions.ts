@@ -1,16 +1,12 @@
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import { userRoles } from '../db/schema';
 
-export async function getUserRolesAndPermissions(opts: {
-  userId: string;
-  accountId: string;
-  applicationId: string;
-}) {
-  const { userId, accountId, applicationId } = opts;
+export async function getUserRolesAndPermissions(opts: { userId: string; applicationId: string }) {
+  const { userId, applicationId } = opts;
 
   const userRolesForAccount = await db.query.userRoles.findMany({
-    where: and(eq(userRoles.userId, userId), eq(userRoles.accountId, accountId)),
+    where: eq(userRoles.userId, userId),
     with: {
       role: {
         with: {

@@ -2,7 +2,8 @@ import { Suspense } from 'react';
 import Login from './login';
 import { Spinner } from '@/components/ui/spinner';
 
-export default function LoginPage() {
+export default async function LoginPage({ params }: PageProps<'/[accountSlug]/[appSlug]/login'>) {
+  const { accountSlug, appSlug } = await params;
   return (
     <Suspense
       fallback={
@@ -11,7 +12,7 @@ export default function LoginPage() {
         </div>
       }
     >
-      <Login />
+      <Login accountSlug={accountSlug} appSlug={appSlug} />
     </Suspense>
   );
 }

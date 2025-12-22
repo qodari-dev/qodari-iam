@@ -67,7 +67,7 @@ const USER_SORT_FIELDS = [
 // INCLUDE
 // ============================================
 
-const USER_INCLUDE_OPTIONS = ['roles', 'accounts', 'sessions', 'auditLogs'] as const;
+const USER_INCLUDE_OPTIONS = ['roles', 'sessions', 'auditLogs'] as const;
 const UserIncludeSchema = createIncludeSchema(USER_INCLUDE_OPTIONS);
 
 // ============================================

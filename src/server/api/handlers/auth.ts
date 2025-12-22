@@ -9,7 +9,7 @@ import {
 } from '@/schemas/auth';
 import { db } from '@/server/db';
 import {
-  accountMembers,
+  accounts,
   Application,
   applications,
   authorizationCodes,
@@ -54,7 +54,7 @@ export const auth = tsr.router(contract.auth, {
   // --------------------------------------
   login: async ({ body }, { request, nextRequest }) => {
     try {
-      const { email, password } = body;
+      const { email, password, appSlug, accountSlug } = body;
 
       // ----- RATE LIMIT por IP + email -----
       const ip = getClientIp(nextRequest);
@@ -92,8 +92,38 @@ export const auth = tsr.router(contract.auth, {
         };
       }
 
+      const account = await db.query.accounts.findFirst({
+        where: and(eq(accounts.slug, accountSlug), eq(accounts.status, 'active')),
+      });
+
+      if (!account) {
+        return {
+          status: 401,
+          body: { message: `Invalid account` },
+        };
+      }
+
+      const application = await db.query.applications.findFirst({
+        where: and(
+          eq(applications.accountId, account.id),
+          eq(applications.slug, appSlug),
+          eq(applications.status, 'active')
+        ),
+      });
+
+      if (!application) {
+        return {
+          status: 401,
+          body: { message: `Invalid application` },
+        };
+      }
+
       const user = await db.query.users.findFirst({
-        where: eq(users.email, email),
+        where: and(
+          eq(users.accountId, account.id),
+          eq(users.email, email),
+          eq(users.status, 'active')
+        ),
       });
 
       if (!user) {
@@ -111,28 +141,7 @@ export const auth = tsr.router(contract.auth, {
         };
       }
 
-      const memberships = await db.query.accountMembers.findMany({
-        where: eq(accountMembers.userId, user.id),
-        with: {
-          account: true,
-        },
-      });
-
-      const accountsList = memberships.map((m) => ({
-        id: m.account.id,
-        name: m.account.name,
-        slug: m.account.slug,
-        status: m.account.status,
-      }));
-
-      if (accountsList.length === 0) {
-        return {
-          status: 400,
-          body: { message: 'User has no associated accounts' },
-        };
-      }
-
-      const currentAccountId = accountsList[0]?.id;
+      const currentAccountId = user.accountId;
 
       const response: LoginResponse = {
         user: {
@@ -144,8 +153,7 @@ export const auth = tsr.router(contract.auth, {
           isAdmin: user.isAdmin,
           status: user.status,
         },
-        accounts: accountsList,
-        currentAccountId,
+        accountId: currentAccountId,
       };
 
       await createSession({
@@ -171,7 +179,6 @@ export const auth = tsr.router(contract.auth, {
   me: async ({ query }, { request }) => {
     try {
       const ctx = await getAuthContextFromRequest(request, {
-        accountIdOverride: query?.accountId,
         appSlug: query?.appSlug,
       });
       const { session: _, ...body } = ctx;
@@ -340,7 +347,6 @@ export const auth = tsr.router(contract.auth, {
         // 6) Access token
         const { roles, permissions } = await getUserRolesAndPermissions({
           userId: authCode.userId,
-          accountId: authCode.accountId,
           applicationId: authCode.applicationId,
         });
         const accessToken = await signAccessToken({
@@ -479,7 +485,6 @@ export const auth = tsr.router(contract.auth, {
         // 5) nuevo access token
         const { roles, permissions } = await getUserRolesAndPermissions({
           userId: existingRefresh.userId,
-          accountId: existingRefresh.accountId,
           applicationId: existingRefresh.applicationId,
         });
         const accessToken = await signAccessToken({
@@ -519,7 +524,7 @@ export const auth = tsr.router(contract.auth, {
   },
   forgotPassword: async ({ body }, { nextRequest }) => {
     try {
-      const { email } = body;
+      const { email, accountSlug } = body;
 
       // ----- RATE LIMIT por IP + email -----
       const ip = getClientIp(nextRequest);
@@ -557,8 +562,26 @@ export const auth = tsr.router(contract.auth, {
         };
       }
 
+      const account = await db.query.accounts.findFirst({
+        where: and(eq(accounts.slug, accountSlug), eq(accounts.status, 'active')),
+      });
+
+      if (!account) {
+        return {
+          status: 200,
+          body: {
+            message:
+              'If an account with that email exists, we have sent instructions to reset your password.',
+          } satisfies ForgotPasswordResponse,
+        };
+      }
+
       const user = await db.query.users.findFirst({
-        where: eq(users.email, email),
+        where: and(
+          eq(users.accountId, account.id),
+          eq(users.email, email),
+          eq(users.status, 'active')
+        ),
       });
 
       if (!user) {
@@ -636,13 +659,31 @@ export const auth = tsr.router(contract.auth, {
           },
         };
       }
-      const { token, password } = body;
+      const { token, password, accountSlug } = body;
+
+      const account = await db.query.accounts.findFirst({
+        where: and(eq(accounts.slug, accountSlug), eq(accounts.status, 'active')),
+      });
+
+      if (!account) {
+        return {
+          status: 400,
+          body: {
+            message: 'Invalid Account',
+            code: 'INVALID_ACCOUNT',
+          },
+        };
+      }
 
       const tokenHash = await hashToken(token);
       const now = new Date();
 
       const user = await db.query.users.findFirst({
-        where: and(eq(users.passwordResetToken, tokenHash), gt(users.passwordResetExpires, now)),
+        where: and(
+          eq(users.accountId, account.id),
+          eq(users.passwordResetToken, tokenHash),
+          gt(users.passwordResetExpires, now)
+        ),
       });
 
       if (!user || !user.passwordResetExpires || user.passwordResetExpires < now) {

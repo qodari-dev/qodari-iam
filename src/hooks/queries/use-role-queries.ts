@@ -14,14 +14,14 @@ export const rolesKeys = {
   detail: (id: string) => [...rolesKeys.details(), id] as const,
 };
 
-function defaultQuery(filters: Partial<ListRolesQuery>) {
+function defaultQuery(filters?: Partial<ListRolesQuery>) {
   const query = {
-    page: filters.page ?? 1,
-    limit: filters.limit ?? 20,
-    include: filters.include ?? ['application'],
-    sort: filters.sort ?? [],
-    where: filters.where,
-    search: filters.search,
+    page: filters?.page ?? 1,
+    limit: filters?.limit ?? 20,
+    include: filters?.include ?? ['application', 'permissions'],
+    sort: filters?.sort ?? [{ field: 'createdAt', order: 'desc' }],
+    where: filters?.where,
+    search: filters?.search,
   } as ListRolesQuery;
   return query;
 }
@@ -35,10 +35,13 @@ export function useRoles(filters: Partial<ListRolesQuery> = {}) {
   });
 }
 
-export function useRole(id: string, options?: { enabled?: boolean }) {
+export function useRole(
+  id: string,
+  options?: Pick<ListRolesQuery, 'include'> & { enabled?: boolean }
+) {
   return api.role.getById.useQuery({
     queryKey: rolesKeys.detail(id),
-    queryData: { params: { id } },
+    queryData: { params: { id }, query: { include: options?.include ?? defaultQuery().include } },
     enabled: options?.enabled ?? !!id,
   });
 }

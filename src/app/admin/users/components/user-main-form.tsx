@@ -10,7 +10,7 @@ type FormValues = z.infer<typeof CreateUserBodySchema>;
 export function UserMainForm() {
   const form = useFormContext<FormValues>();
   return (
-    <FieldGroup className="px-4">
+    <FieldGroup className="">
       <Controller
         name="email"
         control={form.control}

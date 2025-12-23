@@ -1,12 +1,16 @@
 import { db } from '@/server/db';
-import { roles } from '@/server/db/schema';
+import { applications, permissions, rolePermissions, roles } from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
 import { requireAdminPermission } from '@/server/utils/require-permission';
 import { tsr } from '@ts-rest/serverless/next';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { contract } from '../contracts';
 
-import { buildTypedIncludes, createIncludeMap } from '@/server/utils/query/include-builder';
+import {
+  buildTypedIncludes,
+  createIncludeMap,
+  selectCols,
+} from '@/server/utils/query/include-builder';
 import {
   buildPaginationMeta,
   buildQuery,
@@ -42,6 +46,22 @@ const ROLE_INCLUDES = createIncludeMap<typeof db.query.roles>()({
     relation: 'application',
     config: {},
   },
+  permissions: {
+    relation: 'rolePermissions',
+    config: {
+      with: {
+        permission: {
+          columns: selectCols<typeof db.query.permissions>()(
+            'id',
+            'name',
+            'resource',
+            'action',
+            'description'
+          ),
+        },
+      },
+    },
+  },
 });
 
 // ============================================
@@ -54,7 +74,14 @@ export const role = tsr.router(contract.role, {
   // ==========================================
   list: async ({ query }, { request, appRoute }) => {
     try {
-      await requireAdminPermission(request, appRoute.metadata);
+      const session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
 
       const { page, limit, search, where, sort, include } = query;
 
@@ -65,9 +92,13 @@ export const role = tsr.router(contract.role, {
         offset,
       } = buildQuery({ page, limit, search, where, sort }, ROLE_QUERY_CONFIG);
 
+      const whereWithAccount = whereClause
+        ? and(whereClause, eq(roles.accountId, session.accountId))
+        : eq(roles.accountId, session.accountId);
+
       const [data, countResult] = await Promise.all([
         db.query.roles.findMany({
-          where: whereClause,
+          where: whereWithAccount,
           with: buildTypedIncludes(include, ROLE_INCLUDES),
           orderBy: orderBy.length ? orderBy : undefined,
           limit: queryLimit,
@@ -76,7 +107,7 @@ export const role = tsr.router(contract.role, {
         db
           .select({ count: sql<number>`count(*)::int` })
           .from(roles)
-          .where(whereClause),
+          .where(whereWithAccount),
       ]);
 
       return {
@@ -96,10 +127,17 @@ export const role = tsr.router(contract.role, {
   // ==========================================
   getById: async ({ params: { id }, query }, { request, appRoute }) => {
     try {
-      await requireAdminPermission(request, appRoute.metadata);
+      const session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
 
       const role = await db.query.roles.findFirst({
-        where: eq(roles.id, id),
+        where: and(eq(roles.id, id), eq(roles.accountId, session.accountId)),
         with: buildTypedIncludes(query?.include, ROLE_INCLUDES),
       });
 
@@ -133,7 +171,7 @@ export const role = tsr.router(contract.role, {
       }
 
       const existing = await db.query.roles.findFirst({
-        where: eq(roles.slug, body.slug.toLowerCase()),
+        where: and(eq(roles.accountId, session.accountId), eq(roles.slug, body.slug.toLowerCase())),
       });
 
       if (existing) {
@@ -144,10 +182,59 @@ export const role = tsr.router(contract.role, {
         });
       }
 
-      const [newRole] = await db
-        .insert(roles)
-        .values({ ...body, accountId: session?.accountId })
-        .returning();
+      const [newRole] = await db.transaction(async (tx) => {
+        const app = await tx.query.applications.findFirst({
+          where: and(
+            eq(applications.id, body.applicationId),
+            eq(applications.accountId, session.accountId)
+          ),
+        });
+        if (!app) {
+          throwHttpError({
+            status: 404,
+            message: 'Application not found for this account',
+            code: 'APP_NOT_FOUND',
+          });
+        }
+
+        const [roleInserted] = await tx
+          .insert(roles)
+          .values({ ...body, slug: body.slug.toLowerCase(), accountId: session.accountId })
+          .returning();
+
+        if (body.permissions?.length) {
+          const validPerms = await tx
+            .select({ id: permissions.id })
+            .from(permissions)
+            .where(
+              and(
+                eq(permissions.accountId, session.accountId),
+                eq(permissions.applicationId, body.applicationId),
+                inArray(
+                  permissions.id,
+                  body.permissions.map((p) => p.permissionId)
+                )
+              )
+            );
+
+          if (validPerms.length !== body.permissions.length) {
+            throwHttpError({
+              status: 400,
+              message: 'Algunos permisos no pertenecen a la aplicación o cuenta',
+              code: 'PERMISSIONS_INVALID',
+            });
+          }
+
+          await tx.insert(rolePermissions).values(
+            body.permissions.map((p) => ({
+              roleId: roleInserted.id,
+              permissionId: p.permissionId,
+            }))
+          );
+        }
+
+        return [roleInserted];
+      });
 
       return { status: 201, body: newRole };
     } catch (e) {
@@ -162,10 +249,17 @@ export const role = tsr.router(contract.role, {
   // ==========================================
   update: async ({ params: { id }, body }, { request, appRoute }) => {
     try {
-      await requireAdminPermission(request, appRoute.metadata);
+      const session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
 
       const existing = await db.query.roles.findFirst({
-        where: eq(roles.id, id),
+        where: and(eq(roles.id, id), eq(roles.accountId, session.accountId)),
       });
 
       if (!existing) {
@@ -176,13 +270,69 @@ export const role = tsr.router(contract.role, {
         });
       }
 
-      const [updated] = await db
-        .update(roles)
-        .set({
-          ...body,
-        })
-        .where(eq(roles.id, id))
-        .returning();
+      const [updated] = await db.transaction(async (tx) => {
+        if (body.applicationId) {
+          const app = await tx.query.applications.findFirst({
+            where: and(
+              eq(applications.id, body.applicationId),
+              eq(applications.accountId, session.accountId)
+            ),
+          });
+          if (!app) {
+            throwHttpError({
+              status: 404,
+              message: 'Application not found for this account',
+              code: 'APP_NOT_FOUND',
+            });
+          }
+        }
+
+        const [roleUpdated] = await tx
+          .update(roles)
+          .set({
+            ...body,
+            slug: body.slug ? body.slug.toLowerCase() : existing.slug,
+          })
+          .where(and(eq(roles.id, id), eq(roles.accountId, session.accountId)))
+          .returning();
+
+        if (body.permissions) {
+          await tx.delete(rolePermissions).where(eq(rolePermissions.roleId, id));
+
+          if (body.permissions.length) {
+            const validPerms = await tx
+              .select({ id: permissions.id })
+              .from(permissions)
+              .where(
+                and(
+                  eq(permissions.accountId, session.accountId),
+                  eq(permissions.applicationId, body.applicationId ?? roleUpdated.applicationId),
+                  inArray(
+                    permissions.id,
+                    body.permissions.map((p) => p.permissionId)
+                  )
+                )
+              );
+
+            if (validPerms.length !== body.permissions.length) {
+              throwHttpError({
+                status: 400,
+                message: 'Algunos permisos no pertenecen a la aplicación o cuenta',
+                code: 'PERMISSIONS_INVALID',
+              });
+            }
+
+            await tx.insert(rolePermissions).values(
+              body.permissions.map((p) => ({
+                roleId: roleUpdated.id,
+                permissionId: p.permissionId,
+              }))
+            );
+          }
+        }
+
+        return [roleUpdated];
+      });
 
       return { status: 200, body: updated };
     } catch (e) {
@@ -197,10 +347,17 @@ export const role = tsr.router(contract.role, {
   // ==========================================
   delete: async ({ params: { id } }, { request, appRoute }) => {
     try {
-      await requireAdminPermission(request, appRoute.metadata);
+      const session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
 
       const existing = await db.query.roles.findFirst({
-        where: eq(roles.id, id),
+        where: and(eq(roles.id, id), eq(roles.accountId, session.accountId)),
       });
 
       if (!existing) {

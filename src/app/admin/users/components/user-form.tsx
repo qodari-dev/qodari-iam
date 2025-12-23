@@ -90,7 +90,7 @@ export function UserForm({
         </SheetHeader>
         <FormProvider {...form}>
           <form id={formId} onSubmit={form.handleSubmit(onSubmit, onSubmitError)} className="px-4">
-            <Tabs defaultValue="main" className="">
+            <Tabs defaultValue="main" className="w-full">
               <TabsList className="mb-4 w-full">
                 <TabsTrigger value="main">Main</TabsTrigger>
                 <TabsTrigger value="roles">Roles</TabsTrigger>

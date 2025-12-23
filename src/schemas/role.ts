@@ -20,7 +20,7 @@ import { z } from 'zod';
 const RoleWhereFieldsSchema = z
   .object({
     id: z.union([z.string().uuid(), UUIDOperatorsSchema]).optional(),
-    applicationId: z.union([z.string().email(), UUIDOperatorsSchema]).optional(),
+    applicationId: z.union([z.string().uuid(), UUIDOperatorsSchema]).optional(),
     name: z.union([z.string().min(1), StringOperatorsSchema]).optional(),
     slug: z.union([z.string().min(1), StringOperatorsSchema]).optional(),
     description: z.union([z.string().min(1), StringOperatorsSchema]).optional(),
@@ -47,7 +47,7 @@ const ROLE_SORT_FIELDS = [
 // INCLUDE
 // ============================================
 
-const ROLE_INCLUDE_OPTIONS = ['application'] as const;
+const ROLE_INCLUDE_OPTIONS = ['application', 'permissions'] as const;
 const RoleIncludeSchema = createIncludeSchema(ROLE_INCLUDE_OPTIONS);
 
 // ============================================
@@ -66,10 +66,17 @@ export const ListRolesQuerySchema = createListQuerySchema({
 // ============================================
 
 export const CreateRoleBodySchema = z.object({
-  name: z.string(),
-  slug: z.string(),
-  applicationId: z.string(),
-  description: z.string(),
+  name: z.string().min(1),
+  slug: z.string().min(1),
+  applicationId: z.string().uuid(),
+  description: z.string().max(500).optional(),
+  permissions: z
+    .array(
+      z.object({
+        permissionId: z.string().uuid(),
+      })
+    )
+    .optional(),
 });
 
 export const UpdateRoleBodySchema = CreateRoleBodySchema.partial();

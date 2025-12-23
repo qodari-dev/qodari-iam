@@ -7,6 +7,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { CheckCircle, Clock, ShieldCheck, User as UserIcon, XCircle } from 'lucide-react';
 import { UserRowActions } from './user-row-actions';
+import { formatDate } from '@/utils/formatters';
 
 // ============================================================================
 // Status Badge Component
@@ -165,11 +166,9 @@ export const userColumns: ColumnDef<User>[] = [
     accessorKey: 'createdAt',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
     cell: ({ row }) => {
-      const date = row.getValue('createdAt') as string;
       return (
         <div className="flex flex-col">
-          <span>{format(new Date(date), 'MMM d, yyyy')}</span>
-          <span className="text-muted-foreground text-xs">{format(new Date(date), 'h:mm a')}</span>
+          <span>{formatDate(row.original.createdAt)}</span>
         </div>
       );
     },
@@ -180,13 +179,13 @@ export const userColumns: ColumnDef<User>[] = [
     accessorKey: 'lastLoginAt',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Last Login" />,
     cell: ({ row }) => {
-      const date = row.getValue('lastLoginAt') as string | null;
+      const date = row.original.lastLoginAt;
       if (!date) {
         return <span className="text-muted-foreground">Never</span>;
       }
       return (
         <div className="flex flex-col">
-          <span>{format(new Date(date), 'MMM d, yyyy')}</span>
+          <span>{formatDate(date)}</span>
           <span className="text-muted-foreground text-xs">{format(new Date(date), 'h:mm a')}</span>
         </div>
       );

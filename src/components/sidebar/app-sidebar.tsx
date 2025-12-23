@@ -59,7 +59,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               ? [
                   {
                     title: 'Applications',
-                    url: '/admin/aplications',
+                    url: '/admin/applications',
                   },
                 ]
               : []),

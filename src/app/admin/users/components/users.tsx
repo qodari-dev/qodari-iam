@@ -14,9 +14,6 @@ import {
 import * as React from 'react';
 import { userColumns } from './user-columns';
 
-// ============================================================================
-// Importar tus hooks existentes
-// ============================================================================
 import { PageContent, PageHeader } from '@/components/layout';
 import { Spinner } from '@/components/ui/spinner';
 import {
@@ -41,14 +38,9 @@ declare module '@tanstack/table-core' {
   }
 }
 
-// ============================================================================
-// Page Component
-// ============================================================================
-
 export function Users() {
   const [user, setUser] = React.useState<User>();
 
-  // ---- Data Table State ----
   const {
     pageIndex,
     pageSize,
@@ -67,10 +59,8 @@ export function Users() {
     defaultSorting: [{ field: 'createdAt', order: 'desc' }],
   });
 
-  // ---- Fetch Users con tu hook existente ----
   const { data, isLoading, isFetching, refetch } = useUsers(queryParams);
 
-  // ---- Mutations con tus hooks existentes ----
   const { mutateAsync: deleteUser, isPending: isDeleting } = useDeleteUser();
   const { mutateAsync: activateUser, isPending: isActivating } = useActivateUser();
   const { mutateAsync: suspendUser, isPending: isSuspending } = useSuspendUser();

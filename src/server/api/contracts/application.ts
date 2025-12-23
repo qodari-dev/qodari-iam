@@ -1,30 +1,29 @@
-import {
-  CreateRoleBodySchema,
-  GetRoleQuerySchema,
-  ListRolesQuerySchema,
-  UpdateRoleBodySchema,
-} from '@/schemas/role';
 import { IdParamSchema } from '@/schemas/shared';
 import { TsRestErrorSchema, TsRestMetaData } from '@/schemas/ts-rest';
-import { Role } from '@/server/db/schema';
+import {
+  CreateApplicationBodySchema,
+  GetApplicationQuerySchema,
+  ListApplicationsQuerySchema,
+  UpdateApplicationBodySchema,
+} from '@/schemas/application';
+import { Application } from '@/server/db/schema';
 import { Paginated } from '@/server/utils/query/schemas';
-
 import { initContract } from '@ts-rest/core';
 
 const c = initContract();
 
-export const role = c.router(
+export const application = c.router(
   {
     list: {
       method: 'GET',
       path: '/',
-      query: ListRolesQuerySchema,
+      query: ListApplicationsQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'roles:read',
+        permissionKey: 'applications:read',
       } satisfies TsRestMetaData,
       responses: {
-        200: c.type<Paginated<Role>>(),
+        200: c.type<Paginated<Application>>(),
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,
@@ -33,15 +32,15 @@ export const role = c.router(
     },
     getById: {
       method: 'GET',
-      path: `/:id`,
+      path: '/:id',
       pathParams: IdParamSchema,
-      query: GetRoleQuerySchema,
+      query: GetApplicationQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'roles:read',
+        permissionKey: 'applications:read',
       } satisfies TsRestMetaData,
       responses: {
-        200: c.type<Role>(),
+        200: c.type<Application>(),
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,
@@ -52,13 +51,13 @@ export const role = c.router(
     create: {
       method: 'POST',
       path: '/',
-      body: CreateRoleBodySchema,
+      body: CreateApplicationBodySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'roles:create',
+        permissionKey: 'applications:create',
       } satisfies TsRestMetaData,
       responses: {
-        201: c.type<Role>(),
+        201: c.type<Application>(),
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,
@@ -69,15 +68,14 @@ export const role = c.router(
     update: {
       method: 'PATCH',
       path: '/:id',
-      summary: 'Actualizar usuario',
       pathParams: IdParamSchema,
-      body: UpdateRoleBodySchema,
+      body: UpdateApplicationBodySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'roles:update',
+        permissionKey: 'applications:update',
       } satisfies TsRestMetaData,
       responses: {
-        200: c.type<Role>(),
+        200: c.type<Application>(),
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,
@@ -92,10 +90,10 @@ export const role = c.router(
       body: c.noBody(),
       metadata: {
         auth: 'required',
-        permissionKey: 'roles:delete',
+        permissionKey: 'applications:delete',
       } satisfies TsRestMetaData,
       responses: {
-        200: c.type<Role>(),
+        200: c.type<Application>(),
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,
@@ -104,5 +102,5 @@ export const role = c.router(
       },
     },
   },
-  { pathPrefix: '/roles' }
+  { pathPrefix: '/applications' }
 );

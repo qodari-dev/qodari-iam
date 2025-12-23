@@ -14,14 +14,14 @@ export const usersKeys = {
   detail: (id: string) => [...usersKeys.details(), id] as const,
 };
 
-function defaultQuery(filters: Partial<ListUsersQuery>) {
+function defaultQuery(filters?: Partial<ListUsersQuery>) {
   const query = {
-    page: filters.page ?? 1,
-    limit: filters.limit ?? 20,
-    include: filters.include ?? ['roles'],
-    sort: filters.sort ?? [],
-    where: filters.where,
-    search: filters.search,
+    page: filters?.page ?? 1,
+    limit: filters?.limit ?? 20,
+    include: filters?.include ?? ['roles'],
+    sort: filters?.sort ?? [],
+    where: filters?.where,
+    search: filters?.search,
   } as ListUsersQuery;
   return query;
 }
@@ -35,10 +35,13 @@ export function useUsers(filters: Partial<ListUsersQuery> = {}) {
   });
 }
 
-export function useUser(id: string, options?: { enabled?: boolean }) {
+export function useUser(
+  id: string,
+  options?: Pick<ListUsersQuery, 'include'> & { enabled?: boolean }
+) {
   return api.user.getById.useQuery({
     queryKey: usersKeys.detail(id),
-    queryData: { params: { id } },
+    queryData: { params: { id }, query: { include: options?.include ?? defaultQuery().include } },
     enabled: options?.enabled ?? !!id,
   });
 }

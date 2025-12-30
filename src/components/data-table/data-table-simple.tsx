@@ -7,7 +7,6 @@ import {
   type SortingState,
   type VisibilityState,
   type RowSelectionState,
-  type FilterFn,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,

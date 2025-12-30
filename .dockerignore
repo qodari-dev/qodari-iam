@@ -1,0 +1,34 @@
+# Dependencias (se instalan en el container)
+node_modules
+
+# Git
+.git
+.gitignore
+
+# Build outputs
+.next
+out
+dist
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode
+.idea
+
+# Misc
+*.md
+LICENSE
+
+# Tests 
+__tests__
+*.test.ts
+*.spec.ts
+coverage

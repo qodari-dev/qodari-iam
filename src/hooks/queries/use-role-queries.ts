@@ -37,7 +37,7 @@ export function useRoles(filters: Partial<ListRolesQuery> = {}) {
 
 export function useRole(
   id: string,
-  options?: Pick<ListRolesQuery, 'include'> & { enabled?: boolean }
+  options?: Partial<Pick<ListRolesQuery, 'include'>> & { enabled?: boolean }
 ) {
   return api.role.getById.useQuery({
     queryKey: rolesKeys.detail(id),

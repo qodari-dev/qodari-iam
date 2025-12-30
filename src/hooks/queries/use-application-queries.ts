@@ -39,7 +39,7 @@ export function useApplications(filters: Partial<ListApplicationsQuery> = {}) {
 
 export function useApplication(
   id: string,
-  options?: Pick<ListApplicationsQuery, 'include'> & { enabled?: boolean }
+  options?: Partial<Pick<ListApplicationsQuery, 'include'>> & { enabled?: boolean }
 ) {
   return api.application.getById.useQuery({
     queryKey: applicationsKeys.detail({ id }),

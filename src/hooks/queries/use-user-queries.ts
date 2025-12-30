@@ -37,7 +37,7 @@ export function useUsers(filters: Partial<ListUsersQuery> = {}) {
 
 export function useUser(
   id: string,
-  options?: Pick<ListUsersQuery, 'include'> & { enabled?: boolean }
+  options?: Partial<Pick<ListUsersQuery, 'include'>> & { enabled?: boolean }
 ) {
   return api.user.getById.useQuery({
     queryKey: usersKeys.detail(id),

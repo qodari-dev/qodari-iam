@@ -1,11 +1,13 @@
 'use client';
 
-import { AudioWaveform, GalleryVerticalEnd, Settings2 } from 'lucide-react';
+import { AppWindowMacIcon, Download, Users } from 'lucide-react';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import * as React from 'react';
 
+import { NavHeader } from '@/components/sidebar/nav-header';
 import { NavMain } from '@/components/sidebar/nav-main';
 import { NavUser } from '@/components/sidebar/nav-user';
-import { TeamSwitcher } from '@/components/sidebar/team-switcher';
 import {
   Sidebar,
   SidebarContent,
@@ -13,10 +15,25 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
 import { useAuthUser, useHasPermission } from '@/stores/auth-store-provider';
+import companyLogo from '../../../public/company-logo.png';
+
+function AppLogo({ className }: { className?: string }) {
+  return (
+    <Image
+      src={companyLogo}
+      alt="Qodari IAM logo"
+      className={cn('object-contain', className)}
+      sizes="32px"
+      priority
+    />
+  );
+}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = useAuthUser();
+  const pathname = usePathname();
   const canSeeUsers = useHasPermission('users:read');
   const canSeeApplications = useHasPermission('applications:read');
   const canSeeRoles = useHasPermission('roles:read');
@@ -26,32 +43,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       user: {
         name: `${user?.firstName} ${user?.lastName}`,
         email: user?.email ?? '',
-        avatar: '/avatars/shadcn.jpg',
+        avatar: `${user?.firstName[0]}${user?.lastName[0]}`,
       },
-      teams: [
-        {
-          name: 'Acme Inc',
-          logo: GalleryVerticalEnd,
-          plan: 'Enterprise',
-        },
-        {
-          name: 'Acme Corp.',
-          logo: AudioWaveform,
-          plan: 'Startup',
-        },
-      ],
+      app: {
+        name: 'IAM',
+        Logo: AppLogo,
+        url: '/admin',
+      },
       navMain: [
         {
-          title: 'Settings',
-          url: '#',
-          icon: Settings2,
-          isActive: true,
+          title: 'Principal',
           items: [
             ...(canSeeUsers
               ? [
                   {
                     title: 'Users',
                     url: '/admin/users',
+                    icon: Users,
                   },
                 ]
               : []),
@@ -60,6 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   {
                     title: 'Applications',
                     url: '/admin/applications',
+                    icon: AppWindowMacIcon,
                   },
                 ]
               : []),
@@ -68,22 +77,39 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   {
                     title: 'Roles',
                     url: '/admin/roles',
+                    icon: Users,
                   },
                 ]
               : []),
           ],
         },
+        {
+          title: 'Reportes',
+          items: [
+            {
+              title: 'Reports',
+              icon: Download,
+              isActive: pathname.startsWith('/admin/reports'),
+              items: [
+                {
+                  title: 'Roles por aplicación',
+                  url: '/admin/reports',
+                },
+              ],
+            },
+          ],
+        },
       ],
     };
-  }, [user, canSeeUsers, canSeeApplications, canSeeRoles]);
+  }, [user, pathname, canSeeUsers, canSeeApplications, canSeeRoles]);
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <NavHeader {...data.app} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain menus={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

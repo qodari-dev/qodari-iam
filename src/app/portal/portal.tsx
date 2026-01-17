@@ -35,6 +35,8 @@ export function Portal() {
                     <Image
                       alt={app.name}
                       src={app.logo ?? ''}
+                      width={200}
+                      height={200}
                       className="aspect-4/3 w-full rounded-lg bg-gray-100 object-cover"
                     />
                     <div

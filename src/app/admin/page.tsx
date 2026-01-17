@@ -1,5 +1,12 @@
-import { PageLayout } from '@/components/sidebar/page-layout';
+import { env } from '@/env';
+import { redirect, notFound } from 'next/navigation';
 
-export default async function AdminPage() {
-  return <PageLayout breadcrumbs={[{ label: 'Dashboard' }]}>Admin</PageLayout>;
+export default function AdminRedirectPage() {
+  const defaultAccountSlug = env.IAM_DEFAULT_ACCOUNT_SLUG;
+
+  if (!defaultAccountSlug) {
+    notFound();
+  }
+
+  redirect(`/${defaultAccountSlug}/admin`);
 }

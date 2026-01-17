@@ -42,14 +42,17 @@ export async function GET(request: NextRequest) {
     return new NextResponse("client_id is required", { status: 400 });
   }
 
-  // 2) Buscar aplicación por client_id
+  // 2) Buscar aplicación por client_id (incluyendo account para obtener el slug)
   const app = await db.query.applications.findFirst({
     where: eq(applications.clientId, clientId),
+    with: { account: true },
   });
 
   if (!app || app.status !== "active") {
     return new NextResponse("Unknown or inactive client", { status: 400 });
   }
+
+  const accountSlug = app.account.slug;
 
   // 3) Determinar redirect_uri final
   const finalRedirectUri = redirectUri ?? app.callbackUrl;
@@ -83,10 +86,12 @@ export async function GET(request: NextRequest) {
   const session = await getSessionFromRequest(request);
 
   if (!session) {
-    // No hay sesión: redirigimos a login del IAM
-    const loginUrl = new URL("/auth/login", env.NEXT_PUBLIC_APP_URL);
-    // "next" = volver a este authorize con todos los query params
-    loginUrl.searchParams.set("next", url.toString());
+    // No hay sesión: redirigimos a login del IAM con el account slug
+    const loginUrl = new URL(`/${accountSlug}/login`, env.NEXT_PUBLIC_APP_URL);
+    // "redirect" = volver a este authorize con todos los query params
+    loginUrl.searchParams.set("redirect", url.toString());
+    // Include app slug for branding
+    loginUrl.searchParams.set("app", app.slug);
 
     return NextResponse.redirect(loginUrl.toString());
   }

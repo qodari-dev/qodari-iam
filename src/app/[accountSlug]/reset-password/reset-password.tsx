@@ -22,10 +22,19 @@ import { z } from 'zod';
 
 type ResetFormValues = z.infer<typeof ResetPasswordBodySchema>;
 
-export default function ResetPassword({ accountSlug }: { accountSlug: string }) {
+interface ResetPasswordProps {
+  accountSlug: string;
+  appSlug?: string;
+}
+
+export default function ResetPassword({ accountSlug, appSlug }: ResetPasswordProps) {
   const searchParams = useSearchParams();
   const tokenFromUrl = searchParams.get('token') ?? '';
   const router = useRouter();
+
+  // Build URLs with app param if we have one
+  const loginUrl = `/${accountSlug}/login${appSlug ? `?app=${appSlug}` : ''}`;
+  const forgotPasswordUrl = `/${accountSlug}/forgot-password${appSlug ? `?app=${appSlug}` : ''}`;
 
   const form = useForm<ResetFormValues>({
     resolver: zodResolver(ResetPasswordBodySchema),
@@ -44,7 +53,7 @@ export default function ResetPassword({ accountSlug }: { accountSlug: string }) 
       toast.success('Contraseña actualizada', {
         description: data.body.message,
       });
-      router.push('/auth/login');
+      router.push(loginUrl);
     },
   });
 
@@ -69,7 +78,7 @@ export default function ResetPassword({ accountSlug }: { accountSlug: string }) 
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <Link href="/auth/forgot-password">Solicitar un nuevo enlace</Link>
+              <Link href={forgotPasswordUrl}>Solicitar un nuevo enlace</Link>
             </Button>
           </CardContent>
         </Card>
@@ -129,7 +138,7 @@ export default function ResetPassword({ accountSlug }: { accountSlug: string }) 
               </Button>
 
               <Button variant="link" className="w-full" asChild>
-                <Link href="/auth/login">Back to Login</Link>
+                <Link href={loginUrl}>Back to Login</Link>
               </Button>
             </form>
           </div>

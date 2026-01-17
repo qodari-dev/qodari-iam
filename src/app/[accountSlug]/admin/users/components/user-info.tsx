@@ -89,11 +89,13 @@ export function UserInfo({
 
   return (
     <Sheet open={opened} onOpenChange={(open) => onOpened(open)}>
-      <SheetContent className="sm:max-w-xl">
+      <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle>Info</SheetTitle>
         </SheetHeader>
         <div className="px-4">
+          <DescriptionList sections={sections} columns={2} />
+          <DescriptionList sections={sections} columns={2} />
           <DescriptionList sections={sections} columns={2} />
         </div>
       </SheetContent>

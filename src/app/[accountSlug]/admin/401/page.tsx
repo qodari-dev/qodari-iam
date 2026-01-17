@@ -7,7 +7,13 @@ export const metadata: Metadata = {
   title: 'No autorizado',
 };
 
-export default function UnauthorizedPage() {
+type Props = {
+  params: Promise<{ accountSlug: string }>;
+};
+
+export default async function UnauthorizedPage({ params }: Props) {
+  const { accountSlug } = await params;
+
   return (
     <div className="flex min-h-[calc(100vh-0px)] w-full items-center justify-center p-6">
       <Card className="w-full max-w-md">
@@ -37,10 +43,10 @@ export default function UnauthorizedPage() {
 
         <CardFooter className="flex justify-end gap-2">
           <Button asChild variant="secondary">
-            <Link href="/admin">Ir al Home</Link>
+            <Link href={`/${accountSlug}/admin`}>Ir al Home</Link>
           </Button>
           <Button asChild>
-            <Link href="/login">Iniciar sesión</Link>
+            <Link href={`/${accountSlug}/login`}>Iniciar sesión</Link>
           </Button>
         </CardFooter>
       </Card>

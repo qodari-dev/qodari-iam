@@ -38,6 +38,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const canSeeApplications = useHasPermission('applications:read');
   const canSeeRoles = useHasPermission('roles:read');
 
+  // Extract accountSlug from pathname (e.g., /acme/admin/users -> acme)
+  const accountSlug = pathname.split('/')[1];
+
   const data = React.useMemo(() => {
     return {
       user: {
@@ -48,7 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       app: {
         name: 'IAM',
         Logo: AppLogo,
-        url: '/admin',
+        url: `/${accountSlug}/admin`,
       },
       navMain: [
         {
@@ -58,7 +61,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               ? [
                   {
                     title: 'Users',
-                    url: '/admin/users',
+                    url: `/${accountSlug}/admin/users`,
                     icon: Users,
                   },
                 ]
@@ -67,7 +70,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               ? [
                   {
                     title: 'Applications',
-                    url: '/admin/applications',
+                    url: `/${accountSlug}/admin/applications`,
                     icon: AppWindowMacIcon,
                   },
                 ]
@@ -76,7 +79,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               ? [
                   {
                     title: 'Roles',
-                    url: '/admin/roles',
+                    url: `/${accountSlug}/admin/roles`,
                     icon: Users,
                   },
                 ]
@@ -89,11 +92,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             {
               title: 'Reports',
               icon: Download,
-              isActive: pathname.startsWith('/admin/reports'),
+              isActive: pathname.startsWith(`/${accountSlug}/admin/reports`),
               items: [
                 {
                   title: 'Roles por aplicación',
-                  url: '/admin/reports',
+                  url: `/${accountSlug}/admin/reports`,
                 },
               ],
             },
@@ -101,7 +104,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       ],
     };
-  }, [user, pathname, canSeeUsers, canSeeApplications, canSeeRoles]);
+  }, [user, pathname, accountSlug, canSeeUsers, canSeeApplications, canSeeRoles]);
 
   return (
     <Sidebar collapsible="icon" {...props}>

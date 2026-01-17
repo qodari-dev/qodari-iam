@@ -1,16 +1,20 @@
-import { Spinner } from '@/components/ui/spinner';
 import { Suspense } from 'react';
-import ResetPassword from './reset-password';
+import Login from './login';
+import { Spinner } from '@/components/ui/spinner';
+import { env } from '@/env';
 
 type Props = {
   params: Promise<{ accountSlug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function ResetPasswordPage({ params, searchParams }: Props) {
+export default async function LoginPage({ params, searchParams }: Props) {
   const { accountSlug } = await params;
   const search = await searchParams;
-  const appSlug = (search.app as string) ?? undefined;
+
+  // Default to IAM_APP_SLUG if no app query param is provided
+  const appSlug = (search.app as string) ?? env.IAM_APP_SLUG;
+  const redirect = (search.redirect as string) ?? undefined;
 
   return (
     <Suspense
@@ -20,7 +24,7 @@ export default async function ResetPasswordPage({ params, searchParams }: Props)
         </div>
       }
     >
-      <ResetPassword accountSlug={accountSlug} appSlug={appSlug} />
+      <Login accountSlug={accountSlug} appSlug={appSlug} redirect={redirect} />
     </Suspense>
   );
 }

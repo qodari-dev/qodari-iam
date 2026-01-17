@@ -1,8 +1,14 @@
 import ForgetPassword from './forget-password';
 
-export default async function ForgotPasswordPage({
-  params,
-}: PageProps<'/[accountSlug]/forgot-password'>) {
+type Props = {
+  params: Promise<{ accountSlug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function ForgotPasswordPage({ params, searchParams }: Props) {
   const { accountSlug } = await params;
-  return <ForgetPassword accountSlug={accountSlug} />;
+  const search = await searchParams;
+  const appSlug = (search.app as string) ?? undefined;
+
+  return <ForgetPassword accountSlug={accountSlug} appSlug={appSlug} />;
 }

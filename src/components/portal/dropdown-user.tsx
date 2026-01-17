@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { useAuthUser } from '@/stores/auth-store-provider';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { Spinner } from '../ui/spinner';
@@ -26,8 +26,12 @@ export const title = 'Profile Dropdown with Avatar';
 
 export function DropdownUser() {
   const router = useRouter();
+  const pathname = usePathname();
   const user = useAuthUser();
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
+
+  // Extract accountSlug from pathname (e.g., /acme/portal -> acme)
+  const accountSlug = pathname.split('/')[1];
 
   const { mutateAsync: logout, isPending } = api.auth.logout.useMutation({
     onError(error) {
@@ -36,7 +40,7 @@ export function DropdownUser() {
       });
     },
     onSuccess() {
-      router.push('/auth/login');
+      router.push(`/${accountSlug}/login`);
     },
   });
 

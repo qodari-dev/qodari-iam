@@ -81,7 +81,7 @@ export function UserForm({
 
   return (
     <Sheet open={opened} onOpenChange={onOpened}>
-      <SheetContent className="sm:max-w-lg">
+      <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle>User</SheetTitle>
           <SheetDescription>

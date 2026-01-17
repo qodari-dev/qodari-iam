@@ -60,7 +60,7 @@ export function RoleInfo({
 
   return (
     <Sheet open={opened} onOpenChange={(open) => onOpened(open)}>
-      <SheetContent className="sm:max-w-xl">
+      <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle>Role</SheetTitle>
         </SheetHeader>

@@ -11,7 +11,7 @@ import {
   BreadcrumbSeparator,
 } from '../ui/breadcrumb';
 import { useHasPermission } from '@/stores/auth-store-provider';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 // Tipo para los items del breadcrumb
 interface BreadcrumbItemData {
@@ -27,13 +27,17 @@ interface Props {
 
 export function PageLayout({ children, breadcrumbs, permissionKey }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const allowed = useHasPermission(permissionKey ?? '');
+
+  // Extract accountSlug from pathname (e.g., /acme/admin/users -> acme)
+  const accountSlug = pathname.split('/')[1];
 
   useEffect(() => {
     if (!allowed && permissionKey) {
-      router.push('/admin/401');
+      router.push(`/${accountSlug}/admin/401`);
     }
-  }, [allowed, router, permissionKey]);
+  }, [allowed, router, permissionKey, accountSlug]);
 
   return (
     <SidebarInset>
@@ -49,7 +53,9 @@ export function PageLayout({ children, breadcrumbs, permissionKey }: Props) {
                     className={index < breadcrumbs.length - 1 ? 'hidden md:block' : ''}
                   >
                     {item.href ? (
-                      <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
+                      <BreadcrumbLink href={`/${accountSlug}${item.href}`}>
+                        {item.label}
+                      </BreadcrumbLink>
                     ) : (
                       <BreadcrumbPage>{item.label}</BreadcrumbPage>
                     )}

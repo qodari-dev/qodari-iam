@@ -12,6 +12,7 @@ export const env = createEnv({
     IAM_JWT_SECRET: z.string(),
     IAM_ISSUER: z.string(),
     IAM_APP_SLUG: z.string(),
+    IAM_DEFAULT_ACCOUNT_SLUG: z.string().optional(),
     RESEND_API_KEY: z.string(),
     RESEND_MAIL_FROM: z.string(),
     PAUSE_SCHEDULER: z
@@ -42,6 +43,7 @@ export const env = createEnv({
     IAM_JWT_SECRET: process.env.IAM_JWT_SECRET,
     IAM_ISSUER: process.env.IAM_ISSUER,
     IAM_APP_SLUG: process.env.IAM_APP_SLUG,
+    IAM_DEFAULT_ACCOUNT_SLUG: process.env.IAM_DEFAULT_ACCOUNT_SLUG,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_MAIL_FROM: process.env.RESEND_MAIL_FROM,
     PAUSE_SCHEDULER: process.env.PAUSE_SCHEDULER,

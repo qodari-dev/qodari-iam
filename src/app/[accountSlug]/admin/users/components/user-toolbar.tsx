@@ -54,14 +54,14 @@ export function UsersToolbar({
   const canCreateUsers = useHasPermission('users:create');
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex flex-1 items-center space-x-2">
+    <div className="flex flex-col-reverse gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-1 flex-col-reverse items-start gap-2 space-x-2 lg:flex-row lg:items-center">
         {/* Search Input */}
         <Input
           placeholder="Search by email, first name, last name..."
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
-          className="h-8 w-[200px] lg:w-[300px]"
+          className="h-8 w-[300px] lg:w-[300px]"
         />
 
         {/* Status Filter (Multi-select) */}

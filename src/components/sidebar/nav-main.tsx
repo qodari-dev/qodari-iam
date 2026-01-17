@@ -14,6 +14,7 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
+import { Fragment } from 'react';
 
 export function NavMain({
   menus,
@@ -35,7 +36,7 @@ export function NavMain({
   return (
     <SidebarGroup>
       {menus.map((menu) => (
-        <>
+        <Fragment key={menu.title}>
           <SidebarGroupLabel>{menu.title}</SidebarGroupLabel>
           <SidebarMenu>
             {menu.items.map((item) => {
@@ -83,7 +84,7 @@ export function NavMain({
               );
             })}
           </SidebarMenu>
-        </>
+        </Fragment>
       ))}
     </SidebarGroup>
   );

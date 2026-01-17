@@ -20,7 +20,14 @@ import { z } from 'zod';
 
 type ForgotFormValues = z.infer<typeof ForgotPasswordBodySchema>;
 
-export default function ForgetPassword({ accountSlug }: { accountSlug: string }) {
+interface ForgetPasswordProps {
+  accountSlug: string;
+  appSlug?: string;
+}
+
+export default function ForgetPassword({ accountSlug, appSlug }: ForgetPasswordProps) {
+  // Build login URL with app param if we have one
+  const loginUrl = `/${accountSlug}/login${appSlug ? `?app=${appSlug}` : ''}`;
   const form = useForm<ForgotFormValues>({
     resolver: zodResolver(ForgotPasswordBodySchema),
     defaultValues: {
@@ -102,7 +109,7 @@ export default function ForgetPassword({ accountSlug }: { accountSlug: string })
               </Button>
 
               <Button variant="link" className="w-full" asChild>
-                <Link href="/auth/login">Back to Login</Link>
+                <Link href={loginUrl}>Back to Login</Link>
               </Button>
             </form>
           </div>

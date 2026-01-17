@@ -29,6 +29,7 @@ import {
   createSession,
   getSessionFromRequest,
   hashToken,
+  hashResetToken,
 } from '@/server/utils/session';
 import { tsr } from '@ts-rest/serverless/next';
 import { and, eq, gt } from 'drizzle-orm';
@@ -67,7 +68,7 @@ export const auth = tsr.router(contract.auth, {
       const [emailRl, ipRl] = await Promise.all([
         checkRateLimit({
           key: emailKey,
-          limit: 3,
+          limit: 5,
           windowMs,
         }),
         checkRateLimit({
@@ -595,7 +596,7 @@ export const auth = tsr.router(contract.auth, {
       }
 
       const rawToken = randomUUID();
-      const tokenHash = await hashToken(rawToken);
+      const tokenHash = hashResetToken(rawToken);
       const expires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
 
       await db
@@ -607,7 +608,7 @@ export const auth = tsr.router(contract.auth, {
         .where(eq(users.id, user.id));
 
       const baseUrl = env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-      const resetUrl = new URL('/auth/reset-password', baseUrl);
+      const resetUrl = new URL(`/${accountSlug}/reset-password`, baseUrl);
       resetUrl.searchParams.set('token', rawToken);
 
       await sendPasswordResetEmail({
@@ -675,7 +676,7 @@ export const auth = tsr.router(contract.auth, {
         };
       }
 
-      const tokenHash = await hashToken(token);
+      const tokenHash = hashResetToken(token);
       const now = new Date();
 
       const user = await db.query.users.findFirst({

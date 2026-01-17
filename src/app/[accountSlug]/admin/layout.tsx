@@ -6,13 +6,20 @@ import { AuthStoreProvider } from '@/stores/auth-store-provider';
 import { redirect } from 'next/navigation';
 import { ReactNode } from 'react';
 
-export default async function AdminLayout({ children }: { children: ReactNode }) {
+type Props = {
+  params: Promise<{ accountSlug: string }>;
+  children: ReactNode;
+};
+
+export default async function AdminLayout({ params, children }: Props) {
+  const { accountSlug } = await params;
+
   const result = await api.auth.me.query({
     query: { appSlug: env.IAM_APP_SLUG },
   });
 
   if (result.status === 401) {
-    redirect(`/auth/login?next=${encodeURIComponent('/admin')}`);
+    redirect(`/${accountSlug}/login?redirect=${encodeURIComponent(`/${accountSlug}/admin`)}`);
   }
 
   if (result.status !== 200) {
@@ -23,7 +30,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   const canAccessAdmin = auth.user.isAdmin || auth.permissions?.includes('admin:access');
   if (!canAccessAdmin) {
-    redirect('/portal');
+    redirect(`/${accountSlug}/portal`);
   }
 
   return (

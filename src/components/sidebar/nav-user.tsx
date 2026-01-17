@@ -19,7 +19,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 export function NavUser({
@@ -33,6 +33,11 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Extract accountSlug from pathname (e.g., /acme/admin -> acme)
+  const accountSlug = pathname.split('/')[1];
+
   const { mutateAsync: logout, isPending } = api.auth.logout.useMutation({
     onError(error) {
       toast.error('Error al cerrar sesión', {
@@ -40,7 +45,7 @@ export function NavUser({
       });
     },
     onSuccess() {
-      router.push('/auth/login');
+      router.push(`/${accountSlug}/login`);
     },
   });
 

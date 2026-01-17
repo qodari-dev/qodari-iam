@@ -4,6 +4,7 @@ import { sessions } from '@/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { parse } from 'cookie';
 import { argon2i, hash } from 'argon2';
+import { createHash } from 'node:crypto';
 
 export const SESSION_COOKIE_NAME = 'qodari_iam_session';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
@@ -93,4 +94,13 @@ export async function hashToken(token: string): Promise<string> {
     timeCost: 3,
     parallelism: 1,
   });
+}
+
+/**
+ * Deterministic hash for reset tokens using SHA-256.
+ * Unlike argon2, this produces the same hash for the same input,
+ * which is needed for token lookup in the database.
+ */
+export function hashResetToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }

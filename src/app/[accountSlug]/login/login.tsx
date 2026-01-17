@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
 
 import { api } from '@/clients/api';
@@ -21,9 +21,14 @@ import { z } from 'zod';
 
 type LoginFormValues = z.infer<typeof LoginBodySchema>;
 
-export default function Login({ accountSlug, appSlug }: { accountSlug: string; appSlug: string }) {
+interface LoginProps {
+  accountSlug: string;
+  appSlug: string;
+  redirect?: string;
+}
+
+export default function Login({ accountSlug, appSlug, redirect }: LoginProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(LoginBodySchema),
@@ -43,17 +48,19 @@ export default function Login({ accountSlug, appSlug }: { accountSlug: string; a
 
   const onSubmit = useCallback(
     async (values: LoginFormValues) => {
-      const result = await login({
+      await login({
         body: values,
       });
 
-      const data = result.body;
-      console.log(data);
-      const next = searchParams.get('next') ?? '/';
+      // Redirect to the specified URL or default to the portal
+      const next = redirect ?? `/${accountSlug}/portal`;
       router.push(next);
     },
-    [login, router, searchParams]
+    [login, router, redirect, accountSlug]
   );
+
+  // Build forgot password URL with app param if we have one
+  const forgotPasswordUrl = `/${accountSlug}/forgot-password${appSlug ? `?app=${appSlug}` : ''}`;
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
@@ -126,7 +133,7 @@ export default function Login({ accountSlug, appSlug }: { accountSlug: string; a
                 </Button>
 
                 <Button variant="link" className="w-full" asChild>
-                  <Link href="/auth/forgot-password">Forgot your password?</Link>
+                  <Link href={forgotPasswordUrl}>Forgot your password?</Link>
                 </Button>
               </FieldGroup>
             </form>

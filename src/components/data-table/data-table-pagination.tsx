@@ -48,7 +48,7 @@ export function DataTablePagination<TData>({
   const endRow = Math.min((pageIndex + 1) * pageSize, totalCount ?? rowCount);
 
   return (
-    <div className="flex items-center justify-between px-2">
+    <div className="flex flex-col justify-between gap-2 px-2 lg:flex-row lg:items-center">
       {/* Left side - Selection count */}
       <div className="text-muted-foreground flex-1 text-sm">
         {showSelectedCount && selectedCount > 0 ? (
@@ -65,7 +65,7 @@ export function DataTablePagination<TData>({
       {/* Right side - Controls */}
       <div className="flex items-center space-x-6 lg:space-x-8">
         {/* Rows per page */}
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-col items-center gap-2 lg:flex-row">
           <p className="text-sm font-medium">Rows per page</p>
           <Select
             value={`${pageSize}`}

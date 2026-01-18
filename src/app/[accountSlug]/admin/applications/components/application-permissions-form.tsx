@@ -20,11 +20,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { CreateApplicationBodySchema } from '@/schemas/application';
+import {
+  CreateApplicationBodySchema,
+  PermissionInput,
+  PermissionInputSchema,
+} from '@/schemas/application';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { useMemo, useState } from 'react';
+import { Controller, useFieldArray, useForm, useFormContext } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 type FormValues = z.infer<typeof CreateApplicationBodySchema>;
@@ -39,38 +46,31 @@ export function ApplicationPermissionsForm() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [draft, setDraft] = useState({
-    name: '',
-    resource: '',
-    action: '',
-    description: '',
+
+  const dialogForm = useForm<PermissionInput>({
+    resolver: zodResolver(PermissionInputSchema),
+    defaultValues: { name: '', resource: '', action: '', description: '' },
   });
-  const [error, setError] = useState<string | null>(null);
 
   const hasPermissions = useMemo(() => fields.length > 0, [fields.length]);
 
-  const resetDialog = useCallback(() => {
-    setDraft({ name: '', resource: '', action: '', description: '' });
-    setEditingIndex(null);
-    setError(null);
-  }, []);
-
-  const handleOpenChange = useCallback(
-    (open: boolean) => {
-      setIsDialogOpen(open);
-      if (!open) resetDialog();
-    },
-    [resetDialog]
-  );
+  const handleOpenChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      dialogForm.reset();
+      setEditingIndex(null);
+    }
+  };
 
   const handleAddClick = () => {
-    resetDialog();
+    dialogForm.reset({ name: '', resource: '', action: '', description: '' });
+    setEditingIndex(null);
     setIsDialogOpen(true);
   };
 
   const handleEditClick = (index: number) => {
     const current = fields[index];
-    setDraft({
+    dialogForm.reset({
       name: current?.name ?? '',
       resource: current?.resource ?? '',
       action: current?.action ?? '',
@@ -80,27 +80,23 @@ export function ApplicationPermissionsForm() {
     setIsDialogOpen(true);
   };
 
-  const handleSave = () => {
-    if (!draft.name || !draft.resource || !draft.action) {
-      setError('Nombre, recurso y acción son requeridos');
-      return;
-    }
-
-    const duplicateIndex = fields.findIndex(
-      (f, idx) => f.resource === draft.resource && f.action === draft.action && idx !== editingIndex
+  const onSave = (values: PermissionInput) => {
+    const isDuplicate = fields.some(
+      (f, idx) =>
+        f.resource === values.resource && f.action === values.action && idx !== editingIndex
     );
-    if (duplicateIndex !== -1) {
-      setError('Ya existe un permiso con ese recurso y acción');
+
+    if (isDuplicate) {
+      toast.error('Ya existe un permiso con ese recurso y acción');
       return;
     }
 
     if (editingIndex !== null) {
-      update(editingIndex, draft);
+      update(editingIndex, values);
     } else {
-      append(draft);
+      append(values);
     }
     setIsDialogOpen(false);
-    resetDialog();
   };
 
   return (
@@ -126,40 +122,55 @@ export function ApplicationPermissionsForm() {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
-              <Field data-invalid={!!error}>
-                <FieldLabel htmlFor="permName">Nombre</FieldLabel>
-                <Input
-                  id="permName"
-                  value={draft.name}
-                  onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-                />
-              </Field>
-              <Field data-invalid={!!error}>
-                <FieldLabel htmlFor="permResource">Recurso</FieldLabel>
-                <Input
-                  id="permResource"
-                  value={draft.resource}
-                  onChange={(e) => setDraft((d) => ({ ...d, resource: e.target.value }))}
-                />
-              </Field>
-              <Field data-invalid={!!error}>
-                <FieldLabel htmlFor="permAction">Acción</FieldLabel>
-                <Input
-                  id="permAction"
-                  value={draft.action}
-                  onChange={(e) => setDraft((d) => ({ ...d, action: e.target.value }))}
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="permDescription">Descripción</FieldLabel>
-                <textarea
-                  id="permDescription"
-                  value={draft.description}
-                  onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
-                  className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-20 w-full rounded-md border px-3 py-2 text-sm shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                />
-              </Field>
-              {error && <FieldError errors={[{ message: error }]} />}
+              <Controller
+                name="name"
+                control={dialogForm.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="permName">Nombre</FieldLabel>
+                    <Input id="permName" {...field} aria-invalid={fieldState.invalid} />
+                    {fieldState.error && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="resource"
+                control={dialogForm.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="permResource">Recurso</FieldLabel>
+                    <Input id="permResource" {...field} aria-invalid={fieldState.invalid} />
+                    {fieldState.error && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="action"
+                control={dialogForm.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="permAction">Acción</FieldLabel>
+                    <Input id="permAction" {...field} aria-invalid={fieldState.invalid} />
+                    {fieldState.error && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="description"
+                control={dialogForm.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="permDescription">Descripción</FieldLabel>
+                    <Textarea
+                      id="permDescription"
+                      {...field}
+                      aria-invalid={fieldState.invalid}
+                      className="min-h-20"
+                    />
+                    {fieldState.error && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )}
+              />
             </div>
             <DialogFooter>
               <DialogClose asChild>
@@ -167,7 +178,7 @@ export function ApplicationPermissionsForm() {
                   Cancelar
                 </Button>
               </DialogClose>
-              <Button type="button" onClick={handleSave}>
+              <Button type="button" onClick={dialogForm.handleSubmit(onSave)}>
                 {editingIndex !== null ? 'Guardar cambios' : 'Agregar permiso'}
               </Button>
             </DialogFooter>

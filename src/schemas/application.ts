@@ -55,12 +55,14 @@ export const GetApplicationQuerySchema = z.object({
 // MUTATIONS
 // ============================================
 
-const PermissionInputSchema = z.object({
-  name: z.string().min(1).max(45),
-  resource: z.string().min(1).max(45),
-  action: z.string().min(1).max(45),
-  description: z.string().max(500).optional(),
+export const PermissionInputSchema = z.object({
+  name: z.string().min(1, 'Nombre es requerido').max(45, 'Máximo 45 caracteres'),
+  resource: z.string().min(1, 'Recurso es requerido').max(45, 'Máximo 45 caracteres'),
+  action: z.string().min(1, 'Acción es requerida').max(45, 'Máximo 45 caracteres'),
+  description: z.string().max(500, 'Máximo 500 caracteres').optional(),
 });
+
+export type PermissionInput = z.infer<typeof PermissionInputSchema>;
 
 export const CreateApplicationBodySchema = z.object({
   name: z.string().min(1).max(255),

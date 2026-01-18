@@ -95,8 +95,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               isActive: pathname.startsWith(`/${accountSlug}/admin/reports`),
               items: [
                 {
-                  title: 'Roles por aplicación',
-                  url: `/${accountSlug}/admin/reports`,
+                  title: 'Permisos por aplicación',
+                  url: `/${accountSlug}/admin/reports/permissions-by-application`,
                 },
               ],
             },

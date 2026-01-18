@@ -6,6 +6,7 @@ import { Role } from '@/schemas/role';
 import type { ColumnDef } from '@tanstack/react-table';
 import { RoleRowActions } from './role-row-actions';
 import { formatDate } from '@/utils/formatters';
+import { truncateText } from '@/utils/truncate-text';
 
 export const roleColumns: ColumnDef<Role>[] = [
   {
@@ -24,6 +25,19 @@ export const roleColumns: ColumnDef<Role>[] = [
     cell: ({ row }) => (
       <span className="text-muted-foreground text-sm">{row.original.application?.name ?? '—'}</span>
     ),
+  },
+  {
+    accessorKey: 'description',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
+    cell: ({ row }) => {
+      const description = row.original.description ?? '-';
+
+      return (
+        <span className="text-muted-foreground text-sm" title={description}>
+          {truncateText(description)}
+        </span>
+      );
+    },
   },
   {
     id: 'permissionsCount',

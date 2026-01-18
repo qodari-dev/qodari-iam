@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useApplications } from '@/hooks/queries/use-application-queries';
 import { CreateRoleBodySchema } from '@/schemas/role';
 import { Controller, useFormContext } from 'react-hook-form';
@@ -54,7 +55,7 @@ export function RoleMainForm() {
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel htmlFor={field.name}>Description</FieldLabel>
-            <Input {...field} aria-invalid={fieldState.invalid} />
+            <Textarea {...field} aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}

@@ -162,7 +162,11 @@ export function ImageUpload({ value, onChange, disabled, className }: ImageUploa
         )}
       </div>
 
-      {error && <p className="text-destructive mt-1 text-xs">{error}</p>}
+      {error && (
+        <p className="text-destructive mt-1 text-xs">
+          {error} - {value}
+        </p>
+      )}
     </div>
   );
 }

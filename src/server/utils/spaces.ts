@@ -39,5 +39,5 @@ export async function deleteObject(key: string): Promise<void> {
 export function isStorageKey(value: string | null | undefined): boolean {
   if (!value) return false;
   // Storage keys start with 'logos/' and don't contain http
-  return value.startsWith('logos/') && !value.includes('http');
+  return value.includes('logos/') && !value.includes('http');
 }

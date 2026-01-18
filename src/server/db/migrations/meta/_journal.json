@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1764120042352,
-      "tag": "0000_confused_barracuda",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1765425151237,
-      "tag": "0001_hesitant_redwing",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1765504462813,
-      "tag": "0002_rainy_tombstone",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1766360853761,
-      "tag": "0003_smiling_harrier",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1768675847680,
-      "tag": "0004_motionless_mordo",
+      "when": 1768706464099,
+      "tag": "0000_bizarre_riptide",
       "breakpoints": true
     }
   ]

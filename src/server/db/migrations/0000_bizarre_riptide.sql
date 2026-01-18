@@ -1,15 +1,7 @@
 CREATE TYPE "public"."client_type" AS ENUM('public', 'confidential');--> statement-breakpoint
 CREATE TYPE "public"."status" AS ENUM('active', 'suspended');--> statement-breakpoint
 CREATE TYPE "public"."subscription_status" AS ENUM('active', 'trialing', 'past_due', 'canceled');--> statement-breakpoint
-CREATE TYPE "public"."user_status" AS ENUM('active', 'suspended', 'pending_verification');--> statement-breakpoint
-CREATE TABLE "account_members" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"account_id" uuid NOT NULL,
-	"user_id" uuid NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
-);
---> statement-breakpoint
+CREATE TYPE "public"."user_status" AS ENUM('active', 'suspended');--> statement-breakpoint
 CREATE TABLE "accounts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
@@ -33,13 +25,14 @@ CREATE TABLE "applications" (
 	"client_type" "client_type" NOT NULL,
 	"client_id" text NOT NULL,
 	"client_secret" text NOT NULL,
+	"client_jwt_secret" text NOT NULL,
 	"home_url" varchar(255),
 	"logout_url" varchar(255),
-	"callback_url" varchar(255),
+	"callback_urls" text[] DEFAULT '{}',
 	"status" "status" DEFAULT 'active' NOT NULL,
 	"auth_code_exp" integer DEFAULT 300 NOT NULL,
 	"access_token_exp" integer DEFAULT 900 NOT NULL,
-	"refresh_token_exp" integer DEFAULT 1296000 NOT NULL,
+	"refresh_token_exp" integer DEFAULT 604800 NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "applications_client_id_unique" UNIQUE("client_id")
@@ -104,6 +97,14 @@ CREATE TABLE "plans" (
 	CONSTRAINT "plans_key_unique" UNIQUE("key")
 );
 --> statement-breakpoint
+CREATE TABLE "rate_limits" (
+	"key" varchar(255) PRIMARY KEY NOT NULL,
+	"window_start" timestamp NOT NULL,
+	"count" integer DEFAULT 1 NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "refresh_tokens" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"family_id" uuid NOT NULL,
@@ -135,7 +136,6 @@ CREATE TABLE "roles" (
 	"name" varchar(45) NOT NULL,
 	"slug" varchar(45) NOT NULL,
 	"description" text,
-	"is_system" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -168,21 +168,21 @@ CREATE TABLE "subscriptions" (
 CREATE TABLE "user_roles" (
 	"user_id" uuid NOT NULL,
 	"role_id" uuid NOT NULL,
-	"account_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "user_roles_user_id_role_id_account_id_pk" PRIMARY KEY("user_id","role_id","account_id")
+	CONSTRAINT "user_roles_user_id_role_id_pk" PRIMARY KEY("user_id","role_id")
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"account_id" uuid NOT NULL,
 	"email" varchar(255) NOT NULL,
 	"first_name" varchar(45) NOT NULL,
 	"last_name" varchar(45) NOT NULL,
 	"password_hash" varchar(255) NOT NULL,
 	"phone" varchar(45),
 	"avatar" text,
-	"status" "user_status" DEFAULT 'pending_verification' NOT NULL,
+	"status" "user_status" DEFAULT 'active' NOT NULL,
 	"last_login_at" timestamp with time zone,
 	"last_login_ip" varchar(45),
 	"failed_login_attempts" integer DEFAULT 0 NOT NULL,
@@ -193,12 +193,9 @@ CREATE TABLE "users" (
 	"password_reset_token" varchar(255),
 	"password_reset_expires" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "users_email_unique" UNIQUE("email")
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "account_members" ADD CONSTRAINT "account_members_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "account_members" ADD CONSTRAINT "account_members_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_plan_id_plans_id_fk" FOREIGN KEY ("plan_id") REFERENCES "public"."plans"("id") ON DELETE restrict ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "applications" ADD CONSTRAINT "applications_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -222,10 +219,7 @@ ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_account_id_accounts_id
 ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_plan_id_plans_id_fk" FOREIGN KEY ("plan_id") REFERENCES "public"."plans"("id") ON DELETE restrict ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_role_id_roles_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."roles"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-CREATE INDEX "fk_account_members_accounts1_idx" ON "account_members" USING btree ("account_id");--> statement-breakpoint
-CREATE INDEX "fk_account_members_users1_idx" ON "account_members" USING btree ("user_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "account_members_account_user_uniq" ON "account_members" USING btree ("account_id","user_id");--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 CREATE INDEX "fk_accounts_plan_idx" ON "accounts" USING btree ("plan_id");--> statement-breakpoint
 CREATE INDEX "fk_applications_accounts_idx" ON "applications" USING btree ("account_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "apps_account_slug_uniq" ON "applications" USING btree ("account_id","slug");--> statement-breakpoint
@@ -240,7 +234,8 @@ CREATE INDEX "permissions_name_idx" ON "permissions" USING btree ("name");--> st
 CREATE INDEX "fk_permissions_accounts1_idx" ON "permissions" USING btree ("account_id");--> statement-breakpoint
 CREATE INDEX "fk_permissions_applications1_idx" ON "permissions" USING btree ("application_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "permissions_account_app_res_act_uniq" ON "permissions" USING btree ("account_id","application_id","resource","action");--> statement-breakpoint
-CREATE INDEX "fk_refresh_tokens_users1_idx" ON "refresh_tokens" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "window_start_idx" ON "rate_limits" USING btree ("window_start");--> statement-breakpoint
+CREATE INDEX "fk_refresh_tokens_users_application_idx" ON "refresh_tokens" USING btree ("user_id","application_id");--> statement-breakpoint
 CREATE INDEX "fk_refresh_tokens_applications1_idx" ON "refresh_tokens" USING btree ("application_id");--> statement-breakpoint
 CREATE INDEX "fk_refresh_tokens_accounts1_idx" ON "refresh_tokens" USING btree ("account_id");--> statement-breakpoint
 CREATE INDEX "fk_role_permissions_roles1_idx" ON "role_permissions" USING btree ("role_id");--> statement-breakpoint
@@ -253,4 +248,4 @@ CREATE INDEX "fk_subscriptions_accounts1_idx" ON "subscriptions" USING btree ("a
 CREATE INDEX "fk_subscriptions_plan1_idx" ON "subscriptions" USING btree ("plan_id");--> statement-breakpoint
 CREATE INDEX "fk_user_roles_users1_idx" ON "user_roles" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "fk_user_roles_roles1_idx" ON "user_roles" USING btree ("role_id");--> statement-breakpoint
-CREATE INDEX "fk_user_roles_accounts1_idx" ON "user_roles" USING btree ("account_id");
+CREATE UNIQUE INDEX "user_account_idx" ON "users" USING btree ("account_id","email");

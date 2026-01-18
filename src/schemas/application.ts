@@ -76,7 +76,7 @@ export const CreateApplicationBodySchema = z.object({
   accessTokenExp: z.number(),
   refreshTokenExp: z.number(),
   clientJwtSecret: z.string(),
-  logo: z.string().url().optional(),
+  logo: z.string().optional(),
   homeUrl: z.string().url().optional(),
   logoutUrl: z.string().url().optional(),
   callbackUrls: z.array(z.string().url()).optional(),

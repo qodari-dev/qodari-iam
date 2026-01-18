@@ -89,6 +89,7 @@ export function useImageUpload(options?: UploadOptions) {
           body: compressedFile,
           headers: {
             'Content-Type': compressedFile.type,
+            'x-amz-acl': 'public-read',
           },
         });
 

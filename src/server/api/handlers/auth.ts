@@ -784,4 +784,89 @@ export const auth = tsr.router(contract.auth, {
       });
     }
   },
+  // --------------------------------------
+  // POST - /revoke (RFC 7009)
+  // --------------------------------------
+  revoke: async ({ body }, { nextRequest }) => {
+    try {
+      const { token, client_id, client_secret } = body;
+
+      // 1. Rate limit por IP
+      const ip = getClientIp(nextRequest);
+      const ipKey = `revoke:ip:${ip}`;
+      const windowMs = 5 * 60 * 1000; // 5 min
+
+      const ipRl = await checkRateLimit({
+        key: ipKey,
+        limit: 20,
+        windowMs,
+      });
+
+      if (!ipRl.success) {
+        return {
+          status: 429,
+          body: {
+            message: 'Too many requests. Please try again later.',
+            code: 'RATE_LIMIT_EXCEEDED',
+          },
+          headers: {
+            'X-RateLimit-Limit': String(ipRl.limit),
+            'X-RateLimit-Remaining': String(ipRl.remaining),
+            'X-RateLimit-Reset': ipRl.resetAt.toISOString(),
+          },
+        };
+      }
+
+      // 2. Buscar app por client_id
+      const app = await db.query.applications.findFirst({
+        where: eq(applications.clientId, client_id),
+      });
+
+      if (!app || app.status !== 'active') {
+        return {
+          status: 401,
+          body: { message: 'Invalid client', code: 'invalid_client' },
+        };
+      }
+
+      // 3. Validar client_secret si la app es confidential
+      if (!validateClientAuth(app, client_secret)) {
+        return {
+          status: 401,
+          body: {
+            message: 'Invalid client credentials',
+            code: 'invalid_client',
+          },
+        };
+      }
+
+      // 4. Hashear token y buscar en refreshTokens
+      const hashed = await hashToken(token);
+      const existingRefresh = await db.query.refreshTokens.findFirst({
+        where: and(eq(refreshTokens.tokenHash, hashed), eq(refreshTokens.applicationId, app.id)),
+      });
+
+      // 5. Si existe y no está revocado, revocar token y toda su familia
+      // RFC 7009: Siempre retornar 200, no revelar si el token existía
+      if (existingRefresh && !existingRefresh.revoked) {
+        const now = new Date();
+        await db
+          .update(refreshTokens)
+          .set({
+            revoked: true,
+            revokedAt: now,
+            revokedReason: 'USER_REVOKED',
+          })
+          .where(eq(refreshTokens.familyId, existingRefresh.familyId));
+      }
+
+      // 6. RFC 7009: siempre retornar 200
+      return { status: 200, body: undefined };
+    } catch (e) {
+      return genericTsRestErrorResponse(e, {
+        genericMsg: 'Failed to revoke token.',
+        logPrefix: '[auth.revoke]',
+      });
+    }
+  },
 });

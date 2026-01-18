@@ -48,7 +48,7 @@ export function Roles() {
     defaultIncludes: ['application', 'permissions'],
   });
 
-  const { data, isLoading } = useRoles(queryParams);
+  const { data, isLoading, isFetching, refetch } = useRoles(queryParams);
 
   const { mutateAsync: deleteRole, isPending: isDeleting } = useDeleteRole();
 
@@ -116,6 +116,8 @@ export function Roles() {
               searchValue={searchValue}
               onSearchChange={handleSearchChange}
               onCreate={handleCreate}
+              onRefresh={() => refetch()}
+              isRefreshing={isFetching && !isLoading}
             />
           }
           meta={tableMeta}

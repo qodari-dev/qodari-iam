@@ -27,11 +27,7 @@ const timestamps = {
 
 export const statusEnum = pgEnum('status', ['active', 'suspended']);
 
-export const userStatusEnum = pgEnum('user_status', [
-  'active',
-  'suspended',
-  'pending_verification',
-]);
+export const userStatusEnum = pgEnum('user_status', ['active', 'suspended']);
 
 export const subscriptionStatusEnum = pgEnum('subscription_status', [
   'active',
@@ -183,7 +179,7 @@ export const users = pgTable(
     passwordHash: varchar('password_hash', { length: 255 }).notNull(),
     phone: varchar('phone', { length: 45 }),
     avatar: text('avatar'),
-    status: userStatusEnum('status').notNull().default('pending_verification'),
+    status: userStatusEnum('status').notNull().default('active'),
     lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
     lastLoginIp: varchar('last_login_ip', { length: 45 }),
     failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
@@ -255,11 +251,11 @@ export const applications = pgTable(
     clientJwtSecret: text('client_jwt_secret').notNull(),
     homeUrl: varchar('home_url', { length: 255 }),
     logoutUrl: varchar('logout_url', { length: 255 }),
-    callbackUrl: varchar('callback_url', { length: 255 }),
+    callbackUrls: text('callback_urls').array().default([]),
     status: statusEnum('status').notNull().default('active'),
     authCodeExp: integer('auth_code_exp').notNull().default(300),
     accessTokenExp: integer('access_token_exp').notNull().default(900),
-    refreshTokenExp: integer('refresh_token_exp').notNull().default(1296000),
+    refreshTokenExp: integer('refresh_token_exp').notNull().default(604800), // 7 days
     ...timestamps,
   },
   (table) => [

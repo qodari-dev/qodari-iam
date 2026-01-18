@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { CreateRoleBodySchema } from '@/schemas/role';
 import { useApplication } from '@/hooks/queries/use-application-queries';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -14,14 +14,20 @@ type FormValues = z.infer<typeof CreateRoleBodySchema>;
 export function RolePermissionsForm() {
   const form = useFormContext<FormValues>();
   const selectedAppId = form.watch('applicationId');
+  const prevAppIdRef = useRef<string | null>(null);
 
   const { fields, replace } = useFieldArray({
     control: form.control,
     name: 'permissions',
   });
 
+  // Solo limpiar permisos cuando el usuario cambia manualmente la aplicación
+  // No limpiar en la carga inicial (cuando prevAppIdRef.current es null)
   useEffect(() => {
-    replace([]);
+    if (prevAppIdRef.current !== null && prevAppIdRef.current !== selectedAppId) {
+      replace([]);
+    }
+    prevAppIdRef.current = selectedAppId;
   }, [selectedAppId, replace]);
 
   const selectedIds = useMemo(() => new Set(fields.map((f) => f.permissionId)), [fields]);

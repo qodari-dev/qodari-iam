@@ -48,7 +48,7 @@ export function Applications() {
     defaultIncludes: ['permissions'],
   });
 
-  const { data, isLoading } = useApplications(queryParams);
+  const { data, isLoading, isFetching, refetch } = useApplications(queryParams);
 
   const { mutateAsync: deleteApplication, isPending: isDeleting } = useDeleteApplication();
 
@@ -113,6 +113,8 @@ export function Applications() {
               searchValue={searchValue}
               onSearchChange={handleSearchChange}
               onCreate={handleCreate}
+              onRefresh={() => refetch()}
+              isRefreshing={isFetching && !isLoading}
             />
           }
           meta={tableMeta}

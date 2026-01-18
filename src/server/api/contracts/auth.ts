@@ -8,6 +8,7 @@ import {
   OauthTokenResponseSchema,
   ResetPasswordBodySchema,
   ResetPasswordResponseSchema,
+  RevokeTokenBodySchema,
 } from '@/schemas/auth';
 import { TsRestErrorSchema } from '@/schemas/ts-rest';
 import { initContract } from '@ts-rest/core';
@@ -107,6 +108,19 @@ export const auth = c.router(
       responses: {
         204: c.noBody(),
         400: TsRestErrorSchema,
+        429: TsRestErrorSchema,
+        500: TsRestErrorSchema,
+      },
+    },
+
+    revoke: {
+      method: 'POST',
+      path: '/revoke',
+      summary: 'Revoke a refresh token (RFC 7009)',
+      body: RevokeTokenBodySchema,
+      responses: {
+        200: c.noBody(),
+        401: TsRestErrorSchema,
         429: TsRestErrorSchema,
         500: TsRestErrorSchema,
       },

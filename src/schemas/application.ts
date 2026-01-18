@@ -77,7 +77,7 @@ export const CreateApplicationBodySchema = z.object({
   logo: z.string().url().optional(),
   homeUrl: z.string().url().optional(),
   logoutUrl: z.string().url().optional(),
-  callbackUrl: z.string().url().optional(),
+  callbackUrls: z.array(z.string().url()).optional(),
   permissions: PermissionInputSchema.array().optional(),
 });
 

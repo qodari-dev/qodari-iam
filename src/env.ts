@@ -18,6 +18,12 @@ export const env = createEnv({
     PAUSE_SCHEDULER: z
       .union([z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')])
       .optional(),
+    // DigitalOcean Spaces
+    DO_SPACES_ENDPOINT: z.string().url(),
+    DO_SPACES_BUCKET: z.string(),
+    DO_SPACES_KEY: z.string(),
+    DO_SPACES_SECRET: z.string(),
+    DO_SPACES_REGION: z.string().default('nyc3'),
   },
   /*
    * Environment variables available on the client (and server).
@@ -27,6 +33,7 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_API_URL: z.string().url(),
     NEXT_PUBLIC_APP_URL: z.string().url(),
+    NEXT_PUBLIC_STORAGE_URL: z.string().url(),
   },
   /*
    * Specify what values should be validated by your schemas above.
@@ -47,6 +54,13 @@ export const env = createEnv({
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_MAIL_FROM: process.env.RESEND_MAIL_FROM,
     PAUSE_SCHEDULER: process.env.PAUSE_SCHEDULER,
+    // DigitalOcean Spaces
+    DO_SPACES_ENDPOINT: process.env.DO_SPACES_ENDPOINT,
+    DO_SPACES_BUCKET: process.env.DO_SPACES_BUCKET,
+    DO_SPACES_KEY: process.env.DO_SPACES_KEY,
+    DO_SPACES_SECRET: process.env.DO_SPACES_SECRET,
+    DO_SPACES_REGION: process.env.DO_SPACES_REGION,
+    NEXT_PUBLIC_STORAGE_URL: process.env.NEXT_PUBLIC_STORAGE_URL,
   },
   // experimental__runtimeEnv: {
   //   NEXT_PUBLIC_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_PUBLISHABLE_KEY,

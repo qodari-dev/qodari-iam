@@ -3,11 +3,11 @@
 import { DataTableColumnHeader } from '@/components/data-table';
 import { Badge } from '@/components/ui/badge';
 import { User, UserStatus } from '@/schemas/user';
+import { formatDate } from '@/utils/formatters';
 import type { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { CheckCircle, Clock, ShieldCheck, User as UserIcon, XCircle } from 'lucide-react';
+import { CheckCircle, ShieldCheck, User as UserIcon, XCircle } from 'lucide-react';
 import { UserRowActions } from './user-row-actions';
-import { formatDate } from '@/utils/formatters';
 
 // ============================================================================
 // Status Badge Component
@@ -30,11 +30,6 @@ const statusConfig: Record<
     label: 'Suspended',
     variant: 'destructive',
     icon: XCircle,
-  },
-  pending_verification: {
-    label: 'Pending',
-    variant: 'outline',
-    icon: Clock,
   },
 };
 

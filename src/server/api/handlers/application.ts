@@ -2,6 +2,7 @@ import { db } from '@/server/db';
 import { applications, permissions } from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
 import { requireAdminPermission } from '@/server/utils/require-permission';
+import { deleteObject, isStorageKey } from '@/server/utils/spaces';
 import { tsr } from '@ts-rest/serverless/next';
 import { and, eq, sql } from 'drizzle-orm';
 import { contract } from '../contracts';
@@ -196,6 +197,15 @@ export const application = tsr.router(contract.application, {
         return { status: 404, body: { message: 'Application not found', code: 'APP_NOT_FOUND' } };
       }
 
+      // Check if we need to delete the old logo
+      const oldLogoKey = app.logo;
+      const newLogo = body.logo;
+      const shouldDeleteOldLogo =
+        oldLogoKey &&
+        isStorageKey(oldLogoKey) &&
+        newLogo !== undefined &&
+        newLogo !== oldLogoKey;
+
       const [updated] = await db.transaction(async (tx) => {
         const [appUpdated] = await tx
           .update(applications)
@@ -218,6 +228,16 @@ export const application = tsr.router(contract.application, {
 
         return [appUpdated];
       });
+
+      // Delete old logo from storage after successful update
+      if (shouldDeleteOldLogo) {
+        try {
+          await deleteObject(oldLogoKey);
+        } catch {
+          // Log but don't fail the request if logo deletion fails
+          console.error(`Failed to delete old logo: ${oldLogoKey}`);
+        }
+      }
 
       return { status: 200, body: updated };
     } catch (e) {
@@ -246,10 +266,22 @@ export const application = tsr.router(contract.application, {
         return { status: 404, body: { message: 'Application not found', code: 'APP_NOT_FOUND' } };
       }
 
+      const logoKey = app.logo;
+
       const [deleted] = await db
         .delete(applications)
         .where(and(eq(applications.id, id), eq(applications.accountId, session.accountId)))
         .returning();
+
+      // Delete logo from storage after successful deletion
+      if (logoKey && isStorageKey(logoKey)) {
+        try {
+          await deleteObject(logoKey);
+        } catch {
+          // Log but don't fail the request if logo deletion fails
+          console.error(`Failed to delete logo: ${logoKey}`);
+        }
+      }
 
       return { status: 200, body: deleted };
     } catch (e) {

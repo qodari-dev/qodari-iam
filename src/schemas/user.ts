@@ -22,10 +22,9 @@ import { z } from 'zod';
 export const userStatusOptions = [
   { label: 'Active', value: 'active' },
   { label: 'Suspended', value: 'suspended' },
-  { label: 'Pending Verification', value: 'pending_verification' },
 ] as const;
 
-const USER_STATUS = ['active', 'suspended', 'pending_verification'] as const;
+const USER_STATUS = ['active', 'suspended'] as const;
 const UserStatusEnum = z.enum(USER_STATUS);
 export type UserStatus = z.infer<typeof UserStatusEnum>;
 

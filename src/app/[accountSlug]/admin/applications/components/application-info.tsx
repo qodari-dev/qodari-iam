@@ -3,6 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Application } from '@/schemas/application';
 import { formatDate } from '@/utils/formatters';
+import { getStorageUrl } from '@/utils/storage';
+import Image from 'next/image';
 
 export function ApplicationInfo({
   application,
@@ -14,6 +16,8 @@ export function ApplicationInfo({
   onOpened(opened: boolean): void;
 }) {
   if (!application) return null;
+
+  const logoUrl = getStorageUrl(application.logo);
 
   const sections: DescriptionSection[] = [
     {
@@ -31,6 +35,16 @@ export function ApplicationInfo({
             </Badge>
           ),
         },
+        {
+          label: 'Logo',
+          value: logoUrl ? (
+            <div className="relative h-16 w-16 overflow-hidden rounded-lg border">
+              <Image src={logoUrl} alt={application.name} fill className="object-cover" unoptimized />
+            </div>
+          ) : (
+            '—'
+          ),
+        },
       ],
     },
     {
@@ -39,7 +53,21 @@ export function ApplicationInfo({
       items: [
         { label: 'Home URL', value: application.homeUrl ?? '—' },
         { label: 'Logout URL', value: application.logoutUrl ?? '—' },
-        { label: 'Callback URL', value: application.callbackUrl ?? '—' },
+        {
+          label: 'Callback URLs',
+          value:
+            application.callbackUrls && application.callbackUrls.length > 0 ? (
+              <ul className="list-disc list-inside space-y-1">
+                {application.callbackUrls.map((url, index) => (
+                  <li key={index} className="text-sm break-all">
+                    {url}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              '—'
+            ),
+        },
       ],
     },
     {

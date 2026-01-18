@@ -55,19 +55,22 @@ export async function GET(request: NextRequest) {
   const accountSlug = app.account.slug;
 
   // 3) Determinar redirect_uri final
-  const finalRedirectUri = redirectUri ?? app.callbackUrl;
-  if (!finalRedirectUri) {
-    return new NextResponse("redirect_uri is required", { status: 400 });
-  }
+  const callbackUrls = app.callbackUrls ?? [];
 
-  // Si el cliente manda redirect_uri, debe coincidir con la registrada
-  if (redirectUri && redirectUri !== app.callbackUrl) {
+  // Si el cliente manda redirect_uri, debe estar en la lista de callbacks permitidos
+  if (redirectUri && !callbackUrls.includes(redirectUri)) {
     return buildErrorRedirect({
-      redirectUri: finalRedirectUri,
+      redirectUri: redirectUri,
       error: "invalid_request",
-      errorDescription: "redirect_uri does not match registered callback",
+      errorDescription: "redirect_uri is not in the list of allowed callbacks",
       state,
     });
+  }
+
+  // Si no hay redirect_uri, usar el primero de la lista
+  const finalRedirectUri = redirectUri ?? callbackUrls[0];
+  if (!finalRedirectUri) {
+    return new NextResponse("No callback URLs configured for this application", { status: 400 });
   }
 
   // 4) Solo soportamos response_type=code

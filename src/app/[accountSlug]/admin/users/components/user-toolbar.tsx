@@ -61,7 +61,7 @@ export function UsersToolbar({
           placeholder="Search by email, first name, last name..."
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
-          className="h-8 w-[300px] lg:w-[300px]"
+          className="md:max-w-xs"
         />
 
         {/* Status Filter (Multi-select) */}
@@ -82,7 +82,7 @@ export function UsersToolbar({
 
         {/* Reset Button */}
         {isFiltered && (
-          <Button variant="ghost" onClick={onReset} className="h-8 px-2 lg:px-3">
+          <Button variant="ghost" onClick={onReset} className="h-9 px-2 lg:px-3">
             Reset
             <X className="ml-2 h-4 w-4" />
           </Button>
@@ -90,14 +90,13 @@ export function UsersToolbar({
       </div>
 
       <div className="flex items-center space-x-2">
-        {/* Refresh Button */}
         {onRefresh && (
           <Button
             variant="outline"
             size="sm"
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="h-8"
+            className="h-9"
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
@@ -106,7 +105,7 @@ export function UsersToolbar({
 
         {/* Create Button */}
         {onCreate && canCreateUsers && (
-          <Button size="sm" onClick={onCreate} className="h-8">
+          <Button type="button" size="sm" onClick={onCreate} className="h-9">
             <Plus className="mr-2 h-4 w-4" />
             Add User
           </Button>

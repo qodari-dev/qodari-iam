@@ -13,7 +13,7 @@ export const zUser: z.ZodType<PublicUser> = z.object({
   lastName: z.string(),
   avatar: z.string().url().nullable(),
   isAdmin: z.boolean(),
-  status: z.enum(['active', 'suspended', 'pending_verification']),
+  status: z.enum(['active', 'suspended']),
 });
 
 type PublicAccount = Pick<Account, 'id' | 'name' | 'slug' | 'status'>;
@@ -114,6 +114,15 @@ export const ResetPasswordResponseSchema = z.object({
 });
 
 export type ResetPasswordResponse = z.infer<typeof ResetPasswordResponseSchema>;
+
+// ---------- Revoke Token (RFC 7009) ----------
+export const RevokeTokenBodySchema = z.object({
+  token: z.string().min(1),
+  client_id: z.string().min(1),
+  client_secret: z.string().optional(),
+});
+
+export type RevokeTokenBody = z.infer<typeof RevokeTokenBodySchema>;
 
 // ------- Change Password -------
 export const ChangePasswordBodySchema = z

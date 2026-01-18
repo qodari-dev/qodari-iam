@@ -3,6 +3,7 @@ import { auth } from './auth';
 import { user } from './user';
 import { role } from './role';
 import { application } from './application';
+import { upload } from './upload';
 
 const c = initContract();
 
@@ -12,6 +13,7 @@ export const contract = c.router(
     user,
     role,
     application,
+    upload,
   },
   {
     pathPrefix: '/api/v1',

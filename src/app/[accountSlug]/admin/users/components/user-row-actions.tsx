@@ -62,18 +62,14 @@ export function UserRowActions({ row, table }: UserRowActionsProps) {
           label: 'Activate',
           icon: UserCheck,
           onClick: meta?.onRowActivate,
-          hidden:
-            !canUpdateUsers || user.status === 'active' || user.status === 'pending_verification',
+          hidden: !canUpdateUsers || user.status === 'active',
         },
         {
           label: 'Suspend',
           icon: Ban,
           onClick: meta?.onRowSuspend,
           variant: 'destructive',
-          hidden:
-            !canUpdateUsers ||
-            user.status === 'suspended' ||
-            user.status === 'pending_verification',
+          hidden: !canUpdateUsers || user.status === 'suspended',
         },
         {
           label: 'Delete User',

@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import { DropdownUser } from '@/components/portal/dropdown-user';
 import { useAuth } from '@/stores/auth-store-provider';
+import { getStorageUrl } from '@/utils/storage';
 import Image from 'next/image';
 
 export function Portal() {
@@ -28,17 +29,25 @@ export function Portal() {
       <div className="container mx-auto">
         <div className="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-4">
           {auth.applications?.map((app) => {
+            const logoUrl = getStorageUrl(app.logo);
             return (
               <Link key={app.id} href={app.homeUrl ?? ''} className="block">
                 <div className="group relative">
                   <div className="relative">
-                    <Image
-                      alt={app.name}
-                      src={app.logo ?? ''}
-                      width={200}
-                      height={200}
-                      className="aspect-4/3 w-full rounded-lg bg-gray-100 object-cover"
-                    />
+                    {logoUrl ? (
+                      <Image
+                        alt={app.name}
+                        src={logoUrl}
+                        width={200}
+                        height={200}
+                        className="aspect-4/3 w-full rounded-lg bg-gray-100 object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="bg-muted text-muted-foreground flex aspect-4/3 w-full items-center justify-center rounded-lg text-4xl font-semibold">
+                        {app.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <div
                       aria-hidden="true"
                       className="absolute inset-0 flex items-end p-4 opacity-0 group-hover:opacity-100"

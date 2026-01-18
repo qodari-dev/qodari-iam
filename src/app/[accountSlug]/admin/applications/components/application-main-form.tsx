@@ -1,6 +1,7 @@
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { z } from 'zod';
 import { CreateApplicationBodySchema } from '@/schemas/application';
 import {
@@ -10,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Plus, Trash2 } from 'lucide-react';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 type FormValues = z.infer<typeof CreateApplicationBodySchema>;
 
@@ -22,6 +25,47 @@ const clientTypeOptions: Array<{ label: string; value: FormValues['clientType'] 
   { label: 'Public', value: 'public' },
   { label: 'Confidential', value: 'confidential' },
 ];
+
+function CallbackUrlsField() {
+  const form = useFormContext<FormValues>();
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'callbackUrls' as never,
+  });
+
+  return (
+    <Field>
+      <FieldLabel>Callback URLs</FieldLabel>
+      <div className="space-y-2">
+        {fields.map((field, index) => (
+          <div key={field.id} className="flex gap-2">
+            <Controller
+              name={`callbackUrls.${index}`}
+              control={form.control}
+              render={({ field: inputField, fieldState }) => (
+                <div className="flex-1">
+                  <Input
+                    {...inputField}
+                    placeholder="https://example.com/callback"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </div>
+              )}
+            />
+            <Button type="button" variant="outline" size="icon" onClick={() => remove(index)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        <Button type="button" variant="outline" size="sm" onClick={() => append('')}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Callback URL
+        </Button>
+      </div>
+    </Field>
+  );
+}
 
 export function ApplicationMainForm() {
   const form = useFormContext<FormValues>();
@@ -153,8 +197,8 @@ export function ApplicationMainForm() {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Logo URL</FieldLabel>
-            <Input {...field} aria-invalid={fieldState.invalid} />
+            <FieldLabel htmlFor={field.name}>Logo</FieldLabel>
+            <ImageUpload value={field.value} onChange={field.onChange} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
@@ -181,17 +225,7 @@ export function ApplicationMainForm() {
           </Field>
         )}
       />
-      <Controller
-        name="callbackUrl"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Callback URL</FieldLabel>
-            <Input {...field} aria-invalid={fieldState.invalid} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
+      <CallbackUrlsField />
       <Controller
         name="status"
         control={form.control}

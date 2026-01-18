@@ -204,8 +204,8 @@ export function Users() {
                 }
               }}
               onReset={resetFilters}
-              onRefresh={() => refetch()}
               onCreate={handleCreate}
+              onRefresh={() => refetch()}
               isRefreshing={isFetching && !isLoading}
             />
           }

@@ -101,7 +101,8 @@ export function DataTable<TData, TValue>({
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
 
-  // Create table instance
+  // React Compiler flags TanStack's table hook as incompatible; usage stays local so opt out of the lint.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

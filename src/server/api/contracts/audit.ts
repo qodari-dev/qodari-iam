@@ -67,7 +67,7 @@ export const audit = c.router(
     },
     export: {
       method: 'GET',
-      path: '/export',
+      path: '/report/export',
       query: AuditLogExportQuerySchema,
       metadata: {
         auth: 'required',

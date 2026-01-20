@@ -24,6 +24,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ApplicationMainForm } from './application-main-form';
 import { ApplicationPermissionsForm } from './application-permissions-form';
+import { useImageUploadWithCleanup } from '@/hooks/use-image-upload-with-cleanup';
 
 type FormValues = z.infer<typeof CreateApplicationBodySchema>;
 
@@ -37,6 +38,7 @@ export function ApplicationForm({
   onOpened(opened: boolean): void;
 }) {
   const formId = useId();
+  const { onUploadComplete, onRemoveUnsaved, markAsSaved } = useImageUploadWithCleanup();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(CreateApplicationBodySchema),
@@ -103,6 +105,7 @@ export function ApplicationForm({
       ...values,
       slug: values.slug.trim().toLowerCase(),
     };
+    markAsSaved([values.logo, values.image, values.imageAd]);
     if (application) {
       await update({ params: { id: application.id }, body: payload });
     } else {
@@ -128,7 +131,10 @@ export function ApplicationForm({
                 <TabsTrigger value="permissions">Permissions</TabsTrigger>
               </TabsList>
               <TabsContent value="main" className="space-y-4 pt-2">
-                <ApplicationMainForm />
+                <ApplicationMainForm
+                  onRemoveUnsaved={onRemoveUnsaved}
+                  onUploadComplete={onUploadComplete}
+                />
               </TabsContent>
 
               <TabsContent value="permissions" className="pt-2">

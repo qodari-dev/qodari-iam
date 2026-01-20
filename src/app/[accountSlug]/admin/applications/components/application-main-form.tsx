@@ -17,6 +17,11 @@ import { Switch } from '@/components/ui/switch';
 
 type FormValues = z.infer<typeof CreateApplicationBodySchema>;
 
+type ApplicationMainFormProps = {
+  onUploadComplete?: (key: string) => void;
+  onRemoveUnsaved?: (key: string | null) => void;
+};
+
 const statusOptions: Array<{ label: string; value: FormValues['status'] }> = [
   { label: 'Active', value: 'active' },
   { label: 'Suspended', value: 'suspended' },
@@ -68,7 +73,10 @@ function CallbackUrlsField() {
   );
 }
 
-export function ApplicationMainForm() {
+export function ApplicationMainForm({
+  onRemoveUnsaved,
+  onUploadComplete,
+}: ApplicationMainFormProps) {
   const form = useFormContext<FormValues>();
   return (
     <FieldGroup>
@@ -202,7 +210,12 @@ export function ApplicationMainForm() {
             <p className="text-muted-foreground mb-2 text-sm">
               Used in the header of authentication pages for this app.
             </p>
-            <ImageUpload value={field.value} onChange={field.onChange} />
+            <ImageUpload
+              value={field.value}
+              onChange={field.onChange}
+              onUploadComplete={onUploadComplete}
+              onRemoveUnsaved={onRemoveUnsaved}
+            />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
@@ -216,7 +229,12 @@ export function ApplicationMainForm() {
             <p className="text-muted-foreground mb-2 text-sm">
               Shown in the app card on the user portal.
             </p>
-            <ImageUpload value={field.value} onChange={field.onChange} />
+            <ImageUpload
+              value={field.value}
+              onChange={field.onChange}
+              onUploadComplete={onUploadComplete}
+              onRemoveUnsaved={onRemoveUnsaved}
+            />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
@@ -230,7 +248,12 @@ export function ApplicationMainForm() {
             <p className="text-muted-foreground mb-2 text-sm">
               Shown in the right panel of login and password reset pages.
             </p>
-            <ImageUpload value={field.value} onChange={field.onChange} />
+            <ImageUpload
+              value={field.value}
+              onChange={field.onChange}
+              onUploadComplete={onUploadComplete}
+              onRemoveUnsaved={onRemoveUnsaved}
+            />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
@@ -270,10 +293,7 @@ export function ApplicationMainForm() {
                   Require users to verify their identity with a code sent to their email
                 </p>
               </div>
-              <Switch
-                checked={field.value ?? false}
-                onCheckedChange={field.onChange}
-              />
+              <Switch checked={field.value ?? false} onCheckedChange={field.onChange} />
             </div>
           </Field>
         )}

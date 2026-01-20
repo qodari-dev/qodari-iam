@@ -43,7 +43,10 @@ type FormValues = z.infer<typeof CreateApiClientBodySchema>;
 
 export function ApiClientRolesForm() {
   const form = useFormContext<FormValues>();
-  const roleIds = form.watch('roleIds') ?? [];
+
+  const roleIds = useMemo(() => {
+    return form.getValues('roleIds') ?? [];
+  }, [form]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);

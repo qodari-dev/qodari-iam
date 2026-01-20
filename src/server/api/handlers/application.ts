@@ -197,11 +197,16 @@ export const application = tsr.router(contract.application, {
         return { status: 404, body: { message: 'Application not found', code: 'APP_NOT_FOUND' } };
       }
 
-      // Check if we need to delete the old logo
+      // Check if we need to delete old images
       const oldLogoKey = app.logo;
-      const newLogo = body.logo;
+      const oldImageKey = app.image;
+      const oldImageAdKey = app.imageAd;
       const shouldDeleteOldLogo =
-        oldLogoKey && isStorageKey(oldLogoKey) && newLogo !== undefined && newLogo !== oldLogoKey;
+        oldLogoKey && isStorageKey(oldLogoKey) && body.logo !== undefined && body.logo !== oldLogoKey;
+      const shouldDeleteOldImage =
+        oldImageKey && isStorageKey(oldImageKey) && body.image !== undefined && body.image !== oldImageKey;
+      const shouldDeleteOldImageAd =
+        oldImageAdKey && isStorageKey(oldImageAdKey) && body.imageAd !== undefined && body.imageAd !== oldImageAdKey;
 
       const [updated] = await db.transaction(async (tx) => {
         const [appUpdated] = await tx
@@ -256,15 +261,22 @@ export const application = tsr.router(contract.application, {
         return [appUpdated];
       });
 
-      // Delete old logo from storage after successful update
-      if (shouldDeleteOldLogo) {
-        try {
-          await deleteObject(oldLogoKey);
-        } catch {
-          // Log but don't fail the request if logo deletion fails
-          console.error(`Failed to delete old logo: ${oldLogoKey}`);
-        }
-      }
+      // Delete old images from storage after successful update
+      const imagesToDelete = [
+        shouldDeleteOldLogo && oldLogoKey,
+        shouldDeleteOldImage && oldImageKey,
+        shouldDeleteOldImageAd && oldImageAdKey,
+      ].filter((key): key is string => Boolean(key));
+
+      await Promise.all(
+        imagesToDelete.map(async (key) => {
+          try {
+            await deleteObject(key);
+          } catch {
+            console.error(`Failed to delete old image: ${key}`);
+          }
+        })
+      );
 
       return { status: 200, body: updated };
     } catch (e) {
@@ -293,22 +305,25 @@ export const application = tsr.router(contract.application, {
         return { status: 404, body: { message: 'Application not found', code: 'APP_NOT_FOUND' } };
       }
 
-      const logoKey = app.logo;
+      const imagesToDelete = [app.logo, app.image, app.imageAd].filter(
+        (key): key is string => Boolean(key) && isStorageKey(key)
+      );
 
       const [deleted] = await db
         .delete(applications)
         .where(and(eq(applications.id, id), eq(applications.accountId, session.accountId)))
         .returning();
 
-      // Delete logo from storage after successful deletion
-      if (logoKey && isStorageKey(logoKey)) {
-        try {
-          await deleteObject(logoKey);
-        } catch {
-          // Log but don't fail the request if logo deletion fails
-          console.error(`Failed to delete logo: ${logoKey}`);
-        }
-      }
+      // Delete all images from storage after successful deletion
+      await Promise.all(
+        imagesToDelete.map(async (key) => {
+          try {
+            await deleteObject(key);
+          } catch {
+            console.error(`Failed to delete image: ${key}`);
+          }
+        })
+      );
 
       return { status: 200, body: deleted };
     } catch (e) {

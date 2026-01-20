@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 type FormValues = z.infer<typeof CreateUserBodySchema>;
 
-export function UserMainForm() {
+export function UserMainForm({ isEdit }: { isEdit?: boolean }) {
   const form = useFormContext<FormValues>();
   return (
     <FieldGroup className="">
@@ -83,7 +83,7 @@ export function UserMainForm() {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <FieldLabel htmlFor="password">Password{isEdit && ' (opcional)'}</FieldLabel>
             <Input
               {...field}
               type="password"

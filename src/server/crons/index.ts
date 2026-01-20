@@ -3,6 +3,7 @@ import { db } from '../db';
 import { authorizationCodes, mfaPending } from '../db/schema';
 import { CronJob } from 'cron';
 import { env } from '@/env';
+import { cleanupOrphanedImages } from './cleanup-orphaned-images';
 
 const onceADayJobs = new CronJob(
   '0 1 * * *',
@@ -11,6 +12,7 @@ const onceADayJobs = new CronJob(
     await Promise.all([
       db.delete(authorizationCodes).where(lt(authorizationCodes.expiresAt, now)),
       db.delete(mfaPending).where(lt(mfaPending.expiresAt, now)),
+      cleanupOrphanedImages(),
     ]);
   },
   null, // onComplete hook

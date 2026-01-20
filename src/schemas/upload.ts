@@ -25,5 +25,13 @@ export const PresignUploadResponseSchema = z.object({
   key: z.string(),
 });
 
+export const DeleteUploadBodySchema = z.object({
+  key: z.string().min(1).refine(
+    (key) => key.startsWith('public/temp/logos/'),
+    { message: 'Only temporary uploads can be deleted' }
+  ),
+});
+
 export type PresignUploadBody = z.infer<typeof PresignUploadBodySchema>;
 export type PresignUploadResponse = z.infer<typeof PresignUploadResponseSchema>;
+export type DeleteUploadBody = z.infer<typeof DeleteUploadBodySchema>;

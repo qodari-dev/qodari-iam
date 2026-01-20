@@ -12,11 +12,22 @@ type ImageUploadProps = {
   onChange?: (value: string | null) => void;
   disabled?: boolean;
   className?: string;
+  /** Called when a new upload completes with the storage key */
+  onUploadComplete?: (key: string) => void;
+  /** Called when user removes an image that hasn't been saved yet */
+  onRemoveUnsaved?: (key: string | null) => void;
 };
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
 
-export function ImageUpload({ value, onChange, disabled, className }: ImageUploadProps) {
+export function ImageUpload({
+  value,
+  onChange,
+  disabled,
+  className,
+  onUploadComplete,
+  onRemoveUnsaved,
+}: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -28,6 +39,11 @@ export function ImageUpload({ value, onChange, disabled, className }: ImageUploa
     async (file: File) => {
       if (!ACCEPTED_TYPES.includes(file.type)) {
         return;
+      }
+
+      // If there's a current unsaved value, notify for cleanup before uploading new one
+      if (value && onRemoveUnsaved) {
+        onRemoveUnsaved(value);
       }
 
       // Create a local preview
@@ -43,9 +59,10 @@ export function ImageUpload({ value, onChange, disabled, className }: ImageUploa
 
       if (key) {
         onChange?.(key);
+        onUploadComplete?.(key);
       }
     },
-    [upload, onChange]
+    [upload, onChange, value, onUploadComplete, onRemoveUnsaved]
   );
 
   const handleDrop = useCallback(
@@ -99,10 +116,11 @@ export function ImageUpload({ value, onChange, disabled, className }: ImageUploa
   const handleRemove = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
+      onRemoveUnsaved?.(value ?? null);
       onChange?.(null);
       reset();
     },
-    [onChange, reset]
+    [onChange, reset, value, onRemoveUnsaved]
   );
 
   return (

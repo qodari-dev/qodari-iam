@@ -7,6 +7,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { ImageUpload } from '@/components/ui/image-upload';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import { useImageUploadWithCleanup } from '@/hooks/use-image-upload-with-cleanup';
 import { UpdateAccountBodySchema } from '@/schemas/account';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +23,8 @@ export function AccountSettings() {
     queryKey: ['account'],
     queryData: {},
   });
+
+  const { onUploadComplete, onRemoveUnsaved, markAsSaved } = useImageUploadWithCleanup();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(UpdateAccountBodySchema),
@@ -56,8 +59,9 @@ export function AccountSettings() {
   const onSubmit = useCallback(
     async (values: FormValues) => {
       await updateAccount({ body: values });
+      markAsSaved([values.logo, values.imageAd]);
     },
-    [updateAccount]
+    [updateAccount, markAsSaved]
   );
 
   if (isLoading) {
@@ -99,7 +103,12 @@ export function AccountSettings() {
                     <p className="text-muted-foreground mb-2 text-sm">
                       Used in the header of authentication pages.
                     </p>
-                    <ImageUpload value={field.value} onChange={field.onChange} />
+                    <ImageUpload
+                      value={field.value}
+                      onChange={field.onChange}
+                      onUploadComplete={onUploadComplete}
+                      onRemoveUnsaved={onRemoveUnsaved}
+                    />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
@@ -114,7 +123,12 @@ export function AccountSettings() {
                     <p className="text-muted-foreground mb-2 text-sm">
                       Shown in the right panel of login and password reset pages.
                     </p>
-                    <ImageUpload value={field.value} onChange={field.onChange} />
+                    <ImageUpload
+                      value={field.value}
+                      onChange={field.onChange}
+                      onUploadComplete={onUploadComplete}
+                      onRemoveUnsaved={onRemoveUnsaved}
+                    />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}

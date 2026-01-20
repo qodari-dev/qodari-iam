@@ -11,7 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Spinner } from '@/components/ui/spinner';
 import { useCreateUser, useUpdateUser } from '@/hooks/queries/use-user-queries';
-import { CreateUserBodySchema, User } from '@/schemas/user';
+import { CreateUserBodySchema, UpdateUserBodySchema, User } from '@/schemas/user';
 import { onSubmitError } from '@/utils/on-submit-error';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCallback, useEffect, useId, useMemo } from 'react';
@@ -33,8 +33,14 @@ export function UserForm({
 }) {
   const formId = useId();
 
+  const schema = useMemo(
+    () => (user ? UpdateUserBodySchema : CreateUserBodySchema),
+    [user]
+  );
+
   const form = useForm<FormValues>({
-    resolver: zodResolver(CreateUserBodySchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       email: '',
       firstName: '',
@@ -96,7 +102,7 @@ export function UserForm({
                 <TabsTrigger value="roles">Roles</TabsTrigger>
               </TabsList>
               <TabsContent value="main">
-                <UserMainForm />
+                <UserMainForm isEdit={!!user} />
               </TabsContent>
               <TabsContent value="roles">
                 <UserRolesForm />

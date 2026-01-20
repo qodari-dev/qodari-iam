@@ -1,5 +1,11 @@
 import { db } from '@/server/db';
-import { USER_SENSITIVE_FIELDS, userRoles, users, UserSensitiveField } from '@/server/db/schema';
+import {
+  User,
+  USER_SENSITIVE_FIELDS,
+  userRoles,
+  users,
+  UserSensitiveField,
+} from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
 import { hashPassword } from '@/server/utils/password';
 import { requireAdminPermission } from '@/server/utils/require-permission';
@@ -298,7 +304,7 @@ export const user = tsr.router(contract.user, {
           code: 'UNAUTHENTICATED',
         });
       }
-      const { roles, ...data } = body;
+      const { roles, password, ...data } = body;
 
       const existing = await db.query.users.findFirst({
         where: eq(users.id, id),
@@ -313,8 +319,18 @@ export const user = tsr.router(contract.user, {
         });
       }
 
+      // Prepare update data with optional password
+      const updateData: Partial<User> = { ...data };
+      if (password && password.length >= 8) {
+        updateData.passwordHash = await hashPassword(password);
+      }
+
       const updated = await db.transaction(async (tx) => {
-        const [updated] = await db.update(users).set(data).where(eq(users.id, id)).returning();
+        const [updated] = await db
+          .update(users)
+          .set(updateData)
+          .where(eq(users.id, id))
+          .returning();
         if (roles && roles.length > 0) {
           await tx
             .insert(userRoles)

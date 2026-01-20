@@ -104,6 +104,8 @@ export const CreateUserBodySchema = z.object({
 export const UpdateUserBodySchema = CreateUserBodySchema.omit({
   email: true,
   password: true,
+}).extend({
+  password: z.string().min(8).optional().or(z.literal('')),
 }).partial();
 
 export const SetUserPasswordBodySchema = z.object({

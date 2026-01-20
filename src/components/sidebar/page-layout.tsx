@@ -12,6 +12,7 @@ import {
 } from '../ui/breadcrumb';
 import { useHasPermission } from '@/stores/auth-store-provider';
 import { usePathname, useRouter } from 'next/navigation';
+import { ModeToggle } from '../mode-toggle';
 
 // Tipo para los items del breadcrumb
 interface BreadcrumbItemData {
@@ -41,8 +42,8 @@ export function PageLayout({ children, breadcrumbs, permissionKey }: Props) {
 
   return (
     <SidebarInset>
-      <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-        <div className="flex items-center gap-2 px-4">
+      <header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <div className="flex items-center gap-2">
           <SidebarTrigger />
           <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
           <Breadcrumb>
@@ -67,6 +68,9 @@ export function PageLayout({ children, breadcrumbs, permissionKey }: Props) {
               ))}
             </BreadcrumbList>
           </Breadcrumb>
+        </div>
+        <div>
+          <ModeToggle />
         </div>
       </header>
       <div className="flex flex-1 flex-col p-4">{children}</div>

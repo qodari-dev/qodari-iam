@@ -18,6 +18,8 @@ import {
   FieldMap,
   QueryConfig,
 } from '@/server/utils/query/query-builder';
+import { logAudit } from '@/server/utils/audit-logger';
+import { getClientIp } from '@/server/utils/get-client-ip';
 
 // ============================================
 // CONFIG
@@ -101,9 +103,16 @@ export const user = tsr.router(contract.user, {
   // ==========================================
   // LIST - GET /users
   // ==========================================
-  list: async ({ query }, { request, appRoute }) => {
+  list: async ({ query }, { request, appRoute, nextRequest }) => {
     try {
-      await requireAdminPermission(request, appRoute.metadata);
+      const session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
 
       const { page, limit, search, where, sort, include } = query;
 
@@ -129,6 +138,17 @@ export const user = tsr.router(contract.user, {
           .where(whereClause),
       ]);
 
+      logAudit(session, {
+        action: 'read',
+        resource: 'users',
+        status: 'success',
+        metadata: {
+          ...query,
+        },
+        ipAddress: getClientIp(nextRequest),
+        userAgent: nextRequest.headers.get('user-agent'),
+      });
+
       return {
         status: 200 as const,
         body: {
@@ -144,9 +164,16 @@ export const user = tsr.router(contract.user, {
   // ==========================================
   // GET - GET /users/:id
   // ==========================================
-  getById: async ({ params: { id }, query }, { request, appRoute }) => {
+  getById: async ({ params: { id }, query }, { request, appRoute, nextRequest }) => {
     try {
-      await requireAdminPermission(request, appRoute.metadata);
+      const session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
 
       const user = await db.query.users.findFirst({
         columns: SENSITIVE_COLUMNS,
@@ -160,6 +187,18 @@ export const user = tsr.router(contract.user, {
           body: { message: 'User not found', code: 'USER_NOT_FOUND' },
         };
       }
+      logAudit(session, {
+        action: 'read',
+        resource: 'users',
+        resourceId: id,
+        resourceLabel: `${user.firstName} ${user.lastName}`,
+        status: 'success',
+        metadata: {
+          ...user,
+        },
+        ipAddress: getClientIp(nextRequest),
+        userAgent: nextRequest.headers.get('user-agent'),
+      });
 
       return { status: 200, body: user };
     } catch (e) {
@@ -172,7 +211,7 @@ export const user = tsr.router(contract.user, {
   // ==========================================
   // CREATE - POST /users
   // ==========================================
-  create: async ({ body }, { request, appRoute }) => {
+  create: async ({ body }, { request, appRoute, nextRequest }) => {
     try {
       const session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
@@ -183,7 +222,6 @@ export const user = tsr.router(contract.user, {
         });
       }
       const { roles, ...data } = body;
-      await requireAdminPermission(request, appRoute.metadata);
 
       const existing = await db.query.users.findFirst({
         where: eq(users.email, body.email.toLowerCase()),
@@ -226,6 +264,18 @@ export const user = tsr.router(contract.user, {
         passwordResetToken: ___,
         ...safeUser
       } = newUser;
+      logAudit(session, {
+        action: 'create',
+        resource: 'users',
+        resourceId: newUser.id,
+        resourceLabel: `${newUser.firstName} ${newUser.lastName}`,
+        status: 'success',
+        afterValue: {
+          ...safeUser,
+        },
+        ipAddress: getClientIp(nextRequest),
+        userAgent: nextRequest.headers.get('user-agent'),
+      });
 
       return { status: 201, body: safeUser };
     } catch (e) {
@@ -238,7 +288,7 @@ export const user = tsr.router(contract.user, {
   // ==========================================
   // UPDATE - PATCH /users/:id
   // ==========================================
-  update: async ({ params: { id }, body }, { request, appRoute }) => {
+  update: async ({ params: { id }, body }, { request, appRoute, nextRequest }) => {
     try {
       const session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
@@ -289,6 +339,22 @@ export const user = tsr.router(contract.user, {
         ...safeUser
       } = updated;
 
+      logAudit(session, {
+        action: 'update',
+        resource: 'users',
+        resourceId: existing.id,
+        resourceLabel: `${existing.firstName} ${existing.lastName}`,
+        status: 'success',
+        beforeValue: {
+          ...existing,
+        },
+        afterValue: {
+          ...safeUser,
+        },
+        ipAddress: getClientIp(nextRequest),
+        userAgent: request.headers.get('user-agent'),
+      });
+
       return { status: 200, body: safeUser };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
@@ -300,9 +366,16 @@ export const user = tsr.router(contract.user, {
   // ==========================================
   // DELETE - DELETE /users/:id
   // ==========================================
-  delete: async ({ params: { id } }, { request, appRoute }) => {
+  delete: async ({ params: { id } }, { request, appRoute, nextRequest }) => {
     try {
-      await requireAdminPermission(request, appRoute.metadata);
+      const session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
 
       const existing = await db.query.users.findFirst({
         where: eq(users.id, id),
@@ -317,6 +390,19 @@ export const user = tsr.router(contract.user, {
       }
 
       await db.delete(users).where(eq(users.id, id));
+
+      logAudit(session, {
+        action: 'delete',
+        resource: 'users',
+        resourceId: existing.id,
+        resourceLabel: `${existing.firstName} ${existing.lastName}`,
+        status: 'success',
+        beforeValue: {
+          ...existing,
+        },
+        ipAddress: getClientIp(nextRequest),
+        userAgent: nextRequest.headers.get('user-agent'),
+      });
 
       return {
         status: 200,

@@ -655,6 +655,8 @@ export type Session = typeof sessions.$inferSelect & {
 };
 export type NewSession = typeof sessions.$inferInsert;
 
+export const actorTypeEnum = pgEnum('actor_type', ['user', 'api_client']);
+
 export const auditLogs = pgTable(
   'audit_logs',
   {
@@ -662,31 +664,53 @@ export const auditLogs = pgTable(
     accountId: uuid('account_id')
       .notNull()
       .references(() => accounts.id, { onDelete: 'cascade' }),
-    userId: uuid('user_id').references(() => users.id, {
-      onDelete: 'set null',
-    }),
-    applicationId: uuid('application_id').references(() => applications.id, {
-      onDelete: 'set null',
-    }),
 
-    action: varchar('action', { length: 100 }).notNull(), // "user.login", "token.issued"
-    resource: varchar('resource', { length: 100 }), // "user", "application"
+    // Actor (who executed the action)
+    actorType: actorTypeEnum('actor_type').notNull(),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+    userName: varchar('user_name', { length: 100 }),
+    apiClientId: uuid('api_client_id').references(() => apiClients.id, { onDelete: 'set null' }),
+    apiClientName: varchar('api_client_name', { length: 255 }),
+
+    // Context (application where it occurred)
+    applicationId: uuid('application_id').references(() => applications.id, { onDelete: 'set null' }),
+    applicationName: varchar('application_name', { length: 255 }),
+
+    // Operation
+    action: varchar('action', { length: 50 }).notNull(),
+    resource: varchar('resource', { length: 100 }).notNull(),
     resourceId: varchar('resource_id', { length: 255 }),
+    resourceLabel: varchar('resource_label', { length: 255 }),
 
+    // Request info
     ipAddress: varchar('ip_address', { length: 45 }),
     userAgent: text('user_agent'),
 
-    status: varchar('status', { length: 20 }).notNull(), // "success", "failure"
+    // Result
+    status: varchar('status', { length: 20 }).notNull(),
     errorMessage: text('error_message'),
+
+    // Changes (for audit evidence)
+    beforeValue: jsonb('before_value'),
+    afterValue: jsonb('after_value'),
+
+    // Additional metadata
     metadata: jsonb('metadata'),
 
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     index('audit_account_idx').on(table.accountId),
+    index('audit_actor_type_idx').on(table.actorType),
     index('audit_user_idx').on(table.userId),
+    index('audit_api_client_idx').on(table.apiClientId),
+    index('audit_app_idx').on(table.applicationId),
     index('audit_action_idx').on(table.action),
+    index('audit_resource_idx').on(table.resource),
+    index('audit_resource_id_idx').on(table.resourceId),
+    index('audit_status_idx').on(table.status),
     index('audit_created_idx').on(table.createdAt),
+    index('audit_account_created_idx').on(table.accountId, table.createdAt),
   ]
 );
 
@@ -699,15 +723,22 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
     fields: [auditLogs.userId],
     references: [users.id],
   }),
+  apiClient: one(apiClients, {
+    fields: [auditLogs.apiClientId],
+    references: [apiClients.id],
+  }),
   application: one(applications, {
     fields: [auditLogs.applicationId],
     references: [applications.id],
   }),
 }));
 
+export type ActorType = (typeof actorTypeEnum.enumValues)[number];
+
 export type AuditLog = typeof auditLogs.$inferSelect & {
   account?: Account;
   user?: User;
+  apiClient?: ApiClient;
   application?: Application;
 };
 export type NewAuditLog = typeof auditLogs.$inferInsert;

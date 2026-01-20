@@ -1,6 +1,7 @@
 import { initContract } from '@ts-rest/core';
 import { account } from './account';
 import { apiClient } from './api-client';
+import { audit } from './audit';
 import { auth } from './auth';
 import { user } from './user';
 import { role } from './role';
@@ -13,6 +14,7 @@ export const contract = c.router(
   {
     account,
     apiClient,
+    audit,
     auth,
     user,
     role,

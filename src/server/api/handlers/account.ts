@@ -18,9 +18,6 @@ export const account = tsr.router(contract.account, {
           code: 'UNAUTHENTICATED',
         });
       }
-      if (!session.user.isAdmin) {
-        return { status: 403, body: { message: 'Admin access required', code: 'FORBIDDEN' } };
-      }
 
       const acc = await db.query.accounts.findFirst({
         where: eq(accounts.id, session.accountId),
@@ -45,10 +42,6 @@ export const account = tsr.router(contract.account, {
           message: 'Not authenticated',
           code: 'UNAUTHENTICATED',
         });
-      }
-
-      if (!ctx.user.isAdmin) {
-        return { status: 403, body: { message: 'Admin access required', code: 'FORBIDDEN' } };
       }
 
       const acc = await db.query.accounts.findFirst({

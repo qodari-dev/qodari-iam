@@ -1,6 +1,6 @@
 'use client';
 
-import { AppWindowMacIcon, Download, Key, Settings, ShieldCheck, Users } from 'lucide-react';
+import { AppWindowMacIcon, Download, Key, ScrollText, Settings, ShieldCheck, Users } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
@@ -38,6 +38,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const canSeeApplications = useHasPermission('applications:read');
   const canSeeRoles = useHasPermission('roles:read');
   const canSeeApiClients = useHasPermission('api-clients:read');
+  const canSeeAuditLogs = useHasPermission('audit:read');
 
   // Extract accountSlug from pathname (e.g., /acme/admin/users -> acme)
   const accountSlug = pathname.split('/')[1];
@@ -94,6 +95,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   },
                 ]
               : []),
+            ...(canSeeAuditLogs
+              ? [
+                  {
+                    title: 'Audit Logs',
+                    url: `/${accountSlug}/admin/audit`,
+                    icon: ScrollText,
+                  },
+                ]
+              : []),
             ...(user?.isAdmin
               ? [
                   {
@@ -123,7 +133,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       ],
     };
-  }, [user, pathname, accountSlug, canSeeUsers, canSeeApplications, canSeeRoles, canSeeApiClients]);
+  }, [user, pathname, accountSlug, canSeeUsers, canSeeApplications, canSeeRoles, canSeeApiClients, canSeeAuditLogs]);
 
   return (
     <Sidebar collapsible="icon" {...props}>

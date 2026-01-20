@@ -12,6 +12,7 @@ export const account = c.router(
       path: '/',
       metadata: {
         auth: 'required',
+        permissionKey: 'accounts:read',
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Account>(),
@@ -26,6 +27,7 @@ export const account = c.router(
       body: UpdateAccountBodySchema,
       metadata: {
         auth: 'required',
+        permissionKey: 'accounts:update',
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Account>(),

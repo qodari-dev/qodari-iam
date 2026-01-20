@@ -1,6 +1,6 @@
 import { env } from '@/env';
 import type { NextRequest } from 'next/server';
-import { getAuthContextFromRequest } from './auth-context';
+import { getUnifiedAuthContext } from './auth-context';
 import { throwHttpError } from './generic-ts-rest-error';
 import { TsRestMetaData } from '@/schemas/ts-rest';
 import { TsRestRequest } from '@ts-rest/serverless/next';
@@ -13,11 +13,12 @@ async function requirePermission(
   if (metadata.auth === 'public') {
     return;
   }
-  const ctx = await getAuthContextFromRequest(request, {
+  const ctx = await getUnifiedAuthContext(request, {
+    requiredPermission: metadata.permissionKey,
     appSlug: opts?.appSlug,
   });
 
-  if (!metadata.permissionKey || ctx.user.isAdmin) {
+  if (!metadata.permissionKey || (ctx.type === 'user' && ctx.user.isAdmin)) {
     return ctx;
   }
 

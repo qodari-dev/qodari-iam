@@ -1,11 +1,6 @@
 import { db } from '@/server/db';
 import { applications, permissions } from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
-import { requireAdminPermission } from '@/server/utils/require-permission';
-import { deleteObject, isStorageKey } from '@/server/utils/spaces';
-import { tsr } from '@ts-rest/serverless/next';
-import { and, eq, sql } from 'drizzle-orm';
-import { contract } from '../contracts';
 import {
   buildTypedIncludes,
   createIncludeMap,
@@ -17,6 +12,11 @@ import {
   FieldMap,
   QueryConfig,
 } from '@/server/utils/query/query-builder';
+import { requireAdminPermission } from '@/server/utils/require-permission';
+import { deleteObject, isStorageKey } from '@/server/utils/spaces';
+import { tsr } from '@ts-rest/serverless/next';
+import { and, eq, notInArray, sql } from 'drizzle-orm';
+import { contract } from '../contracts';
 
 type ApplicationColumn = keyof typeof applications.$inferSelect;
 
@@ -201,10 +201,7 @@ export const application = tsr.router(contract.application, {
       const oldLogoKey = app.logo;
       const newLogo = body.logo;
       const shouldDeleteOldLogo =
-        oldLogoKey &&
-        isStorageKey(oldLogoKey) &&
-        newLogo !== undefined &&
-        newLogo !== oldLogoKey;
+        oldLogoKey && isStorageKey(oldLogoKey) && newLogo !== undefined && newLogo !== oldLogoKey;
 
       const [updated] = await db.transaction(async (tx) => {
         const [appUpdated] = await tx
@@ -214,16 +211,46 @@ export const application = tsr.router(contract.application, {
           .returning();
 
         if (body.permissions) {
-          await tx.delete(permissions).where(eq(permissions.applicationId, id));
           if (body.permissions.length) {
-            await tx.insert(permissions).values(
-              body.permissions.map((perm) => ({
-                ...perm,
-                accountId: session.accountId,
-                applicationId: id,
-              }))
-            );
+            await tx
+              .insert(permissions)
+              .values(
+                body.permissions.map((perm) => ({
+                  ...perm,
+                  accountId: session.accountId,
+                  applicationId: id,
+                }))
+              )
+              .onConflictDoUpdate({
+                target: [
+                  permissions.accountId,
+                  permissions.applicationId,
+                  permissions.resource,
+                  permissions.action,
+                ],
+                set: { name: sql`excluded.name`, description: sql`excluded.description` },
+              });
           }
+
+          const permissionsIds = [];
+          for (const perm of body.permissions) {
+            const [p] = await tx
+              .select({ id: permissions.id })
+              .from(permissions)
+              .where(
+                and(
+                  eq(permissions.accountId, session.accountId),
+                  eq(permissions.applicationId, id),
+                  eq(permissions.resource, perm.resource),
+                  eq(permissions.action, perm.action)
+                )
+              );
+            if (!p) {
+              continue;
+            }
+            permissionsIds.push(p.id);
+          }
+          await tx.delete(permissions).where(notInArray(permissions.id, permissionsIds));
         }
 
         return [appUpdated];

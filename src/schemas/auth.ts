@@ -26,7 +26,7 @@ export const zAccount: z.ZodType<PublicAccount> = z.object({
 
 type PublicApplication = Pick<
   Application,
-  'id' | 'name' | 'slug' | 'status' | 'logo' | 'description' | 'homeUrl'
+  'id' | 'name' | 'slug' | 'status' | 'logo' | 'image' | 'description' | 'homeUrl'
 >;
 export const zApplication: z.ZodType<PublicApplication> = z.object({
   id: z.string().uuid(),
@@ -34,6 +34,7 @@ export const zApplication: z.ZodType<PublicApplication> = z.object({
   slug: z.string(),
   status: z.enum(['active', 'suspended']),
   logo: z.string().nullable(),
+  image: z.string().nullable(),
   description: z.string().nullable(),
   homeUrl: z.string(),
 });
@@ -45,10 +46,18 @@ export const LoginBodySchema = z.object({
   password: z.string().min(8),
 });
 
-export const LoginResponseSchema = z.object({
-  user: zUser,
-  accountId: z.string().uuid(),
-});
+export const LoginResponseSchema = z.union([
+  z.object({
+    user: zUser,
+    accountId: z.string().uuid(),
+    mfaRequired: z.literal(false).optional(),
+  }),
+  z.object({
+    mfaRequired: z.literal(true),
+    mfaToken: z.string().uuid(),
+    maskedEmail: z.string(),
+  }),
+]);
 
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 
@@ -75,6 +84,12 @@ export const OauthTokenBodySchema = z.union([
     refresh_token: z.string(),
     client_id: z.string(),
     client_secret: z.string(),
+  }),
+  z.object({
+    grant_type: z.literal('client_credentials'),
+    client_id: z.string(),
+    client_secret: z.string(),
+    app_slug: z.string(), // Application slug to request token for
   }),
 ]);
 
@@ -143,3 +158,63 @@ export const ChangePasswordResponseSchema = z.object({
 });
 
 export type ChangePasswordResponse = z.infer<typeof ChangePasswordResponseSchema>;
+
+// ---------- MFA Verify ----------
+export const MfaVerifyBodySchema = z.object({
+  mfaToken: z.string().uuid(),
+  code: z.string().length(6),
+  accountSlug: z.string(),
+  appSlug: z.string(),
+});
+
+export type MfaVerifyBody = z.infer<typeof MfaVerifyBodySchema>;
+
+export const MfaVerifyResponseSchema = z.object({
+  user: zUser,
+  accountId: z.string().uuid(),
+});
+
+export type MfaVerifyResponse = z.infer<typeof MfaVerifyResponseSchema>;
+
+// ---------- MFA Resend ----------
+export const MfaResendBodySchema = z.object({
+  mfaToken: z.string().uuid(),
+  accountSlug: z.string(),
+  appSlug: z.string(),
+});
+
+export type MfaResendBody = z.infer<typeof MfaResendBodySchema>;
+
+export const MfaResendResponseSchema = z.object({
+  message: z.string(),
+  maskedEmail: z.string(),
+});
+
+export type MfaResendResponse = z.infer<typeof MfaResendResponseSchema>;
+
+// ---------- Branding ----------
+export const BrandingQuerySchema = z.object({
+  accountSlug: z.string(),
+  appSlug: z.string().optional(),
+});
+
+export type BrandingQuery = z.infer<typeof BrandingQuerySchema>;
+
+export const BrandingResponseSchema = z.object({
+  account: z.object({
+    name: z.string(),
+    slug: z.string(),
+    logo: z.string().nullable(),
+    imageAd: z.string().nullable(),
+  }),
+  application: z
+    .object({
+      name: z.string(),
+      slug: z.string(),
+      logo: z.string().nullable(),
+      imageAd: z.string().nullable(),
+    })
+    .nullable(),
+});
+
+export type BrandingResponse = z.infer<typeof BrandingResponseSchema>;

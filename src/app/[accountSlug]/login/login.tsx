@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
 
 import { api } from '@/clients/api';
+import { AuthLayout } from '@/components/auth/auth-layout';
 import { LoginBodySchema } from '@/schemas/auth';
 
 import { Button } from '@/components/ui/button';
@@ -12,8 +13,6 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
-import { GalleryVerticalEnd } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
@@ -48,107 +47,97 @@ export default function Login({ accountSlug, appSlug, redirect }: LoginProps) {
 
   const onSubmit = useCallback(
     async (values: LoginFormValues) => {
-      await login({
+      const result = await login({
         body: values,
       });
+
+      // Check if MFA is required
+      if (result.status === 200 && 'mfaRequired' in result.body && result.body.mfaRequired) {
+        const mfaUrl = new URL(`/${accountSlug}/mfa`, window.location.origin);
+        mfaUrl.searchParams.set('app', appSlug);
+        mfaUrl.searchParams.set('token', result.body.mfaToken);
+        mfaUrl.searchParams.set('email', result.body.maskedEmail);
+        if (redirect) {
+          mfaUrl.searchParams.set('redirect', redirect);
+        }
+        router.push(mfaUrl.pathname + mfaUrl.search);
+        return;
+      }
 
       // Redirect to the specified URL or default to the portal
       const next = redirect ?? `/${accountSlug}/portal`;
       router.push(next);
     },
-    [login, router, redirect, accountSlug]
+    [login, router, redirect, accountSlug, appSlug]
   );
 
   // Build forgot password URL with app param if we have one
   const forgotPasswordUrl = `/${accountSlug}/forgot-password${appSlug ? `?app=${appSlug}` : ''}`;
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-medium">
-            <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
-              <GalleryVerticalEnd className="size-4" />
-            </div>
-            Acme Inc.
-          </a>
-        </div>
-        <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-xs">
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-              <FieldGroup>
-                <div className="flex flex-col items-center gap-1 text-center">
-                  <h1 className="text-2xl font-bold">Login to your account</h1>
-                  <p className="text-muted-foreground text-sm text-balance">
-                    Enter your email below to login to your account
-                  </p>
-                </div>
-                <FieldGroup>
-                  <Controller
-                    name="email"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="login-email">Email</FieldLabel>
-                        <Input
-                          {...field}
-                          type="email"
-                          autoComplete="email"
-                          aria-invalid={fieldState.invalid}
-                          placeholder="tu@email.com"
-                        />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-
-                  <Controller
-                    name="password"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="login-password">Password</FieldLabel>
-                        <Input
-                          {...field}
-                          type="password"
-                          autoComplete="current-password"
-                          aria-invalid={fieldState.invalid}
-                          placeholder="••••••••"
-                        />
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                      </Field>
-                    )}
-                  />
-                </FieldGroup>
-
-                <Button type="submit" className="w-full" disabled={isPending}>
-                  {isPending ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <Spinner className="h-4 w-4" />
-                      <span>Login...</span>
-                    </div>
-                  ) : (
-                    'Login'
-                  )}
-                </Button>
-
-                <Button variant="link" className="w-full" asChild>
-                  <Link href={forgotPasswordUrl}>Forgot your password?</Link>
-                </Button>
-              </FieldGroup>
-            </form>
+    <AuthLayout accountSlug={accountSlug} appSlug={appSlug}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
+        <FieldGroup>
+          <div className="flex flex-col items-center gap-1 text-center">
+            <h1 className="text-2xl font-bold">Login to your account</h1>
+            <p className="text-muted-foreground text-sm text-balance">
+              Enter your email below to login to your account
+            </p>
           </div>
-        </div>
-      </div>
-      <div className="bg-muted relative hidden lg:block">
-        <Image
-          src="/placeholder.svg"
-          alt="Image"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-          width={1000}
-          height={1000}
-        />
-      </div>
-    </div>
+          <FieldGroup>
+            <Controller
+              name="email"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="login-email">Email</FieldLabel>
+                  <Input
+                    {...field}
+                    type="email"
+                    autoComplete="email"
+                    aria-invalid={fieldState.invalid}
+                    placeholder="tu@email.com"
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name="password"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="login-password">Password</FieldLabel>
+                  <Input
+                    {...field}
+                    type="password"
+                    autoComplete="current-password"
+                    aria-invalid={fieldState.invalid}
+                    placeholder="••••••••"
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
+          </FieldGroup>
+
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? (
+              <div className="flex items-center justify-center gap-2">
+                <Spinner className="h-4 w-4" />
+                <span>Login...</span>
+              </div>
+            ) : (
+              'Login'
+            )}
+          </Button>
+
+          <Button variant="link" className="w-full" asChild>
+            <Link href={forgotPasswordUrl}>Forgot your password?</Link>
+          </Button>
+        </FieldGroup>
+      </form>
+    </AuthLayout>
   );
 }

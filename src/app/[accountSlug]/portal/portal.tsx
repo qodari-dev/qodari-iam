@@ -15,11 +15,11 @@ export function Portal() {
   }
 
   return (
-    <main className="py-12">
+    <main className="px-4 py-6 lg:py-12">
       <header className="container mx-auto mb-12 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold">
-            Welcome, {auth.user.firstName} {auth.user.lastName}
+          <h1 className="text-xl font-semibold lg:text-3xl">
+            Welcome, <br className="lg:hidden" /> {auth.user.firstName} {auth.user.lastName}
           </h1>
         </div>
         <div>
@@ -29,15 +29,15 @@ export function Portal() {
       <div className="container mx-auto">
         <div className="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-4">
           {auth.applications?.map((app) => {
-            const logoUrl = getStorageUrl(app.logo);
+            const imageUrl = getStorageUrl(app.image);
             return (
               <Link key={app.id} href={app.homeUrl ?? ''} className="block">
                 <div className="group relative">
                   <div className="relative">
-                    {logoUrl ? (
+                    {imageUrl ? (
                       <Image
                         alt={app.name}
-                        src={logoUrl}
+                        src={imageUrl}
                         width={200}
                         height={200}
                         className="aspect-4/3 w-full rounded-lg bg-gray-100 object-cover"

@@ -76,11 +76,14 @@ export const CreateApplicationBodySchema = z.object({
   accessTokenExp: z.number(),
   refreshTokenExp: z.number(),
   clientJwtSecret: z.string(),
-  logo: z.string().optional(),
+  logo: z.string().nullable().optional(),
+  image: z.string().nullable().optional(),
+  imageAd: z.string().nullable().optional(),
   homeUrl: z.string().url().optional(),
   logoutUrl: z.string().url().optional(),
   callbackUrls: z.array(z.string().url()).optional(),
   permissions: PermissionInputSchema.array().optional(),
+  mfaEnabled: z.boolean().optional(),
 });
 
 export const UpdateApplicationBodySchema = CreateApplicationBodySchema.partial();

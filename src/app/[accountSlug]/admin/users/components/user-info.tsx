@@ -95,8 +95,6 @@ export function UserInfo({
         </SheetHeader>
         <div className="px-4">
           <DescriptionList sections={sections} columns={2} />
-          <DescriptionList sections={sections} columns={2} />
-          <DescriptionList sections={sections} columns={2} />
         </div>
       </SheetContent>
     </Sheet>

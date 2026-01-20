@@ -1,13 +1,17 @@
 import { lt } from 'drizzle-orm';
 import { db } from '../db';
-import { authorizationCodes } from '../db/schema';
+import { authorizationCodes, mfaPending } from '../db/schema';
 import { CronJob } from 'cron';
 import { env } from '@/env';
 
 const onceADayJobs = new CronJob(
   '0 1 * * *',
   async function () {
-    await db.delete(authorizationCodes).where(lt(authorizationCodes.expiresAt, new Date()));
+    const now = new Date();
+    await Promise.all([
+      db.delete(authorizationCodes).where(lt(authorizationCodes.expiresAt, now)),
+      db.delete(mfaPending).where(lt(mfaPending.expiresAt, now)),
+    ]);
   },
   null, // onComplete hook
   false, // autostart

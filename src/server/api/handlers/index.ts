@@ -1,5 +1,7 @@
 import { contract } from '@/server/api/contracts';
 import { createNextHandler } from '@ts-rest/serverless/next';
+import { account } from './account';
+import { apiClient } from './api-client';
 import { auth } from './auth';
 import { user } from './user';
 import { role } from './role';
@@ -8,7 +10,7 @@ import { upload } from './upload';
 
 export const handler = createNextHandler(
   contract,
-  { auth, role, user, application, upload },
+  { account, apiClient, auth, role, user, application, upload },
   {
     jsonQuery: true,
     responseValidation: true,

@@ -80,6 +80,8 @@ export const accounts = pgTable(
       }),
     email: varchar('email', { length: 255 }).notNull(),
     phone: varchar('phone', { length: 45 }),
+    logo: text('logo'),
+    imageAd: text('image_ad'),
     status: statusEnum('status').default('active').notNull(),
     ...timestamps,
   },
@@ -99,6 +101,7 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
   authorizationCodes: many(authorizationCodes),
   refreshTokens: many(refreshTokens),
   auditLogs: many(auditLogs),
+  apiClients: many(apiClients),
 }));
 
 export type Account = typeof accounts.$inferSelect & {
@@ -111,6 +114,7 @@ export type Account = typeof accounts.$inferSelect & {
   authorizationCodes?: AuthorizationCode[];
   refreshTokens?: RefreshToken[];
   auditLogs?: AuditLog[];
+  apiClients?: ApiClient[];
 };
 export type NewAccount = typeof accounts.$inferInsert;
 
@@ -242,6 +246,8 @@ export const applications = pgTable(
         onUpdate: 'cascade',
       }),
     logo: text('logo'),
+    image: text('image'),
+    imageAd: text('image_ad'),
     name: varchar('name', { length: 255 }).notNull(),
     slug: varchar('slug', { length: 100 }).notNull(),
     description: text('description'),
@@ -256,6 +262,7 @@ export const applications = pgTable(
     authCodeExp: integer('auth_code_exp').notNull().default(300),
     accessTokenExp: integer('access_token_exp').notNull().default(900),
     refreshTokenExp: integer('refresh_token_exp').notNull().default(604800), // 7 days
+    mfaEnabled: boolean('mfa_enabled').notNull().default(false),
     ...timestamps,
   },
   (table) => [
@@ -718,3 +725,138 @@ export const rateLimits = pgTable(
 
 export type RateLimit = typeof rateLimits.$inferSelect;
 export type NewRateLimit = typeof rateLimits.$inferInsert;
+
+// ---------- mfa_pending ----------
+
+export const mfaPending = pgTable(
+  'mfa_pending',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+    accountId: uuid('account_id')
+      .notNull()
+      .references(() => accounts.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+    applicationId: uuid('application_id')
+      .notNull()
+      .references(() => applications.id, {
+        onDelete: 'cascade',
+        onUpdate: 'cascade',
+      }),
+    codeHash: varchar('code_hash', { length: 255 }).notNull(),
+    attempts: integer('attempts').notNull().default(0),
+    ipAddress: varchar('ip_address', { length: 45 }),
+    userAgent: text('user_agent'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index('mfa_pending_user_idx').on(table.userId),
+    index('mfa_pending_expires_idx').on(table.expiresAt),
+  ]
+);
+
+export const mfaPendingRelations = relations(mfaPending, ({ one }) => ({
+  user: one(users, {
+    fields: [mfaPending.userId],
+    references: [users.id],
+  }),
+  account: one(accounts, {
+    fields: [mfaPending.accountId],
+    references: [accounts.id],
+  }),
+  application: one(applications, {
+    fields: [mfaPending.applicationId],
+    references: [applications.id],
+  }),
+}));
+
+export type MfaPending = typeof mfaPending.$inferSelect & {
+  user?: User;
+  account?: Account;
+  application?: Application;
+};
+export type NewMfaPending = typeof mfaPending.$inferInsert;
+
+// ---------- api_clients ----------
+
+export const apiClients = pgTable(
+  'api_clients',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    accountId: uuid('account_id')
+      .notNull()
+      .references(() => accounts.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    clientId: text('client_id').notNull().unique(),
+    clientSecretHash: text('client_secret_hash').notNull(),
+    status: statusEnum('status').default('active').notNull(),
+    accessTokenExp: integer('access_token_exp').notNull().default(600), // 10 min
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [
+    index('api_clients_account_idx').on(table.accountId),
+    index('api_clients_client_id_idx').on(table.clientId),
+  ]
+);
+
+export const apiClientsRelations = relations(apiClients, ({ one, many }) => ({
+  account: one(accounts, {
+    fields: [apiClients.accountId],
+    references: [accounts.id],
+  }),
+  roles: many(apiClientRoles),
+}));
+
+export type ApiClient = typeof apiClients.$inferSelect & {
+  account?: Account;
+  roles?: ApiClientRole[];
+};
+export type NewApiClient = typeof apiClients.$inferInsert;
+
+// ---------- api_client_roles (join) ----------
+
+export const apiClientRoles = pgTable(
+  'api_client_roles',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    apiClientId: uuid('api_client_id')
+      .notNull()
+      .references(() => apiClients.id, { onDelete: 'cascade' }),
+    roleId: uuid('role_id')
+      .notNull()
+      .references(() => roles.id, { onDelete: 'cascade' }),
+    ...timestamps,
+  },
+  (table) => [
+    index('api_client_roles_client_idx').on(table.apiClientId),
+    index('api_client_roles_role_idx').on(table.roleId),
+    uniqueIndex('api_client_roles_uniq').on(table.apiClientId, table.roleId),
+  ]
+);
+
+export const apiClientRolesRelations = relations(apiClientRoles, ({ one }) => ({
+  apiClient: one(apiClients, {
+    fields: [apiClientRoles.apiClientId],
+    references: [apiClients.id],
+  }),
+  role: one(roles, {
+    fields: [apiClientRoles.roleId],
+    references: [roles.id],
+  }),
+}));
+
+export type ApiClientRole = typeof apiClientRoles.$inferSelect & {
+  apiClient?: ApiClient;
+  role?: Role;
+};
+export type NewApiClientRole = typeof apiClientRoles.$inferInsert;

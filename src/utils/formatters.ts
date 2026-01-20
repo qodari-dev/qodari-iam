@@ -94,6 +94,17 @@ export function formatDateCustom(value: DateInput, formatStr: string): string {
   return format(date, formatStr);
 }
 
+/**
+ * Format expiry
+ */
+export const formatExpiry = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (minutes === 0) return `${secs} seconds`;
+  if (secs === 0) return `${minutes} minutes`;
+  return `${minutes} minutes ${secs} seconds`;
+};
+
 // ============================================================================
 // Currency / Number Formatters (Intl)
 // ============================================================================

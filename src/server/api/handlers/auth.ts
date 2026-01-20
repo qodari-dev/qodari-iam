@@ -2,26 +2,39 @@ import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 
 import { env } from '@/env';
 import {
+  BrandingResponse,
   ForgotPasswordResponse,
   LoginResponse,
+  MfaResendResponse,
+  MfaVerifyResponse,
   OauthTokenResponse,
   ResetPasswordResponse,
 } from '@/schemas/auth';
 import { db } from '@/server/db';
 import {
   accounts,
+  apiClients,
   Application,
   applications,
   authorizationCodes,
+  mfaPending,
   refreshTokens,
   sessions,
   users,
 } from '@/server/db/schema';
 import { getAuthContextFromRequest } from '@/server/utils/auth-context';
-import { sendPasswordResetEmail } from '@/server/utils/emails';
+import { sendMfaCodeEmail, sendPasswordResetEmail } from '@/server/utils/emails';
 import { genericTsRestErrorResponse } from '@/server/utils/generic-ts-rest-error';
 import { getClientIp } from '@/server/utils/get-client-ip';
 import { signAccessToken } from '@/server/utils/jwt';
+import {
+  generateMfaCode,
+  getMfaExpiryDate,
+  hashMfaCode,
+  maskEmail,
+  MFA_CONFIG,
+  verifyMfaCode,
+} from '@/server/utils/mfa';
 import { hashPassword, verifyPassword } from '@/server/utils/password';
 import { checkRateLimit } from '@/server/utils/rate-limit';
 import {
@@ -34,6 +47,7 @@ import {
 import { tsr } from '@ts-rest/serverless/next';
 import { and, eq, gt } from 'drizzle-orm';
 import { contract } from '../contracts';
+import { getApiClientRolesAndPermissions } from '@/server/utils/get-api-client-roles-and-permissions';
 import { getUserRolesAndPermissions } from '@/server/utils/get-user-roles-and-permissions';
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
@@ -143,6 +157,48 @@ export const auth = tsr.router(contract.auth, {
       }
 
       const currentAccountId = user.accountId;
+
+      // Check if MFA is enabled for this application
+      if (application.mfaEnabled) {
+        // Generate MFA code
+        const mfaCode = generateMfaCode();
+        const codeHash = hashMfaCode(mfaCode);
+        const expiresAt = getMfaExpiryDate();
+        const userAgent = nextRequest?.headers.get('user-agent') ?? null;
+
+        // Create MFA pending record
+        const [mfaRecord] = await db
+          .insert(mfaPending)
+          .values({
+            userId: user.id,
+            accountId: currentAccountId,
+            applicationId: application.id,
+            codeHash,
+            ipAddress: ip,
+            userAgent,
+            expiresAt,
+          })
+          .returning({ id: mfaPending.id });
+
+        // Send MFA code email
+        await sendMfaCodeEmail({
+          to: user.email,
+          name: `${user.firstName} ${user.lastName}`,
+          code: mfaCode,
+          expiresInMinutes: MFA_CONFIG.EXPIRY_MINUTES,
+        });
+
+        const response: LoginResponse = {
+          mfaRequired: true,
+          mfaToken: mfaRecord.id,
+          maskedEmail: maskEmail(user.email),
+        };
+
+        return {
+          status: 200,
+          body: response,
+        };
+      }
 
       const response: LoginResponse = {
         user: {
@@ -510,6 +566,106 @@ export const auth = tsr.router(contract.auth, {
         };
 
         return { status: 200, body: response };
+      } else if (body.grant_type === 'client_credentials') {
+        // ========================================
+        // CLIENT CREDENTIALS FLOW (M2M)
+        // ========================================
+        const { client_id, client_secret, app_slug } = body;
+
+        // 1) Find API Client by client_id
+        const apiClient = await db.query.apiClients.findFirst({
+          where: eq(apiClients.clientId, client_id),
+          with: {
+            account: true,
+          },
+        });
+
+        if (!apiClient) {
+          return {
+            status: 401,
+            body: { message: 'Invalid client credentials', code: 'invalid_client' },
+          };
+        }
+
+        // 2) Check if API Client is active
+        if (apiClient.status !== 'active') {
+          return {
+            status: 401,
+            body: { message: 'API Client is suspended', code: 'invalid_client' },
+          };
+        }
+
+        // 3) Verify client_secret (Argon2)
+        const isValidSecret = await verifyPassword(client_secret, apiClient.clientSecretHash);
+        if (!isValidSecret) {
+          return {
+            status: 401,
+            body: { message: 'Invalid client credentials', code: 'invalid_client' },
+          };
+        }
+
+        // 4) Find the application by slug within the same account
+        const app = await db.query.applications.findFirst({
+          where: and(
+            eq(applications.accountId, apiClient.accountId),
+            eq(applications.slug, app_slug),
+            eq(applications.status, 'active')
+          ),
+        });
+
+        if (!app) {
+          return {
+            status: 400,
+            body: { message: 'Invalid application', code: 'invalid_request' },
+          };
+        }
+
+        // 5) Get roles and permissions for this API Client for the requested application
+        const { permissions } = await getApiClientRolesAndPermissions({
+          apiClientId: apiClient.id,
+          applicationId: app.id,
+        });
+
+        // 6) If the API Client has no roles for this app, deny access
+        if (permissions.length === 0) {
+          return {
+            status: 403,
+            body: {
+              message: 'API Client has no permissions for this application',
+              code: 'access_denied',
+            },
+          };
+        }
+
+        // 7) Generate access token
+        const accessToken = await signAccessToken({
+          payload: {
+            sub: apiClient.id,
+            accountId: apiClient.accountId,
+            appId: app.id,
+            permissions,
+            grantType: 'client_credentials',
+          },
+          expiresInSec: apiClient.accessTokenExp,
+          issuer: env.IAM_ISSUER,
+          audience: app.clientId,
+          jwtSecret: app.clientJwtSecret,
+        });
+
+        // 8) Update lastUsedAt
+        await db
+          .update(apiClients)
+          .set({ lastUsedAt: new Date() })
+          .where(eq(apiClients.id, apiClient.id));
+
+        // 9) Return token (NO refresh token for client_credentials)
+        const response: OauthTokenResponse = {
+          accessToken,
+          tokenType: 'Bearer',
+          expiresIn: apiClient.accessTokenExp,
+        };
+
+        return { status: 200, body: response };
       }
 
       return {
@@ -866,6 +1022,312 @@ export const auth = tsr.router(contract.auth, {
       return genericTsRestErrorResponse(e, {
         genericMsg: 'Failed to revoke token.',
         logPrefix: '[auth.revoke]',
+      });
+    }
+  },
+  // --------------------------------------
+  // POST - /mfa/verify
+  // --------------------------------------
+  mfaVerify: async ({ body }, { request, nextRequest }) => {
+    try {
+      const { mfaToken, code, accountSlug, appSlug } = body;
+
+      // ----- RATE LIMIT por Token + IP -----
+      const ip = getClientIp(nextRequest);
+
+      const tokenKey = `mfa:verify:token:${mfaToken}`;
+      const ipKey = `mfa:verify:ip:${ip}`;
+
+      const windowMs = 5 * 60 * 1000; // 5 min
+
+      const [tokenRl, ipRl] = await Promise.all([
+        checkRateLimit({
+          key: tokenKey,
+          limit: 5,
+          windowMs,
+        }),
+        checkRateLimit({
+          key: ipKey,
+          limit: 20,
+          windowMs,
+        }),
+      ]);
+
+      if (!tokenRl.success || !ipRl.success) {
+        return {
+          status: 429,
+          body: {
+            message: 'Too many requests. Please try again later.',
+            code: 'RATE_LIMIT_EXCEEDED',
+          },
+          headers: {
+            'X-RateLimit-Limit': String(tokenRl.limit),
+            'X-RateLimit-Remaining': String(tokenRl.remaining),
+            'X-RateLimit-Reset': tokenRl.resetAt.toISOString(),
+          },
+        };
+      }
+
+      // Get MFA pending record
+      const mfaRecord = await db.query.mfaPending.findFirst({
+        where: eq(mfaPending.id, mfaToken),
+        with: {
+          user: true,
+          account: true,
+          application: true,
+        },
+      });
+
+      if (!mfaRecord) {
+        return {
+          status: 401,
+          body: { message: 'Invalid or expired MFA token', code: 'INVALID_MFA_TOKEN' },
+        };
+      }
+
+      // Check if expired
+      const now = new Date();
+      if (mfaRecord.expiresAt < now) {
+        await db.delete(mfaPending).where(eq(mfaPending.id, mfaToken));
+        return {
+          status: 401,
+          body: { message: 'MFA code expired. Please login again.', code: 'MFA_EXPIRED' },
+        };
+      }
+
+      // Verify account and app slugs match
+      if (mfaRecord.account?.slug !== accountSlug || mfaRecord.application?.slug !== appSlug) {
+        return {
+          status: 401,
+          body: { message: 'Invalid request', code: 'INVALID_REQUEST' },
+        };
+      }
+
+      // Check max attempts
+      if (mfaRecord.attempts >= MFA_CONFIG.MAX_ATTEMPTS) {
+        await db.delete(mfaPending).where(eq(mfaPending.id, mfaToken));
+        return {
+          status: 401,
+          body: {
+            message: 'Too many failed attempts. Please login again.',
+            code: 'MFA_MAX_ATTEMPTS',
+          },
+        };
+      }
+
+      // Verify the code
+      if (!verifyMfaCode(code, mfaRecord.codeHash)) {
+        // Increment attempts
+        await db
+          .update(mfaPending)
+          .set({ attempts: mfaRecord.attempts + 1 })
+          .where(eq(mfaPending.id, mfaToken));
+
+        return {
+          status: 401,
+          body: { message: 'Invalid code', code: 'INVALID_CODE' },
+        };
+      }
+
+      // Code is valid, delete the MFA pending record
+      await db.delete(mfaPending).where(eq(mfaPending.id, mfaToken));
+
+      const user = mfaRecord.user;
+
+      // Create session
+      await createSession({
+        userId: user.id,
+        accountId: mfaRecord.accountId,
+        req: request,
+      });
+
+      const response: MfaVerifyResponse = {
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          avatar: user.avatar,
+          isAdmin: user.isAdmin,
+          status: user.status,
+        },
+        accountId: mfaRecord.accountId,
+      };
+
+      return {
+        status: 200,
+        body: response,
+      };
+    } catch (e) {
+      return genericTsRestErrorResponse(e, {
+        genericMsg: 'Failed to verify MFA code.',
+        logPrefix: '[auth.mfaVerify]',
+      });
+    }
+  },
+  // --------------------------------------
+  // POST - /mfa/resend
+  // --------------------------------------
+  mfaResend: async ({ body }, { nextRequest }) => {
+    try {
+      const { mfaToken, accountSlug, appSlug } = body;
+
+      // ----- RATE LIMIT por Token + IP -----
+      const ip = getClientIp(nextRequest);
+
+      const tokenKey = `mfa:resend:token:${mfaToken}`;
+      const ipKey = `mfa:resend:ip:${ip}`;
+
+      const windowMs = 5 * 60 * 1000; // 5 min
+
+      const [tokenRl, ipRl] = await Promise.all([
+        checkRateLimit({
+          key: tokenKey,
+          limit: 3,
+          windowMs,
+        }),
+        checkRateLimit({
+          key: ipKey,
+          limit: 10,
+          windowMs,
+        }),
+      ]);
+
+      if (!tokenRl.success || !ipRl.success) {
+        return {
+          status: 429,
+          body: {
+            message: 'Too many requests. Please try again later.',
+            code: 'RATE_LIMIT_EXCEEDED',
+          },
+          headers: {
+            'X-RateLimit-Limit': String(tokenRl.limit),
+            'X-RateLimit-Remaining': String(tokenRl.remaining),
+            'X-RateLimit-Reset': tokenRl.resetAt.toISOString(),
+          },
+        };
+      }
+
+      // Get MFA pending record
+      const mfaRecord = await db.query.mfaPending.findFirst({
+        where: eq(mfaPending.id, mfaToken),
+        with: {
+          user: true,
+          account: true,
+          application: true,
+        },
+      });
+
+      if (!mfaRecord) {
+        return {
+          status: 400,
+          body: { message: 'Invalid or expired MFA token', code: 'INVALID_MFA_TOKEN' },
+        };
+      }
+
+      // Verify account and app slugs match
+      if (mfaRecord.account?.slug !== accountSlug || mfaRecord.application?.slug !== appSlug) {
+        return {
+          status: 400,
+          body: { message: 'Invalid request', code: 'INVALID_REQUEST' },
+        };
+      }
+
+      const user = mfaRecord.user!;
+
+      // Generate new MFA code
+      const mfaCode = generateMfaCode();
+      const codeHash = hashMfaCode(mfaCode);
+      const expiresAt = getMfaExpiryDate();
+
+      // Update MFA pending record with new code
+      await db
+        .update(mfaPending)
+        .set({
+          codeHash,
+          expiresAt,
+          attempts: 0,
+        })
+        .where(eq(mfaPending.id, mfaToken));
+
+      // Send MFA code email
+      await sendMfaCodeEmail({
+        to: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        code: mfaCode,
+        expiresInMinutes: MFA_CONFIG.EXPIRY_MINUTES,
+      });
+
+      const response: MfaResendResponse = {
+        message: 'A new code has been sent to your email.',
+        maskedEmail: maskEmail(user.email),
+      };
+
+      return {
+        status: 200,
+        body: response,
+      };
+    } catch (e) {
+      return genericTsRestErrorResponse(e, {
+        genericMsg: 'Failed to resend MFA code.',
+        logPrefix: '[auth.mfaResend]',
+      });
+    }
+  },
+  // --------------------------------------
+  // GET - /branding (public endpoint)
+  // --------------------------------------
+  branding: async ({ query }) => {
+    try {
+      const { accountSlug, appSlug } = query;
+
+      const account = await db.query.accounts.findFirst({
+        where: and(eq(accounts.slug, accountSlug), eq(accounts.status, 'active')),
+      });
+
+      if (!account) {
+        return {
+          status: 404,
+          body: { message: 'Account not found', code: 'ACCOUNT_NOT_FOUND' },
+        };
+      }
+
+      let application = null;
+      if (appSlug) {
+        application = await db.query.applications.findFirst({
+          where: and(
+            eq(applications.accountId, account.id),
+            eq(applications.slug, appSlug),
+            eq(applications.status, 'active')
+          ),
+        });
+      }
+
+      const response: BrandingResponse = {
+        account: {
+          name: account.name,
+          slug: account.slug,
+          logo: account.logo,
+          imageAd: account.imageAd,
+        },
+        application: application
+          ? {
+              name: application.name,
+              slug: application.slug,
+              logo: application.logo,
+              imageAd: application.imageAd,
+            }
+          : null,
+      };
+
+      return {
+        status: 200,
+        body: response,
+      };
+    } catch (e) {
+      return genericTsRestErrorResponse(e, {
+        genericMsg: 'Failed to get branding info.',
+        logPrefix: '[auth.branding]',
       });
     }
   },

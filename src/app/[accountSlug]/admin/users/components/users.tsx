@@ -257,6 +257,7 @@ export function Users() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
       <AlertDialog open={openedActivateDialog} onOpenChange={setOpenedActivateDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>

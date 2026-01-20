@@ -52,6 +52,7 @@ export async function getAuthContextFromRequest(
     slug: applications.slug,
     status: applications.status,
     logo: applications.logo,
+    image: applications.image,
     description: applications.description,
     homeUrl: applications.homeUrl,
   };

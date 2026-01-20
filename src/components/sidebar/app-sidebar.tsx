@@ -1,6 +1,6 @@
 'use client';
 
-import { AppWindowMacIcon, Download, Users } from 'lucide-react';
+import { AppWindowMacIcon, Download, Key, Settings, ShieldCheck, Users } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
@@ -37,6 +37,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const canSeeUsers = useHasPermission('users:read');
   const canSeeApplications = useHasPermission('applications:read');
   const canSeeRoles = useHasPermission('roles:read');
+  const canSeeApiClients = useHasPermission('api-clients:read');
 
   // Extract accountSlug from pathname (e.g., /acme/admin/users -> acme)
   const accountSlug = pathname.split('/')[1];
@@ -80,7 +81,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   {
                     title: 'Roles',
                     url: `/${accountSlug}/admin/roles`,
-                    icon: Users,
+                    icon: ShieldCheck,
+                  },
+                ]
+              : []),
+            ...(canSeeApiClients
+              ? [
+                  {
+                    title: 'API Clients',
+                    url: `/${accountSlug}/admin/api-clients`,
+                    icon: Key,
+                  },
+                ]
+              : []),
+            ...(user?.isAdmin
+              ? [
+                  {
+                    title: 'Settings',
+                    url: `/${accountSlug}/admin/settings`,
+                    icon: Settings,
                   },
                 ]
               : []),
@@ -104,7 +123,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       ],
     };
-  }, [user, pathname, accountSlug, canSeeUsers, canSeeApplications, canSeeRoles]);
+  }, [user, pathname, accountSlug, canSeeUsers, canSeeApplications, canSeeRoles, canSeeApiClients]);
 
   return (
     <Sidebar collapsible="icon" {...props}>

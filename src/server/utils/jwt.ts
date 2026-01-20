@@ -8,11 +8,12 @@ function getJwtSecretKey(jwtSecret: string): Uint8Array {
 }
 
 export type AccessTokenPayload = {
-  sub: string; // userId
+  sub: string; // userId or apiClientId
   accountId: string; // current account
   appId: string; // application.id
-  roles: string[]; // slugs de roles de esa app en esa account
+  roles?: string[]; // slugs de roles de esa app en esa account (only for user tokens)
   permissions: string[]; // "resource:action" de esa app en esa account
+  grantType?: 'client_credentials'; // Only for M2M tokens
 };
 
 export async function signAccessToken(opts: {

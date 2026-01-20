@@ -1,9 +1,15 @@
 import {
+  BrandingQuerySchema,
+  BrandingResponseSchema,
   ForgotPasswordBodySchema,
   ForgotPasswordResponseSchema,
   LoginBodySchema,
   LoginResponseSchema,
   MeResponseSchema,
+  MfaResendBodySchema,
+  MfaResendResponseSchema,
+  MfaVerifyBodySchema,
+  MfaVerifyResponseSchema,
   OauthTokenBodySchema,
   OauthTokenResponseSchema,
   ResetPasswordBodySchema,
@@ -122,6 +128,46 @@ export const auth = c.router(
         200: c.noBody(),
         401: TsRestErrorSchema,
         429: TsRestErrorSchema,
+        500: TsRestErrorSchema,
+      },
+    },
+
+    mfaVerify: {
+      method: 'POST',
+      path: '/mfa/verify',
+      summary: 'Verify MFA code and complete login',
+      body: MfaVerifyBodySchema,
+      responses: {
+        200: MfaVerifyResponseSchema,
+        400: TsRestErrorSchema,
+        401: TsRestErrorSchema,
+        429: TsRestErrorSchema,
+        500: TsRestErrorSchema,
+      },
+    },
+
+    mfaResend: {
+      method: 'POST',
+      path: '/mfa/resend',
+      summary: 'Resend MFA code',
+      body: MfaResendBodySchema,
+      responses: {
+        200: MfaResendResponseSchema,
+        400: TsRestErrorSchema,
+        429: TsRestErrorSchema,
+        500: TsRestErrorSchema,
+      },
+    },
+
+    branding: {
+      method: 'GET',
+      path: '/branding',
+      summary: 'Get branding info for auth pages (public endpoint)',
+      query: BrandingQuerySchema,
+      responses: {
+        200: BrandingResponseSchema,
+        400: TsRestErrorSchema,
+        404: TsRestErrorSchema,
         500: TsRestErrorSchema,
       },
     },

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 import { ImageUpload } from '@/components/ui/image-upload';
+import { Switch } from '@/components/ui/switch';
 
 type FormValues = z.infer<typeof CreateApplicationBodySchema>;
 
@@ -198,6 +199,37 @@ export function ApplicationMainForm() {
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel htmlFor={field.name}>Logo</FieldLabel>
+            <p className="text-muted-foreground mb-2 text-sm">
+              Used in the header of authentication pages for this app.
+            </p>
+            <ImageUpload value={field.value} onChange={field.onChange} />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+      <Controller
+        name="image"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name}>Portal Image</FieldLabel>
+            <p className="text-muted-foreground mb-2 text-sm">
+              Shown in the app card on the user portal.
+            </p>
+            <ImageUpload value={field.value} onChange={field.onChange} />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+      <Controller
+        name="imageAd"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name}>Auth Page Image</FieldLabel>
+            <p className="text-muted-foreground mb-2 text-sm">
+              Shown in the right panel of login and password reset pages.
+            </p>
             <ImageUpload value={field.value} onChange={field.onChange} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -227,14 +259,34 @@ export function ApplicationMainForm() {
       />
       <CallbackUrlsField />
       <Controller
+        name="mfaEnabled"
+        control={form.control}
+        render={({ field }) => (
+          <Field>
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FieldLabel htmlFor={field.name}>Multi-Factor Authentication (MFA)</FieldLabel>
+                <p className="text-muted-foreground text-sm">
+                  Require users to verify their identity with a code sent to their email
+                </p>
+              </div>
+              <Switch
+                checked={field.value ?? false}
+                onCheckedChange={field.onChange}
+              />
+            </div>
+          </Field>
+        )}
+      />
+      <Controller
         name="status"
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Application</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Status</FieldLabel>
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="">
-                <SelectValue placeholder="Application" />
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((opt) => (

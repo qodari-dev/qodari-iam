@@ -380,6 +380,7 @@ export const user = tsr.router(contract.user, {
 
       const existing = await db.query.users.findFirst({
         where: eq(users.id, id),
+        columns: SENSITIVE_COLUMNS,
       });
 
       if (!existing) {
@@ -425,6 +426,7 @@ export const user = tsr.router(contract.user, {
 
       const existing = await db.query.users.findFirst({
         where: eq(users.id, id),
+        columns: SENSITIVE_COLUMNS,
       });
 
       if (!existing) {
@@ -467,6 +469,7 @@ export const user = tsr.router(contract.user, {
 
       const existing = await db.query.users.findFirst({
         where: eq(users.id, id),
+        columns: SENSITIVE_COLUMNS,
       });
 
       if (!existing) {
@@ -510,6 +513,7 @@ export const user = tsr.router(contract.user, {
 
       const existing = await db.query.users.findFirst({
         where: eq(users.id, id),
+        columns: SENSITIVE_COLUMNS,
       });
 
       if (!existing) {
@@ -553,6 +557,7 @@ export const user = tsr.router(contract.user, {
 
       const existing = await db.query.users.findFirst({
         where: eq(users.id, id),
+        columns: SENSITIVE_COLUMNS,
       });
 
       if (!existing) {

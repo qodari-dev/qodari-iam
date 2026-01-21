@@ -88,6 +88,7 @@ const AuditLogWhereFieldsSchema = z
     apiClientId: z.union([z.string().uuid(), UUIDOperatorsSchema]).optional(),
     applicationId: z.union([z.string().uuid(), UUIDOperatorsSchema]).optional(),
     action: z.union([AuditActionEnum, EnumOperatorsSchema(AUDIT_ACTIONS)]).optional(),
+    actionKey: z.union([z.string(), StringOperatorsSchema]).optional(),
     resource: z.union([z.string(), StringOperatorsSchema]).optional(),
     resourceId: z.union([z.string(), StringOperatorsSchema]).optional(),
     status: z.union([AuditStatusEnum, EnumOperatorsSchema(AUDIT_STATUS)]).optional(),
@@ -168,6 +169,7 @@ export const AuditLogItemSchema = z.object({
   applicationId: z.string().uuid().nullable(),
   applicationName: z.string().nullable(),
   action: z.string(),
+  actionKey: z.string(),
   resource: z.string(),
   resourceId: z.string().nullable(),
   resourceLabel: z.string().nullable(),
@@ -175,9 +177,9 @@ export const AuditLogItemSchema = z.object({
   userAgent: z.string().nullable(),
   status: z.string(),
   errorMessage: z.string().nullable(),
-  beforeValue: z.unknown().nullable(),
-  afterValue: z.unknown().nullable(),
-  metadata: z.unknown().nullable(),
+  beforeValue: z.object({}).nullable(),
+  afterValue: z.object({}).nullable(),
+  metadata: z.object({}).nullable(),
   createdAt: z.coerce.date(),
 });
 

@@ -11,9 +11,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group';
+import { generateClientId, randomBase64Url } from '@/utils/random-base64-url';
 
 type FormValues = z.infer<typeof CreateApplicationBodySchema>;
 
@@ -79,7 +87,7 @@ export function ApplicationMainForm({
 }: ApplicationMainFormProps) {
   const form = useFormContext<FormValues>();
   return (
-    <FieldGroup>
+    <FieldGroup className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Controller
         name="name"
         control={form.control}
@@ -106,8 +114,87 @@ export function ApplicationMainForm({
         name="description"
         control={form.control}
         render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
+          <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
             <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+            <Textarea {...field} aria-invalid={fieldState.invalid} />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+      <Controller
+        name="logo"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
+            <FieldLabel htmlFor={field.name}>Logo</FieldLabel>
+            <p className="text-muted-foreground mb-2 text-sm">
+              Used in the header of authentication pages for this app.
+            </p>
+            <ImageUpload
+              value={field.value}
+              onChange={field.onChange}
+              onUploadComplete={onUploadComplete}
+              onRemoveUnsaved={onRemoveUnsaved}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+      <Controller
+        name="image"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
+            <FieldLabel htmlFor={field.name}>Portal Image</FieldLabel>
+            <p className="text-muted-foreground mb-2 text-sm">
+              Shown in the app card on the user portal.
+            </p>
+            <ImageUpload
+              value={field.value}
+              onChange={field.onChange}
+              onUploadComplete={onUploadComplete}
+              onRemoveUnsaved={onRemoveUnsaved}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+      <Controller
+        name="imageAd"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
+            <FieldLabel htmlFor={field.name}>Auth Page Image</FieldLabel>
+            <p className="text-muted-foreground mb-2 text-sm">
+              Shown in the right panel of login and password reset pages.
+            </p>
+            <ImageUpload
+              value={field.value}
+              onChange={field.onChange}
+              onUploadComplete={onUploadComplete}
+              onRemoveUnsaved={onRemoveUnsaved}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+      <Controller
+        name="homeUrl"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name}>Home URL</FieldLabel>
+            <Input {...field} aria-invalid={fieldState.invalid} />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+      <Controller
+        name="logoutUrl"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name}>Logout URL</FieldLabel>
             <Input {...field} aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -136,12 +223,51 @@ export function ApplicationMainForm({
         )}
       />
       <Controller
+        name="clientJwtSecret"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
+            <FieldLabel htmlFor={field.name}>Client JWT Secret</FieldLabel>
+            <InputGroup>
+              <InputGroupInput {...field} aria-invalid={fieldState.invalid} />
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  aria-label="Generate"
+                  title="Generate"
+                  size="icon-xs"
+                  onClick={() => {
+                    form.setValue(field.name, randomBase64Url(30));
+                  }}
+                >
+                  <RefreshCw />
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+      <Controller
         name="clientId"
         control={form.control}
         render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
+          <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
             <FieldLabel htmlFor={field.name}>Client ID</FieldLabel>
-            <Input {...field} aria-invalid={fieldState.invalid} />
+            <InputGroup>
+              <InputGroupInput {...field} aria-invalid={fieldState.invalid} />
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  aria-label="Generate"
+                  title="Generate"
+                  size="icon-xs"
+                  onClick={() => {
+                    form.setValue(field.name, generateClientId('cli_'));
+                  }}
+                >
+                  <RefreshCw />
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
@@ -150,9 +276,23 @@ export function ApplicationMainForm({
         name="clientSecret"
         control={form.control}
         render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
+          <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
             <FieldLabel htmlFor={field.name}>Client Secret</FieldLabel>
-            <Input {...field} aria-invalid={fieldState.invalid} />
+            <InputGroup>
+              <InputGroupInput {...field} aria-invalid={fieldState.invalid} />
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  aria-label="Generate"
+                  title="Generate"
+                  size="icon-xs"
+                  onClick={() => {
+                    form.setValue(field.name, randomBase64Url(48));
+                  }}
+                >
+                  <RefreshCw />
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
@@ -190,102 +330,15 @@ export function ApplicationMainForm({
           </Field>
         )}
       />
-      <Controller
-        name="clientJwtSecret"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Client JWT Secret</FieldLabel>
-            <Input {...field} aria-invalid={fieldState.invalid} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
-      <Controller
-        name="logo"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Logo</FieldLabel>
-            <p className="text-muted-foreground mb-2 text-sm">
-              Used in the header of authentication pages for this app.
-            </p>
-            <ImageUpload
-              value={field.value}
-              onChange={field.onChange}
-              onUploadComplete={onUploadComplete}
-              onRemoveUnsaved={onRemoveUnsaved}
-            />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
-      <Controller
-        name="image"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Portal Image</FieldLabel>
-            <p className="text-muted-foreground mb-2 text-sm">
-              Shown in the app card on the user portal.
-            </p>
-            <ImageUpload
-              value={field.value}
-              onChange={field.onChange}
-              onUploadComplete={onUploadComplete}
-              onRemoveUnsaved={onRemoveUnsaved}
-            />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
-      <Controller
-        name="imageAd"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Auth Page Image</FieldLabel>
-            <p className="text-muted-foreground mb-2 text-sm">
-              Shown in the right panel of login and password reset pages.
-            </p>
-            <ImageUpload
-              value={field.value}
-              onChange={field.onChange}
-              onUploadComplete={onUploadComplete}
-              onRemoveUnsaved={onRemoveUnsaved}
-            />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
-      <Controller
-        name="homeUrl"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Home URL</FieldLabel>
-            <Input {...field} aria-invalid={fieldState.invalid} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
-      <Controller
-        name="logoutUrl"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Logout URL</FieldLabel>
-            <Input {...field} aria-invalid={fieldState.invalid} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
-      <CallbackUrlsField />
+
+      <div className="lg:col-span-2">
+        <CallbackUrlsField />
+      </div>
       <Controller
         name="mfaEnabled"
         control={form.control}
         render={({ field }) => (
-          <Field>
+          <Field className="lg:col-span-2">
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <FieldLabel htmlFor={field.name}>Multi-Factor Authentication (MFA)</FieldLabel>

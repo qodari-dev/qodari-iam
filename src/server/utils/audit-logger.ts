@@ -19,6 +19,7 @@ export type AuditLogParams = {
 
   // Operation
   action: AuditAction;
+  actionKey?: string;
   resource: string;
   resourceId?: string;
   resourceLabel?: string;
@@ -43,7 +44,11 @@ export type AuditLogParams = {
  * Fire-and-forget audit logger for internal IAM operations.
  * Does not block the main operation - errors are logged but not thrown.
  */
-export async function logAudit(session: UnifiedAuthContext, params: AuditLogParams): Promise<void> {
+export async function logAudit(
+  session: UnifiedAuthContext | undefined,
+  params: AuditLogParams
+): Promise<void> {
+  if (!session) return;
   const insertData: NewAuditLog = {
     ...params,
     ...(session.type === 'user'
@@ -67,9 +72,12 @@ export async function logAudit(session: UnifiedAuthContext, params: AuditLogPara
     metadata: params.metadata,
   };
 
-  db.insert(auditLogs)
+  await db
+    .insert(auditLogs)
     .values(insertData)
     .catch((error) => {
       console.error('[AuditLogger] Failed to log audit event:', error);
     });
+  console.log(insertData);
+  return;
 }

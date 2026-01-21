@@ -15,6 +15,8 @@ import {
   primaryKey,
 } from 'drizzle-orm/pg-core';
 
+type JsonObject = Record<string, unknown>;
+
 const timestamps = {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
@@ -673,11 +675,14 @@ export const auditLogs = pgTable(
     apiClientName: varchar('api_client_name', { length: 255 }),
 
     // Context (application where it occurred)
-    applicationId: uuid('application_id').references(() => applications.id, { onDelete: 'set null' }),
+    applicationId: uuid('application_id').references(() => applications.id, {
+      onDelete: 'set null',
+    }),
     applicationName: varchar('application_name', { length: 255 }),
 
     // Operation
     action: varchar('action', { length: 50 }).notNull(),
+    actionKey: varchar('action_key', { length: 50 }),
     resource: varchar('resource', { length: 100 }).notNull(),
     resourceId: varchar('resource_id', { length: 255 }),
     resourceLabel: varchar('resource_label', { length: 255 }),
@@ -691,11 +696,11 @@ export const auditLogs = pgTable(
     errorMessage: text('error_message'),
 
     // Changes (for audit evidence)
-    beforeValue: jsonb('before_value'),
-    afterValue: jsonb('after_value'),
+    beforeValue: jsonb('before_value').$type<JsonObject | null>(),
+    afterValue: jsonb('after_value').$type<JsonObject | null>(),
 
     // Additional metadata
-    metadata: jsonb('metadata'),
+    metadata: jsonb('metadata').$type<JsonObject | null>(),
 
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

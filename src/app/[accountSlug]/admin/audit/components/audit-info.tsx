@@ -4,17 +4,10 @@ import { DescriptionList, DescriptionSection } from '@/components/description-li
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { AuditLog as AuditLogRaw } from '@/schemas/audit';
+import type { AuditLog } from '@/schemas/audit';
 import { formatDate } from '@/utils/formatters';
 import { format } from 'date-fns';
 import { User, Bot, CheckCircle, XCircle } from 'lucide-react';
-
-// Typed interface for the audit log to ensure proper ReactNode compatibility
-interface AuditLog extends Omit<AuditLogRaw, 'beforeValue' | 'afterValue' | 'metadata'> {
-  beforeValue: Record<string, unknown> | null;
-  afterValue: Record<string, unknown> | null;
-  metadata: Record<string, unknown> | null;
-}
 
 // ============================================================================
 // JSON Viewer Component
@@ -286,10 +279,7 @@ export function AuditInfo({
             {/* Changes Section */}
             <div className="mt-6">
               <h3 className="mb-4 text-sm font-medium">Changes</h3>
-              <ChangesDiff
-                beforeValue={auditLog.beforeValue as Record<string, unknown> | null}
-                afterValue={auditLog.afterValue as Record<string, unknown> | null}
-              />
+              <ChangesDiff beforeValue={auditLog.beforeValue} afterValue={auditLog.afterValue} />
             </div>
 
             {/* Metadata Section */}

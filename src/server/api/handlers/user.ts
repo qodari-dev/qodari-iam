@@ -26,6 +26,7 @@ import {
 } from '@/server/utils/query/query-builder';
 import { logAudit } from '@/server/utils/audit-logger';
 import { getClientIp } from '@/server/utils/get-client-ip';
+import { UnifiedAuthContext } from '@/server/utils/auth-context';
 
 // ============================================
 // CONFIG
@@ -109,7 +110,7 @@ export const user = tsr.router(contract.user, {
   // ==========================================
   // LIST - GET /users
   // ==========================================
-  list: async ({ query }, { request, appRoute, nextRequest }) => {
+  list: async ({ query }, { request, appRoute }) => {
     try {
       const session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
@@ -144,17 +145,6 @@ export const user = tsr.router(contract.user, {
           .where(whereClause),
       ]);
 
-      logAudit(session, {
-        action: 'read',
-        resource: 'users',
-        status: 'success',
-        metadata: {
-          ...query,
-        },
-        ipAddress: getClientIp(nextRequest),
-        userAgent: nextRequest.headers.get('user-agent'),
-      });
-
       return {
         status: 200 as const,
         body: {
@@ -170,7 +160,7 @@ export const user = tsr.router(contract.user, {
   // ==========================================
   // GET - GET /users/:id
   // ==========================================
-  getById: async ({ params: { id }, query }, { request, appRoute, nextRequest }) => {
+  getById: async ({ params: { id }, query }, { request, appRoute }) => {
     try {
       const session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
@@ -193,18 +183,6 @@ export const user = tsr.router(contract.user, {
           body: { message: 'User not found', code: 'USER_NOT_FOUND' },
         };
       }
-      logAudit(session, {
-        action: 'read',
-        resource: 'users',
-        resourceId: id,
-        resourceLabel: `${user.firstName} ${user.lastName}`,
-        status: 'success',
-        metadata: {
-          ...user,
-        },
-        ipAddress: getClientIp(nextRequest),
-        userAgent: nextRequest.headers.get('user-agent'),
-      });
 
       return { status: 200, body: user };
     } catch (e) {
@@ -272,6 +250,7 @@ export const user = tsr.router(contract.user, {
       } = newUser;
       logAudit(session, {
         action: 'create',
+        actionKey: appRoute.metadata.permissionKey,
         resource: 'users',
         resourceId: newUser.id,
         resourceLabel: `${newUser.firstName} ${newUser.lastName}`,
@@ -358,6 +337,7 @@ export const user = tsr.router(contract.user, {
 
       logAudit(session, {
         action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
         resource: 'users',
         resourceId: existing.id,
         resourceLabel: `${existing.firstName} ${existing.lastName}`,
@@ -384,8 +364,11 @@ export const user = tsr.router(contract.user, {
   // DELETE - DELETE /users/:id
   // ==========================================
   delete: async ({ params: { id } }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -411,6 +394,7 @@ export const user = tsr.router(contract.user, {
 
       logAudit(session, {
         action: 'delete',
+        actionKey: appRoute.metadata.permissionKey,
         resource: 'users',
         resourceId: existing.id,
         resourceLabel: `${existing.firstName} ${existing.lastName}`,
@@ -418,8 +402,8 @@ export const user = tsr.router(contract.user, {
         beforeValue: {
           ...existing,
         },
-        ipAddress: getClientIp(nextRequest),
-        userAgent: nextRequest.headers.get('user-agent'),
+        ipAddress,
+        userAgent,
       });
 
       return {
@@ -427,9 +411,23 @@ export const user = tsr.router(contract.user, {
         body: existing,
       };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al eliminar usuario ${id}`,
       });
+      await logAudit(session, {
+        action: 'delete',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'users',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          id,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 

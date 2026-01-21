@@ -139,7 +139,7 @@ export function AuditLogs() {
         />
       </PageContent>
 
-      <AuditInfo auditLog={auditLog as Parameters<typeof AuditInfo>[0]['auditLog']} opened={openedInfoSheet} onOpened={handleInfoSheetChange} />
+      <AuditInfo auditLog={auditLog} opened={openedInfoSheet} onOpened={handleInfoSheetChange} />
     </>
   );
 }

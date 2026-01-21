@@ -1,0 +1,1 @@
+ALTER TABLE "audit_logs" ADD COLUMN "action_key" varchar(50);

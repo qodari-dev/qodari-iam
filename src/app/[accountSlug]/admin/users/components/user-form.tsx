@@ -33,10 +33,7 @@ export function UserForm({
 }) {
   const formId = useId();
 
-  const schema = useMemo(
-    () => (user ? UpdateUserBodySchema : CreateUserBodySchema),
-    [user]
-  );
+  const schema = useMemo(() => (user ? UpdateUserBodySchema : CreateUserBodySchema), [user]);
 
   const form = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

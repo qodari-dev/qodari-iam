@@ -35,7 +35,12 @@ const AUDIT_LOG_FIELDS: FieldMap = {
 
 const AUDIT_LOG_QUERY_CONFIG: QueryConfig = {
   fields: AUDIT_LOG_FIELDS,
-  searchFields: [auditLogs.resourceLabel, auditLogs.userName, auditLogs.apiClientName],
+  searchFields: [
+    auditLogs.resourceLabel,
+    auditLogs.userName,
+    auditLogs.apiClientName,
+    auditLogs.resource,
+  ],
   defaultSort: { column: auditLogs.createdAt, order: 'desc' },
 };
 
@@ -266,7 +271,6 @@ export const audit = tsr.router(contract.audit, {
         apiClientId,
         applicationId,
         action,
-        resource,
         status,
         from,
         to,
@@ -275,16 +279,14 @@ export const audit = tsr.router(contract.audit, {
 
       // Build where conditions
       const conditions = [eq(auditLogs.accountId, accountId)];
-
+      if (applicationId) conditions.push(eq(auditLogs.applicationId, applicationId));
       if (actorType) conditions.push(eq(auditLogs.actorType, actorType));
       if (userId) conditions.push(eq(auditLogs.userId, userId));
       if (apiClientId) conditions.push(eq(auditLogs.apiClientId, apiClientId));
-      if (applicationId) conditions.push(eq(auditLogs.applicationId, applicationId));
       if (action) conditions.push(eq(auditLogs.action, action));
-      if (resource) conditions.push(eq(auditLogs.resource, resource));
-      if (status) conditions.push(eq(auditLogs.status, status));
       if (from) conditions.push(gte(auditLogs.createdAt, from));
       if (to) conditions.push(lte(auditLogs.createdAt, to));
+      if (status) conditions.push(eq(auditLogs.status, status));
       if (search) {
         conditions.push(
           or(

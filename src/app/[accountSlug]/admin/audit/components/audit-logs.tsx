@@ -43,6 +43,28 @@ export function AuditLogs() {
   // ---- Handlers ----
 
   // Extract filters for the toolbar
+
+  const applicationFilter = React.useMemo(() => {
+    const applicationId = filters.applicationId;
+    if (!applicationId) return undefined;
+    if (typeof applicationId === 'string') return applicationId;
+    return undefined;
+  }, [filters.applicationId]);
+
+  const userFilter = React.useMemo(() => {
+    const userId = filters.userId;
+    if (!userId) return undefined;
+    if (typeof userId === 'string') return userId;
+    return undefined;
+  }, [filters.userId]);
+
+  const apiClientFilter = React.useMemo(() => {
+    const apiClientId = filters.apiClientId;
+    if (!apiClientId) return undefined;
+    if (typeof apiClientId === 'string') return apiClientId;
+    return undefined;
+  }, [filters.apiClientId]);
+
   const actionFilter = React.useMemo(() => {
     const action = filters.action;
     if (!action) return [];
@@ -113,6 +135,18 @@ export function AuditLogs() {
             <AuditToolbar
               searchValue={searchValue}
               onSearchChange={handleSearchChange}
+              applicationFilter={applicationFilter}
+              onApplicationFilterChange={(value) => {
+                handleFilterChange('applicationId', value);
+              }}
+              userFilter={userFilter}
+              onUserFilterChange={(value) => {
+                handleFilterChange('userId', value);
+              }}
+              apiClientFilter={apiClientFilter}
+              onApiClientFilterChange={(value) => {
+                handleFilterChange('apiClientId', value);
+              }}
               actionFilter={actionFilter}
               onActionFilterChange={(values) => {
                 if (values.length === 0) {

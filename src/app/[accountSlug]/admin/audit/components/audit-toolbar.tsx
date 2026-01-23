@@ -7,6 +7,10 @@ import { DataTableFacetedFilter, SimpleSelectFilter } from '@/components/data-ta
 import { auditActionOptions, auditStatusOptions, actorTypeOptions } from '@/schemas/audit';
 import { api } from '@/clients/api';
 import { toast } from 'sonner';
+import { useApplications } from '@/hooks/queries/use-application-queries';
+import { useMemo } from 'react';
+import { useUsers } from '@/hooks/queries/use-user-queries';
+import { useApiClients } from '@/hooks/queries/use-api-client-queries';
 
 // ============================================================================
 // Props Interface
@@ -16,6 +20,15 @@ interface AuditToolbarProps {
   // Search
   searchValue: string;
   onSearchChange: (value: string) => void;
+
+  applicationFilter?: string;
+  onApplicationFilterChange: (value: string | undefined) => void;
+
+  userFilter?: string;
+  onUserFilterChange: (value: string | undefined) => void;
+
+  apiClientFilter?: string;
+  onApiClientFilterChange: (value: string | undefined) => void;
 
   // Action filter (multi-select)
   actionFilter: string[];
@@ -44,6 +57,12 @@ interface AuditToolbarProps {
 export function AuditToolbar({
   searchValue,
   onSearchChange,
+  applicationFilter,
+  onApplicationFilterChange,
+  userFilter,
+  onUserFilterChange,
+  apiClientFilter,
+  onApiClientFilterChange,
   actionFilter,
   onActionFilterChange,
   statusFilter,
@@ -56,10 +75,54 @@ export function AuditToolbar({
 }: AuditToolbarProps) {
   const isFiltered = searchValue || actionFilter.length > 0 || statusFilter || actorTypeFilter;
 
+  const { data: applications } = useApplications();
+
+  const applicationFilterData = useMemo(() => {
+    if (!applications) return [];
+    if (!applications.body.data) return [];
+    return applications.body?.data.map((app) => ({
+      label: app.name,
+      value: app.id,
+    }));
+  }, [applications]);
+
+  const { data: users } = useUsers();
+
+  const userFilterData = useMemo(() => {
+    if (!users) return [];
+    if (!users.body.data) return [];
+    return users.body?.data.map((user) => ({
+      label: user.email,
+      value: user.id,
+    }));
+  }, [users]);
+
+  const { data: apiClients } = useApiClients();
+
+  const apiClientFilterData = useMemo(() => {
+    if (!apiClients) return [];
+    if (!apiClients.body.data) return [];
+    return apiClients.body?.data.map((apiClient) => ({
+      label: apiClient.name,
+      value: apiClient.id,
+    }));
+  }, [apiClients]);
+
   const handleExport = async (format: 'csv' | 'json') => {
     try {
       const result = await api.audit.export.query({
-        query: { format },
+        query: {
+          format,
+          //actorType: actorTypeFilter ?? undefined,
+          userId: userFilter ?? undefined,
+          apiClientId: apiClientFilter ?? undefined,
+          applicationId: applicationFilter ?? undefined,
+          //action: actionFilter ?? undefined,
+          //status: statusFilter ?? undefined,
+          //from: from ?? undefined,
+          //to: to ?? undefined,
+          search: searchValue ?? undefined,
+        },
       });
 
       if (result.status === 200) {
@@ -91,6 +154,28 @@ export function AuditToolbar({
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
           className="md:max-w-xs"
+        />
+
+        {/* Application Filter (Single-select) */}
+        <SimpleSelectFilter
+          title="Application"
+          options={applicationFilterData}
+          value={applicationFilter}
+          onValueChange={onApplicationFilterChange}
+        />
+        {/* User Filter (Single-select) */}
+        <SimpleSelectFilter
+          title="User"
+          options={userFilterData}
+          value={userFilter}
+          onValueChange={onUserFilterChange}
+        />
+        {/* API Client Filter (Single-select) */}
+        <SimpleSelectFilter
+          title="API Client"
+          options={apiClientFilterData}
+          value={apiClientFilter}
+          onValueChange={onApiClientFilterChange}
         />
 
         {/* Action Filter (Multi-select) */}

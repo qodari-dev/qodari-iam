@@ -26,6 +26,7 @@ import { getAuthContextFromRequest } from '@/server/utils/auth-context';
 import { sendMfaCodeEmail, sendPasswordResetEmail } from '@/server/utils/emails';
 import { genericTsRestErrorResponse } from '@/server/utils/generic-ts-rest-error';
 import { getClientIp } from '@/server/utils/get-client-ip';
+import { logAudit } from '@/server/utils/audit-logger';
 import { signAccessToken } from '@/server/utils/jwt';
 import {
   generateMfaCode,
@@ -213,12 +214,38 @@ export const auth = tsr.router(contract.auth, {
         accountId: currentAccountId,
       };
 
-      await createSession({
+      const { session } = await createSession({
         userId: user.id,
         accountId: currentAccountId,
         req: request,
       });
 
+      logAudit(
+        {
+          type: 'user',
+          session,
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            avatar: user.avatar,
+            isAdmin: user.isAdmin,
+            status: user.status,
+          },
+          accountId: currentAccountId,
+        },
+        {
+          action: 'login',
+          actionKey: 'login',
+          resource: 'users',
+          resourceId: user.id,
+          resourceLabel: `${user.firstName} ${user.lastName}`,
+          status: 'success',
+          ipAddress: ip,
+          userAgent: nextRequest.headers.get('user-agent'),
+        }
+      );
       return {
         status: 200,
         body: response,
@@ -250,11 +277,45 @@ export const auth = tsr.router(contract.auth, {
   // --------------------------------------
   // POST - /logout
   // --------------------------------------
-  logout: async ({}, { request }) => {
+  logout: async ({}, { request, nextRequest }) => {
     try {
       const session = await getSessionFromRequest(request);
+      const ipAddress = getClientIp(nextRequest);
+      const userAgent = nextRequest.headers.get('user-agent');
 
       if (session) {
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, session.userId),
+        });
+
+        if (user) {
+          logAudit(
+            {
+              type: 'user',
+              session,
+              user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                avatar: user.avatar,
+                isAdmin: user.isAdmin,
+                status: user.status,
+              },
+              accountId: session.accountId,
+            },
+            {
+              action: 'logout',
+              actionKey: 'logout',
+              resource: 'users',
+              resourceId: user.id,
+              resourceLabel: `${user.firstName} ${user.lastName}`,
+              status: 'success',
+              ipAddress,
+              userAgent,
+            }
+          );
+        }
         await db.delete(sessions).where(eq(sessions.id, session.id));
       }
 

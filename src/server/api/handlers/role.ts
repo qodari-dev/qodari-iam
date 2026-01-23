@@ -17,6 +17,9 @@ import {
   FieldMap,
   QueryConfig,
 } from '@/server/utils/query/query-builder';
+import { logAudit } from '@/server/utils/audit-logger';
+import { getClientIp } from '@/server/utils/get-client-ip';
+import { UnifiedAuthContext } from '@/server/utils/auth-context';
 
 // ============================================
 // CONFIG
@@ -159,9 +162,12 @@ export const role = tsr.router(contract.role, {
   // ==========================================
   // CREATE - POST /roles
   // ==========================================
-  create: async ({ body }, { request, appRoute }) => {
+  create: async ({ body }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -186,7 +192,7 @@ export const role = tsr.router(contract.role, {
         const app = await tx.query.applications.findFirst({
           where: and(
             eq(applications.id, body.applicationId),
-            eq(applications.accountId, session.accountId)
+            eq(applications.accountId, session!.accountId)
           ),
         });
         if (!app) {
@@ -199,7 +205,7 @@ export const role = tsr.router(contract.role, {
 
         const [roleInserted] = await tx
           .insert(roles)
-          .values({ ...body, slug: body.slug.toLowerCase(), accountId: session.accountId })
+          .values({ ...body, slug: body.slug.toLowerCase(), accountId: session!.accountId })
           .returning();
 
         if (body.permissions?.length) {
@@ -208,7 +214,7 @@ export const role = tsr.router(contract.role, {
             .from(permissions)
             .where(
               and(
-                eq(permissions.accountId, session.accountId),
+                eq(permissions.accountId, session!.accountId),
                 eq(permissions.applicationId, body.applicationId),
                 inArray(
                   permissions.id,
@@ -236,20 +242,49 @@ export const role = tsr.router(contract.role, {
         return [roleInserted];
       });
 
+      logAudit(session, {
+        action: 'create',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'roles',
+        resourceId: newRole.id,
+        resourceLabel: newRole.name,
+        status: 'success',
+        afterValue: {
+          ...newRole,
+        },
+        ipAddress,
+        userAgent,
+      });
       return { status: 201, body: newRole };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: 'Error al crear',
       });
+      await logAudit(session, {
+        action: 'create',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'roles',
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          body,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
   // ==========================================
   // UPDATE - PATCH /roles/:id
   // ==========================================
-  update: async ({ params: { id }, body }, { request, appRoute }) => {
+  update: async ({ params: { id }, body }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -275,7 +310,7 @@ export const role = tsr.router(contract.role, {
           const app = await tx.query.applications.findFirst({
             where: and(
               eq(applications.id, body.applicationId),
-              eq(applications.accountId, session.accountId)
+              eq(applications.accountId, session!.accountId)
             ),
           });
           if (!app) {
@@ -293,7 +328,7 @@ export const role = tsr.router(contract.role, {
             ...body,
             slug: body.slug ? body.slug.toLowerCase() : existing.slug,
           })
-          .where(and(eq(roles.id, id), eq(roles.accountId, session.accountId)))
+          .where(and(eq(roles.id, id), eq(roles.accountId, session!.accountId)))
           .returning();
 
         if (body.permissions) {
@@ -305,7 +340,7 @@ export const role = tsr.router(contract.role, {
               .from(permissions)
               .where(
                 and(
-                  eq(permissions.accountId, session.accountId),
+                  eq(permissions.accountId, session!.accountId),
                   eq(permissions.applicationId, body.applicationId ?? roleUpdated.applicationId),
                   inArray(
                     permissions.id,
@@ -334,20 +369,53 @@ export const role = tsr.router(contract.role, {
         return [roleUpdated];
       });
 
+      logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'roles',
+        resourceId: existing.id,
+        resourceLabel: updated.name,
+        status: 'success',
+        beforeValue: {
+          ...existing,
+        },
+        afterValue: {
+          ...updated,
+        },
+        ipAddress,
+        userAgent,
+      });
       return { status: 200, body: updated };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al actualizar ${id}`,
       });
+      await logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'roles',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          body,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
   // ==========================================
   // DELETE - DELETE /roles/:id
   // ==========================================
-  delete: async ({ params: { id } }, { request, appRoute }) => {
+  delete: async ({ params: { id } }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -370,14 +438,41 @@ export const role = tsr.router(contract.role, {
 
       await db.delete(roles).where(eq(roles.id, id));
 
+      logAudit(session, {
+        action: 'delete',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'roles',
+        resourceId: existing.id,
+        resourceLabel: existing.name,
+        status: 'success',
+        beforeValue: {
+          ...existing,
+        },
+        ipAddress,
+        userAgent,
+      });
       return {
         status: 200,
         body: existing,
       };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al eliminar ${id}`,
       });
+      await logAudit(session, {
+        action: 'delete',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'roles',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          id,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 });

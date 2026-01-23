@@ -4,13 +4,13 @@ import { apiClientRoles, apiClients } from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
 import { hashPassword } from '@/server/utils/password';
 import { requireAdminPermission } from '@/server/utils/require-permission';
+import { logAudit } from '@/server/utils/audit-logger';
+import { getClientIp } from '@/server/utils/get-client-ip';
+import { UnifiedAuthContext } from '@/server/utils/auth-context';
 import { tsr } from '@ts-rest/serverless/next';
 import { and, eq, notInArray, sql } from 'drizzle-orm';
 import { contract } from '../contracts';
-import {
-  buildTypedIncludes,
-  createIncludeMap,
-} from '@/server/utils/query/include-builder';
+import { buildTypedIncludes, createIncludeMap } from '@/server/utils/query/include-builder';
 import {
   buildPaginationMeta,
   buildQuery,
@@ -176,9 +176,12 @@ export const apiClient = tsr.router(contract.apiClient, {
   // ==========================================
   // CREATE - POST /api-clients
   // ==========================================
-  create: async ({ body }, { request, appRoute }) => {
+  create: async ({ body }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -199,7 +202,7 @@ export const apiClient = tsr.router(contract.apiClient, {
           .insert(apiClients)
           .values({
             ...data,
-            accountId: session.accountId,
+            accountId: session!.accountId,
             clientId,
             clientSecretHash,
             accessTokenExp: data.accessTokenExp ?? 600, // Default 10 minutes
@@ -220,23 +223,52 @@ export const apiClient = tsr.router(contract.apiClient, {
 
       // Return with plain text secret (only time it's returned)
       const { clientSecretHash: _, ...safeClient } = created;
+      logAudit(session, {
+        action: 'create',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'api_clients',
+        resourceId: safeClient.id,
+        resourceLabel: safeClient.name,
+        status: 'success',
+        afterValue: {
+          ...safeClient,
+        },
+        ipAddress,
+        userAgent,
+      });
       return {
         status: 201 as const,
         body: { ...safeClient, clientSecret },
       };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: 'Error al crear API Client',
       });
+      await logAudit(session, {
+        action: 'create',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'api_clients',
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          body,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
   // ==========================================
   // UPDATE - PATCH /api-clients/:id
   // ==========================================
-  update: async ({ params: { id }, body }, { request, appRoute }) => {
+  update: async ({ params: { id }, body }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -250,10 +282,11 @@ export const apiClient = tsr.router(contract.apiClient, {
       });
 
       if (!existing) {
-        return {
+        throwHttpError({
           status: 404,
-          body: { message: 'API Client not found', code: 'API_CLIENT_NOT_FOUND' },
-        };
+          message: 'API Client not found',
+          code: 'API_CLIENT_NOT_FOUND',
+        });
       }
 
       const { roleIds, ...data } = body;
@@ -262,7 +295,7 @@ export const apiClient = tsr.router(contract.apiClient, {
         const [updatedClient] = await tx
           .update(apiClients)
           .set(data)
-          .where(and(eq(apiClients.id, id), eq(apiClients.accountId, session.accountId)))
+          .where(and(eq(apiClients.id, id), eq(apiClients.accountId, session!.accountId)))
           .returning();
 
         if (roleIds !== undefined) {
@@ -284,10 +317,7 @@ export const apiClient = tsr.router(contract.apiClient, {
             await tx
               .delete(apiClientRoles)
               .where(
-                and(
-                  eq(apiClientRoles.apiClientId, id),
-                  notInArray(apiClientRoles.roleId, roleIds)
-                )
+                and(eq(apiClientRoles.apiClientId, id), notInArray(apiClientRoles.roleId, roleIds))
               );
           }
         }
@@ -295,20 +325,54 @@ export const apiClient = tsr.router(contract.apiClient, {
         return updatedClient;
       });
 
-      return { status: 200, body: sanitizeApiClient(updated) };
+      const safeUpdated = sanitizeApiClient(updated);
+      logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'api_clients',
+        resourceId: existing.id,
+        resourceLabel: safeUpdated.name,
+        status: 'success',
+        beforeValue: {
+          ...sanitizeApiClient(existing),
+        },
+        afterValue: {
+          ...safeUpdated,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return { status: 200, body: safeUpdated };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al actualizar API Client ${id}`,
       });
+      await logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'api_clients',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          body,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
   // ==========================================
   // DELETE - DELETE /api-clients/:id
   // ==========================================
-  delete: async ({ params: { id } }, { request, appRoute }) => {
+  delete: async ({ params: { id } }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -322,10 +386,11 @@ export const apiClient = tsr.router(contract.apiClient, {
       });
 
       if (!existing) {
-        return {
+        throwHttpError({
           status: 404,
-          body: { message: 'API Client not found', code: 'API_CLIENT_NOT_FOUND' },
-        };
+          message: 'API Client not found',
+          code: 'API_CLIENT_NOT_FOUND',
+        });
       }
 
       const [deleted] = await db
@@ -333,20 +398,50 @@ export const apiClient = tsr.router(contract.apiClient, {
         .where(and(eq(apiClients.id, id), eq(apiClients.accountId, session.accountId)))
         .returning();
 
+      logAudit(session, {
+        action: 'delete',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'api_clients',
+        resourceId: existing.id,
+        resourceLabel: existing.name,
+        status: 'success',
+        beforeValue: {
+          ...sanitizeApiClient(existing),
+        },
+        ipAddress,
+        userAgent,
+      });
       return { status: 200, body: sanitizeApiClient(deleted) };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al eliminar API Client ${id}`,
       });
+      await logAudit(session, {
+        action: 'delete',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'api_clients',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          id,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
   // ==========================================
   // REGENERATE SECRET - POST /api-clients/:id/regenerate-secret
   // ==========================================
-  regenerateSecret: async ({ params: { id } }, { request, appRoute }) => {
+  regenerateSecret: async ({ params: { id } }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -360,10 +455,11 @@ export const apiClient = tsr.router(contract.apiClient, {
       });
 
       if (!existing) {
-        return {
+        throwHttpError({
           status: 404,
-          body: { message: 'API Client not found', code: 'API_CLIENT_NOT_FOUND' },
-        };
+          message: 'API Client not found',
+          code: 'API_CLIENT_NOT_FOUND',
+        });
       }
 
       // Generate new secret
@@ -375,23 +471,53 @@ export const apiClient = tsr.router(contract.apiClient, {
         .set({ clientSecretHash })
         .where(and(eq(apiClients.id, id), eq(apiClients.accountId, session.accountId)));
 
+      logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'api_clients',
+        resourceId: existing.id,
+        resourceLabel: existing.name,
+        status: 'success',
+        metadata: {
+          action: 'regenerate_secret',
+        },
+        ipAddress,
+        userAgent,
+      });
       return {
         status: 200,
         body: { clientSecret },
       };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al regenerar secret para API Client ${id}`,
       });
+      await logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'api_clients',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          action: 'regenerate_secret',
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
   // ==========================================
   // SUSPEND - POST /api-clients/:id/suspend
   // ==========================================
-  suspend: async ({ params: { id } }, { request, appRoute }) => {
+  suspend: async ({ params: { id } }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -405,10 +531,11 @@ export const apiClient = tsr.router(contract.apiClient, {
       });
 
       if (!existing) {
-        return {
+        throwHttpError({
           status: 404,
-          body: { message: 'API Client not found', code: 'API_CLIENT_NOT_FOUND' },
-        };
+          message: 'API Client not found',
+          code: 'API_CLIENT_NOT_FOUND',
+        });
       }
 
       const [updated] = await db
@@ -417,20 +544,56 @@ export const apiClient = tsr.router(contract.apiClient, {
         .where(and(eq(apiClients.id, id), eq(apiClients.accountId, session.accountId)))
         .returning();
 
+      logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'api_clients',
+        resourceId: existing.id,
+        resourceLabel: existing.name,
+        status: 'success',
+        beforeValue: {
+          ...sanitizeApiClient(existing),
+        },
+        afterValue: {
+          ...sanitizeApiClient(updated),
+        },
+        metadata: {
+          action: 'suspend',
+        },
+        ipAddress,
+        userAgent,
+      });
       return { status: 200, body: sanitizeApiClient(updated) };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al suspender API Client ${id}`,
       });
+      await logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'api_clients',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          action: 'suspend',
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
   // ==========================================
   // ACTIVATE - POST /api-clients/:id/activate
   // ==========================================
-  activate: async ({ params: { id } }, { request, appRoute }) => {
+  activate: async ({ params: { id } }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -444,10 +607,11 @@ export const apiClient = tsr.router(contract.apiClient, {
       });
 
       if (!existing) {
-        return {
+        throwHttpError({
           status: 404,
-          body: { message: 'API Client not found', code: 'API_CLIENT_NOT_FOUND' },
-        };
+          message: 'API Client not found',
+          code: 'API_CLIENT_NOT_FOUND',
+        });
       }
 
       const [updated] = await db
@@ -456,11 +620,44 @@ export const apiClient = tsr.router(contract.apiClient, {
         .where(and(eq(apiClients.id, id), eq(apiClients.accountId, session.accountId)))
         .returning();
 
+      logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'api_clients',
+        resourceId: existing.id,
+        resourceLabel: existing.name,
+        status: 'success',
+        beforeValue: {
+          ...sanitizeApiClient(existing),
+        },
+        afterValue: {
+          ...sanitizeApiClient(updated),
+        },
+        metadata: {
+          action: 'activate',
+        },
+        ipAddress,
+        userAgent,
+      });
       return { status: 200, body: sanitizeApiClient(updated) };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al activar API Client ${id}`,
       });
+      await logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'api_clients',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          action: 'activate',
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 });

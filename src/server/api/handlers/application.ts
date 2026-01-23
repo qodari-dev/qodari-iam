@@ -14,6 +14,9 @@ import {
 } from '@/server/utils/query/query-builder';
 import { requireAdminPermission } from '@/server/utils/require-permission';
 import { deleteObject, isStorageKey } from '@/server/utils/spaces';
+import { logAudit } from '@/server/utils/audit-logger';
+import { getClientIp } from '@/server/utils/get-client-ip';
+import { UnifiedAuthContext } from '@/server/utils/auth-context';
 import { tsr } from '@ts-rest/serverless/next';
 import { and, eq, notInArray, sql } from 'drizzle-orm';
 import { contract } from '../contracts';
@@ -123,9 +126,12 @@ export const application = tsr.router(contract.application, {
     }
   },
 
-  create: async ({ body }, { request, appRoute }) => {
+  create: async ({ body }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -153,7 +159,7 @@ export const application = tsr.router(contract.application, {
           .insert(applications)
           .values({
             ...data,
-            accountId: session.accountId,
+            accountId: session!.accountId,
           })
           .returning();
 
@@ -161,7 +167,7 @@ export const application = tsr.router(contract.application, {
           await tx.insert(permissions).values(
             permissionsData.map((perm) => ({
               ...perm,
-              accountId: session.accountId,
+              accountId: session!.accountId,
               applicationId: app.id,
             }))
           );
@@ -170,17 +176,46 @@ export const application = tsr.router(contract.application, {
         return [app];
       });
 
+      logAudit(session, {
+        action: 'create',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'applications',
+        resourceId: created.id,
+        resourceLabel: created.name,
+        status: 'success',
+        afterValue: {
+          ...created,
+        },
+        ipAddress,
+        userAgent,
+      });
       return { status: 201 as const, body: created };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: 'Error al crear aplicación',
       });
+      await logAudit(session, {
+        action: 'create',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'applications',
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          body,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
-  update: async ({ params: { id }, body }, { request, appRoute }) => {
+  update: async ({ params: { id }, body }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -194,7 +229,11 @@ export const application = tsr.router(contract.application, {
       });
 
       if (!app) {
-        return { status: 404, body: { message: 'Application not found', code: 'APP_NOT_FOUND' } };
+        throwHttpError({
+          status: 404,
+          message: 'Application not found',
+          code: 'APP_NOT_FOUND',
+        });
       }
 
       // Check if we need to delete old images
@@ -202,17 +241,26 @@ export const application = tsr.router(contract.application, {
       const oldImageKey = app.image;
       const oldImageAdKey = app.imageAd;
       const shouldDeleteOldLogo =
-        oldLogoKey && isStorageKey(oldLogoKey) && body.logo !== undefined && body.logo !== oldLogoKey;
+        oldLogoKey &&
+        isStorageKey(oldLogoKey) &&
+        body.logo !== undefined &&
+        body.logo !== oldLogoKey;
       const shouldDeleteOldImage =
-        oldImageKey && isStorageKey(oldImageKey) && body.image !== undefined && body.image !== oldImageKey;
+        oldImageKey &&
+        isStorageKey(oldImageKey) &&
+        body.image !== undefined &&
+        body.image !== oldImageKey;
       const shouldDeleteOldImageAd =
-        oldImageAdKey && isStorageKey(oldImageAdKey) && body.imageAd !== undefined && body.imageAd !== oldImageAdKey;
+        oldImageAdKey &&
+        isStorageKey(oldImageAdKey) &&
+        body.imageAd !== undefined &&
+        body.imageAd !== oldImageAdKey;
 
       const [updated] = await db.transaction(async (tx) => {
         const [appUpdated] = await tx
           .update(applications)
           .set({ ...body })
-          .where(and(eq(applications.id, id), eq(applications.accountId, session.accountId)))
+          .where(and(eq(applications.id, id), eq(applications.accountId, session!.accountId)))
           .returning();
 
         if (body.permissions) {
@@ -222,7 +270,7 @@ export const application = tsr.router(contract.application, {
               .values(
                 body.permissions.map((perm) => ({
                   ...perm,
-                  accountId: session.accountId,
+                  accountId: session!.accountId,
                   applicationId: id,
                 }))
               )
@@ -244,7 +292,7 @@ export const application = tsr.router(contract.application, {
               .from(permissions)
               .where(
                 and(
-                  eq(permissions.accountId, session.accountId),
+                  eq(permissions.accountId, session!.accountId),
                   eq(permissions.applicationId, id),
                   eq(permissions.resource, perm.resource),
                   eq(permissions.action, perm.action)
@@ -278,17 +326,50 @@ export const application = tsr.router(contract.application, {
         })
       );
 
+      logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'applications',
+        resourceId: app.id,
+        resourceLabel: updated.name,
+        status: 'success',
+        beforeValue: {
+          ...app,
+        },
+        afterValue: {
+          ...updated,
+        },
+        ipAddress,
+        userAgent,
+      });
       return { status: 200, body: updated };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al actualizar aplicación ${id}`,
       });
+      await logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'applications',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          body,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
-  delete: async ({ params: { id } }, { request, appRoute }) => {
+  delete: async ({ params: { id } }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -302,7 +383,11 @@ export const application = tsr.router(contract.application, {
       });
 
       if (!app) {
-        return { status: 404, body: { message: 'Application not found', code: 'APP_NOT_FOUND' } };
+        throwHttpError({
+          status: 404,
+          message: 'Application not found',
+          code: 'APP_NOT_FOUND',
+        });
       }
 
       const imagesToDelete = [app.logo, app.image, app.imageAd].filter(
@@ -325,11 +410,38 @@ export const application = tsr.router(contract.application, {
         })
       );
 
+      logAudit(session, {
+        action: 'delete',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'applications',
+        resourceId: app.id,
+        resourceLabel: app.name,
+        status: 'success',
+        beforeValue: {
+          ...app,
+        },
+        ipAddress,
+        userAgent,
+      });
       return { status: 200, body: deleted };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al eliminar aplicación ${id}`,
       });
+      await logAudit(session, {
+        action: 'delete',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'applications',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          id,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 });

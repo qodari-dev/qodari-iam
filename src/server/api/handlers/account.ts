@@ -3,6 +3,9 @@ import { accounts } from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
 import { requireAdminPermission } from '@/server/utils/require-permission';
 import { deleteObject, isStorageKey } from '@/server/utils/spaces';
+import { logAudit } from '@/server/utils/audit-logger';
+import { getClientIp } from '@/server/utils/get-client-ip';
+import { UnifiedAuthContext } from '@/server/utils/auth-context';
 import { tsr } from '@ts-rest/serverless/next';
 import { eq } from 'drizzle-orm';
 import { contract } from '../contracts';
@@ -33,10 +36,13 @@ export const account = tsr.router(contract.account, {
     }
   },
 
-  update: async ({ body }, { request, appRoute }) => {
+  update: async ({ body }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const ctx = await requireAdminPermission(request, appRoute.metadata);
-      if (!ctx) {
+      session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
         throwHttpError({
           status: 401,
           message: 'Not authenticated',
@@ -45,11 +51,15 @@ export const account = tsr.router(contract.account, {
       }
 
       const acc = await db.query.accounts.findFirst({
-        where: eq(accounts.id, ctx.accountId),
+        where: eq(accounts.id, session.accountId),
       });
 
       if (!acc) {
-        return { status: 404, body: { message: 'Account not found', code: 'ACCOUNT_NOT_FOUND' } };
+        throwHttpError({
+          status: 404,
+          message: 'Account not found',
+          code: 'ACCOUNT_NOT_FOUND',
+        });
       }
 
       // Check if we need to delete old images
@@ -69,7 +79,7 @@ export const account = tsr.router(contract.account, {
       const [updated] = await db
         .update(accounts)
         .set({ ...body })
-        .where(eq(accounts.id, ctx.accountId))
+        .where(eq(accounts.id, session.accountId))
         .returning();
 
       // Delete old images from storage after successful update
@@ -88,9 +98,39 @@ export const account = tsr.router(contract.account, {
         }
       }
 
+      logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'accounts',
+        resourceId: acc.id,
+        resourceLabel: acc.name,
+        status: 'success',
+        beforeValue: {
+          ...acc,
+        },
+        afterValue: {
+          ...updated,
+        },
+        ipAddress,
+        userAgent,
+      });
       return { status: 200, body: updated };
     } catch (e) {
-      return genericTsRestErrorResponse(e, { genericMsg: 'Error updating account' });
+      const error = genericTsRestErrorResponse(e, { genericMsg: 'Error updating account' });
+      await logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'accounts',
+        resourceId: session?.accountId,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          body,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 });

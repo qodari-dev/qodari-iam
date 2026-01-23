@@ -133,7 +133,6 @@ export function AuditToolbar({
 
       const parsedAction = z.array(AuditActionEnum).safeParse(actionFilter);
       const action = parsedAction.success ? parsedAction.data : undefined;
-      console.log(status, statusFilter);
 
       const result = await api.audit.export.query({
         query: {

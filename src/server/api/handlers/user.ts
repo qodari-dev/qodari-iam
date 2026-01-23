@@ -145,15 +145,19 @@ export const user = tsr.router(contract.user, {
           .where(whereClause),
       ]);
 
-      return {
+      const totalCount = countResult[0]?.count ?? 0;
+      const response = {
         status: 200 as const,
         body: {
           data,
-          meta: buildPaginationMeta(countResult[0]?.count ?? 0, page, limit),
+          meta: buildPaginationMeta(totalCount, page, limit),
         },
       };
+      return response;
     } catch (e) {
-      return genericTsRestErrorResponse(e, { genericMsg: 'Error al listar usuarios' });
+      return genericTsRestErrorResponse(e, {
+        genericMsg: 'Error al listar usuarios',
+      });
     }
   },
 
@@ -178,10 +182,11 @@ export const user = tsr.router(contract.user, {
       });
 
       if (!user) {
-        return {
+        throwHttpError({
           status: 404,
-          body: { message: 'User not found', code: 'USER_NOT_FOUND' },
-        };
+          message: 'User not found',
+          code: 'USER_NOT_FOUND',
+        });
       }
 
       return { status: 200, body: user };
@@ -196,8 +201,11 @@ export const user = tsr.router(contract.user, {
   // CREATE - POST /users
   // ==========================================
   create: async ({ body }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -227,7 +235,7 @@ export const user = tsr.router(contract.user, {
           .values({
             ...data,
             email: data.email.toLowerCase(),
-            accountId: session.accountId,
+            accountId: session!.accountId,
             passwordHash,
           })
           .returning();
@@ -258,15 +266,32 @@ export const user = tsr.router(contract.user, {
         afterValue: {
           ...safeUser,
         },
-        ipAddress: getClientIp(nextRequest),
-        userAgent: nextRequest.headers.get('user-agent'),
+        ipAddress,
+        userAgent,
+        metadata: {
+          action: 'create',
+        },
       });
 
       return { status: 201, body: safeUser };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: 'Error al crear usuario',
       });
+      await logAudit(session, {
+        action: 'create',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'users',
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          action: 'create',
+          body,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
@@ -274,8 +299,11 @@ export const user = tsr.router(contract.user, {
   // UPDATE - PATCH /users/:id
   // ==========================================
   update: async ({ params: { id }, body }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      const session = await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
       if (!session) {
         throwHttpError({
           status: 401,
@@ -348,15 +376,33 @@ export const user = tsr.router(contract.user, {
         afterValue: {
           ...safeUser,
         },
-        ipAddress: getClientIp(nextRequest),
-        userAgent: request.headers.get('user-agent'),
+        ipAddress,
+        userAgent,
+        metadata: {
+          action: 'update',
+        },
       });
 
       return { status: 200, body: safeUser };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al actualizar usuario ${id}`,
       });
+      await logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'users',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          action: 'update',
+          body,
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
@@ -401,6 +447,7 @@ export const user = tsr.router(contract.user, {
         status: 'success',
         beforeValue: {
           ...existing,
+          action: 'delete',
         },
         ipAddress,
         userAgent,
@@ -423,6 +470,7 @@ export const user = tsr.router(contract.user, {
         errorMessage: error?.body.message,
         metadata: {
           id,
+          action: 'delete',
         },
         ipAddress,
         userAgent,
@@ -434,9 +482,19 @@ export const user = tsr.router(contract.user, {
   // ==========================================
   // SET PASSWORD - POST /users/:id/set-password
   // ==========================================
-  setPassword: async ({ params: { id }, body }, { request, appRoute }) => {
+  setPassword: async ({ params: { id }, body }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
 
       const existing = await db.query.users.findFirst({
         where: eq(users.id, id),
@@ -463,23 +521,60 @@ export const user = tsr.router(contract.user, {
         })
         .where(eq(users.id, id));
 
+      logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'users',
+        resourceId: existing.id,
+        resourceLabel: `${existing.firstName} ${existing.lastName}`,
+        status: 'success',
+        metadata: {
+          action: 'set_password',
+        },
+        ipAddress,
+        userAgent,
+      });
       return {
         status: 200,
         body: undefined,
       };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al establecer password para usuario ${id}`,
       });
+      await logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'users',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          action: 'set_password',
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
   // ==========================================
   // SUSPEND - POST /users/:id/suspend
   // ==========================================
-  suspend: async ({ params: { id } }, { request, appRoute }) => {
+  suspend: async ({ params: { id } }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
 
       const existing = await db.query.users.findFirst({
         where: eq(users.id, id),
@@ -510,20 +605,63 @@ export const user = tsr.router(contract.user, {
         ...safeUser
       } = updated;
 
+      logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'users',
+        resourceId: existing.id,
+        resourceLabel: `${existing.firstName} ${existing.lastName}`,
+        status: 'success',
+        beforeValue: {
+          ...existing,
+        },
+        afterValue: {
+          ...safeUser,
+        },
+        metadata: {
+          action: 'suspend',
+        },
+        ipAddress,
+        userAgent,
+      });
       return { status: 200, body: safeUser };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al suspender usuario ${id}`,
       });
+      await logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'users',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          action: 'suspend',
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
   // ==========================================
   // ACTIVATE - POST /users/:id/activate
   // ==========================================
-  activate: async ({ params: { id } }, { request, appRoute }) => {
+  activate: async ({ params: { id } }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
 
       const existing = await db.query.users.findFirst({
         where: eq(users.id, id),
@@ -554,20 +692,63 @@ export const user = tsr.router(contract.user, {
         ...safeUser
       } = updated;
 
+      logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'users',
+        resourceId: existing.id,
+        resourceLabel: `${existing.firstName} ${existing.lastName}`,
+        status: 'success',
+        beforeValue: {
+          ...existing,
+        },
+        afterValue: {
+          ...safeUser,
+        },
+        metadata: {
+          action: 'activate',
+        },
+        ipAddress,
+        userAgent,
+      });
       return { status: 200, body: safeUser };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al activar usuario ${id}`,
       });
+      await logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'users',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          action: 'activate',
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 
   // ==========================================
   // UNLOCK - POST /users/:id/unlock
   // ==========================================
-  unlock: async ({ params: { id } }, { request, appRoute }) => {
+  unlock: async ({ params: { id } }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
     try {
-      await requireAdminPermission(request, appRoute.metadata);
+      session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
 
       const existing = await db.query.users.findFirst({
         where: eq(users.id, id),
@@ -599,11 +780,44 @@ export const user = tsr.router(contract.user, {
         ...safeUser
       } = updated;
 
+      logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'users',
+        resourceId: existing.id,
+        resourceLabel: `${existing.firstName} ${existing.lastName}`,
+        status: 'success',
+        beforeValue: {
+          ...existing,
+        },
+        afterValue: {
+          ...safeUser,
+        },
+        metadata: {
+          action: 'unlock',
+        },
+        ipAddress,
+        userAgent,
+      });
       return { status: 200, body: safeUser };
     } catch (e) {
-      return genericTsRestErrorResponse(e, {
+      const error = genericTsRestErrorResponse(e, {
         genericMsg: `Error al desbloquear usuario ${id}`,
       });
+      await logAudit(session, {
+        action: 'update',
+        actionKey: appRoute.metadata.permissionKey,
+        resource: 'users',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        metadata: {
+          action: 'unlock',
+        },
+        ipAddress,
+        userAgent,
+      });
+      return error;
     }
   },
 });

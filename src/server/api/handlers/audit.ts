@@ -2,7 +2,7 @@ import { db } from '@/server/db';
 import { auditLogs } from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
 import { tsr } from '@ts-rest/serverless/next';
-import { and, eq, gte, ilike, lte, or, sql } from 'drizzle-orm';
+import { and, eq, gte, ilike, inArray, lte, or, sql } from 'drizzle-orm';
 import { contract } from '../contracts';
 
 import { buildTypedIncludes, createIncludeMap } from '@/server/utils/query/include-builder';
@@ -283,7 +283,7 @@ export const audit = tsr.router(contract.audit, {
       if (actorType) conditions.push(eq(auditLogs.actorType, actorType));
       if (userId) conditions.push(eq(auditLogs.userId, userId));
       if (apiClientId) conditions.push(eq(auditLogs.apiClientId, apiClientId));
-      if (action) conditions.push(eq(auditLogs.action, action));
+      if (action && action.length > 0) conditions.push(inArray(auditLogs.action, action));
       if (from) conditions.push(gte(auditLogs.createdAt, from));
       if (to) conditions.push(lte(auditLogs.createdAt, to));
       if (status) conditions.push(eq(auditLogs.status, status));

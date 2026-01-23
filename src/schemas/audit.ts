@@ -31,9 +31,9 @@ export type AuditStatus = (typeof AUDIT_STATUS)[number];
 export const ACTOR_TYPES = ['user', 'api_client'] as const;
 export type ActorType = (typeof ACTOR_TYPES)[number];
 
-const AuditActionEnum = z.enum(AUDIT_ACTIONS);
-const AuditStatusEnum = z.enum(AUDIT_STATUS);
-const ActorTypeEnum = z.enum(ACTOR_TYPES);
+export const AuditActionEnum = z.enum(AUDIT_ACTIONS);
+export const AuditStatusEnum = z.enum(AUDIT_STATUS);
+export const ActorTypeEnum = z.enum(ACTOR_TYPES);
 
 // Options for UI selects
 export const auditActionOptions = [
@@ -144,8 +144,7 @@ export const AuditLogExportQuerySchema = z.object({
   userId: z.string().uuid().optional(),
   apiClientId: z.string().uuid().optional(),
   applicationId: z.string().uuid().optional(),
-  action: AuditActionEnum.optional(),
-  resource: z.string().optional(),
+  action: z.array(AuditActionEnum).optional(),
   status: AuditStatusEnum.optional(),
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),

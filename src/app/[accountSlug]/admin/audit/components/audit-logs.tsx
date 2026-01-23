@@ -44,6 +44,14 @@ export function AuditLogs() {
 
   // Extract filters for the toolbar
 
+  const rangeDateFilter = React.useMemo(() => {
+    const from = filters.from as Date | undefined;
+    const to = filters.to as Date | undefined;
+    if (!from && !to) return undefined;
+    if (from && to) return { from, to };
+    return undefined;
+  }, [filters.from, filters.to]);
+
   const applicationFilter = React.useMemo(() => {
     const applicationId = filters.applicationId;
     if (!applicationId) return undefined;
@@ -135,6 +143,11 @@ export function AuditLogs() {
             <AuditToolbar
               searchValue={searchValue}
               onSearchChange={handleSearchChange}
+              rangeDateFilter={rangeDateFilter}
+              onRangeDateFilterChange={(value) => {
+                handleFilterChange('from', value?.from);
+                handleFilterChange('to', value?.to);
+              }}
               applicationFilter={applicationFilter}
               onApplicationFilterChange={(value) => {
                 handleFilterChange('applicationId', value);

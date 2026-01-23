@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import type { Column } from '@tanstack/react-table';
-import { Check, PlusCircle } from 'lucide-react';
+import { CalendarIcon, Check, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,10 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { DateRange } from 'react-day-picker';
+import { Field } from '../ui/field';
+import { format } from 'date-fns';
+import { Calendar } from '../ui/calendar';
 
 // ============================================================================
 // Props Interface
@@ -244,5 +248,51 @@ export function SimpleSelectFilter({
         </Command>
       </PopoverContent>
     </Popover>
+  );
+}
+
+interface DatePickerWithRangeFilterProps {
+  value?: DateRange;
+  onValueChange: (date: DateRange | undefined) => void;
+}
+
+export function DatePickerWithRangeFilter({
+  value,
+  onValueChange,
+}: DatePickerWithRangeFilterProps) {
+  return (
+    <Field className="w-60">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            id="date-picker-range"
+            className="justify-start px-2.5 font-normal"
+          >
+            <CalendarIcon />
+            {value?.from ? (
+              value.to ? (
+                <>
+                  {format(value.from, 'LLL dd, y')} - {format(value.to, 'LLL dd, y')}
+                </>
+              ) : (
+                format(value.from, 'LLL dd, y')
+              )
+            ) : (
+              <span>Pick a date</span>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="range"
+            defaultMonth={value?.from}
+            selected={value}
+            onSelect={onValueChange}
+            numberOfMonths={2}
+          />
+        </PopoverContent>
+      </Popover>
+    </Field>
   );
 }

@@ -4,13 +4,23 @@ import { Download, RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTableFacetedFilter, SimpleSelectFilter } from '@/components/data-table';
-import { auditActionOptions, auditStatusOptions, actorTypeOptions } from '@/schemas/audit';
+import {
+  auditActionOptions,
+  auditStatusOptions,
+  actorTypeOptions,
+  AuditStatusEnum,
+  ActorTypeEnum,
+  AuditActionEnum,
+} from '@/schemas/audit';
 import { api } from '@/clients/api';
 import { toast } from 'sonner';
 import { useApplications } from '@/hooks/queries/use-application-queries';
 import { useMemo } from 'react';
 import { useUsers } from '@/hooks/queries/use-user-queries';
 import { useApiClients } from '@/hooks/queries/use-api-client-queries';
+import { DatePickerWithRangeFilter } from '@/components/data-table/data-table-faceted-filter';
+import { DateRange } from 'react-day-picker';
+import { z } from 'zod';
 
 // ============================================================================
 // Props Interface
@@ -20,6 +30,9 @@ interface AuditToolbarProps {
   // Search
   searchValue: string;
   onSearchChange: (value: string) => void;
+
+  rangeDateFilter?: DateRange;
+  onRangeDateFilterChange: (value: DateRange | undefined) => void;
 
   applicationFilter?: string;
   onApplicationFilterChange: (value: string | undefined) => void;
@@ -57,6 +70,8 @@ interface AuditToolbarProps {
 export function AuditToolbar({
   searchValue,
   onSearchChange,
+  rangeDateFilter,
+  onRangeDateFilterChange,
   applicationFilter,
   onApplicationFilterChange,
   userFilter,
@@ -110,17 +125,27 @@ export function AuditToolbar({
 
   const handleExport = async (format: 'csv' | 'json') => {
     try {
+      const parsedStatus = AuditStatusEnum.safeParse(statusFilter);
+      const status = parsedStatus.success ? parsedStatus.data : undefined;
+
+      const parsedActorType = ActorTypeEnum.safeParse(actorTypeFilter);
+      const actorType = parsedActorType.success ? parsedActorType.data : undefined;
+
+      const parsedAction = z.array(AuditActionEnum).safeParse(actionFilter);
+      const action = parsedAction.success ? parsedAction.data : undefined;
+      console.log(status, statusFilter);
+
       const result = await api.audit.export.query({
         query: {
           format,
-          //actorType: actorTypeFilter ?? undefined,
+          actorType,
           userId: userFilter ?? undefined,
           apiClientId: apiClientFilter ?? undefined,
           applicationId: applicationFilter ?? undefined,
-          //action: actionFilter ?? undefined,
-          //status: statusFilter ?? undefined,
-          //from: from ?? undefined,
-          //to: to ?? undefined,
+          action,
+          status,
+          from: rangeDateFilter?.from ?? undefined,
+          to: rangeDateFilter?.to ?? undefined,
           search: searchValue ?? undefined,
         },
       });
@@ -154,6 +179,10 @@ export function AuditToolbar({
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
           className="md:max-w-xs"
+        />
+        <DatePickerWithRangeFilter
+          value={rangeDateFilter}
+          onValueChange={onRangeDateFilterChange}
         />
 
         {/* Application Filter (Single-select) */}

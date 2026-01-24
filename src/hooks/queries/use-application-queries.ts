@@ -14,6 +14,8 @@ export const applicationsKeys = {
   details: () => [...applicationsKeys.all, 'detail'] as const,
   detail: (params: string | { id: string; include?: string[] }) =>
     [...applicationsKeys.details(), params] as const,
+  report: (params: string | { id: string; include?: string[] }) =>
+    [...applicationsKeys.details(), 'report', params] as const,
 };
 
 function defaultQuery(filters?: Partial<ListApplicationsQuery>) {

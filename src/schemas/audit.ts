@@ -62,7 +62,8 @@ export const actorTypeOptions = [
 
 export const CreateAuditLogBodySchema = z.object({
   action: AuditActionEnum,
-  resource: z.string().min(1).max(100),
+  resourceKey: z.string().min(1).max(100),
+  functionName: z.string().min(1).max(100),
   resourceId: z.string().max(255).optional(),
   resourceLabel: z.string().max(255).optional(),
   userId: z.string().uuid().optional(),
@@ -89,7 +90,7 @@ const AuditLogWhereFieldsSchema = z
     applicationId: z.union([z.string().uuid(), UUIDOperatorsSchema]).optional(),
     action: z.union([AuditActionEnum, EnumOperatorsSchema(AUDIT_ACTIONS)]).optional(),
     actionKey: z.union([z.string(), StringOperatorsSchema]).optional(),
-    resource: z.union([z.string(), StringOperatorsSchema]).optional(),
+    resourceKey: z.union([z.string(), StringOperatorsSchema]).optional(),
     resourceId: z.union([z.string(), StringOperatorsSchema]).optional(),
     status: z.union([AuditStatusEnum, EnumOperatorsSchema(AUDIT_STATUS)]).optional(),
     createdAt: z.union([z.coerce.date(), DateOperatorsSchema]).optional(),
@@ -104,7 +105,8 @@ const AUDIT_LOG_SORT_FIELDS = [
   'id',
   'actorType',
   'action',
-  'resource',
+  'actionKey',
+  'resourceKey',
   'status',
   'createdAt',
 ] as const;
@@ -169,7 +171,7 @@ export const AuditLogItemSchema = z.object({
   applicationName: z.string().nullable(),
   action: z.string(),
   actionKey: z.string(),
-  resource: z.string(),
+  resourceKey: z.string(),
   resourceId: z.string().nullable(),
   resourceLabel: z.string().nullable(),
   ipAddress: z.string().nullable(),

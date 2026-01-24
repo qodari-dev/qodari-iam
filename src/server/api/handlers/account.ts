@@ -99,9 +99,10 @@ export const account = tsr.router(contract.account, {
       }
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'accounts',
+        functionName: 'update',
         resourceId: acc.id,
         resourceLabel: acc.name,
         status: 'success',
@@ -118,9 +119,10 @@ export const account = tsr.router(contract.account, {
     } catch (e) {
       const error = genericTsRestErrorResponse(e, { genericMsg: 'Error updating account' });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'accounts',
+        functionName: 'update',
         resourceId: session?.accountId,
         status: 'failure',
         errorMessage: error?.body.message,

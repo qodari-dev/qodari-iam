@@ -80,13 +80,13 @@ function ChangesDiff({
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div>
                       <span className="text-muted-foreground">Before:</span>
-                      <pre className="mt-1 rounded bg-red-50 p-2 text-red-600 dark:bg-red-950/20 dark:text-red-400">
+                      <pre className="mt-1 rounded bg-red-50 p-2 wrap-break-word whitespace-pre-wrap text-red-600 dark:bg-red-950/20 dark:text-red-400">
                         {JSON.stringify(beforeValue?.[key] ?? null, null, 2)}
                       </pre>
                     </div>
                     <div>
                       <span className="text-muted-foreground">After:</span>
-                      <pre className="mt-1 rounded bg-green-50 p-2 text-green-600 dark:bg-green-950/20 dark:text-green-400">
+                      <pre className="mt-1 rounded bg-green-50 p-2 wrap-break-word whitespace-pre-wrap text-green-600 dark:bg-green-950/20 dark:text-green-400">
                         {JSON.stringify(afterValue?.[key] ?? null, null, 2)}
                       </pre>
                     </div>
@@ -164,8 +164,12 @@ export function AuditInfo({
           value: <Badge variant="secondary">{String(auditLog.action)}</Badge>,
         },
         {
-          label: 'Resource',
-          value: String(auditLog.resource),
+          label: 'ResourceKey',
+          value: String(auditLog.resourceKey),
+        },
+        {
+          label: 'ActionKey',
+          value: String(auditLog.actionKey),
         },
       ],
     },
@@ -198,8 +202,8 @@ export function AuditInfo({
       columns: 2,
       items: [
         {
-          label: 'Resource Type',
-          value: String(auditLog.resource),
+          label: 'Resource',
+          value: String(auditLog.resourceKey),
         },
         {
           label: 'Resource ID',

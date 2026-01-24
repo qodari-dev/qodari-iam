@@ -45,12 +45,13 @@ export function AuditLogs() {
   // Extract filters for the toolbar
 
   const rangeDateFilter = React.useMemo(() => {
-    const from = filters.from as Date | undefined;
-    const to = filters.to as Date | undefined;
+    const createdAtFilter = filters.createdAt as { gte?: Date; lte?: Date } | undefined;
+    if (!createdAtFilter) return undefined;
+    const from = createdAtFilter.gte;
+    const to = createdAtFilter.lte;
     if (!from && !to) return undefined;
-    if (from && to) return { from, to };
-    return undefined;
-  }, [filters.from, filters.to]);
+    return { from, to };
+  }, [filters.createdAt]);
 
   const applicationFilter = React.useMemo(() => {
     const applicationId = filters.applicationId;
@@ -145,8 +146,15 @@ export function AuditLogs() {
               onSearchChange={handleSearchChange}
               rangeDateFilter={rangeDateFilter}
               onRangeDateFilterChange={(value) => {
-                handleFilterChange('from', value?.from);
-                handleFilterChange('to', value?.to);
+                if (value?.from && value?.to) {
+                  handleFilterChange('createdAt', { gte: value.from, lte: value.to });
+                } else if (value?.from) {
+                  handleFilterChange('createdAt', { gte: value.from });
+                } else if (value?.to) {
+                  handleFilterChange('createdAt', { lte: value.to });
+                } else {
+                  handleFilterChange('createdAt', undefined);
+                }
               }}
               applicationFilter={applicationFilter}
               onApplicationFilterChange={(value) => {

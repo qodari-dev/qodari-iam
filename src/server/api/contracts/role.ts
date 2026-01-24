@@ -21,7 +21,10 @@ export const role = c.router(
       query: ListRolesQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'roles:read',
+        permissionKey: {
+          resourceKey: 'roles',
+          actionKey: 'read',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Paginated<Role>>(),
@@ -38,7 +41,10 @@ export const role = c.router(
       query: GetRoleQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'roles:read',
+        permissionKey: {
+          resourceKey: 'roles',
+          actionKey: 'read',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Role>(),
@@ -55,7 +61,10 @@ export const role = c.router(
       body: CreateRoleBodySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'roles:create',
+        permissionKey: {
+          resourceKey: 'roles',
+          actionKey: 'create',
+        },
       } satisfies TsRestMetaData,
       responses: {
         201: c.type<Role>(),
@@ -74,7 +83,10 @@ export const role = c.router(
       body: UpdateRoleBodySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'roles:update',
+        permissionKey: {
+          resourceKey: 'roles',
+          actionKey: 'update',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Role>(),
@@ -92,7 +104,10 @@ export const role = c.router(
       body: c.noBody(),
       metadata: {
         auth: 'required',
-        permissionKey: 'roles:delete',
+        permissionKey: {
+          resourceKey: 'roles',
+          actionKey: 'delete',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Role>(),

@@ -87,7 +87,7 @@ const USER_INCLUDES = createIncludeMap<typeof db.query.users>()({
       columns: selectCols<typeof db.query.auditLogs>()(
         'id',
         'action',
-        'resource',
+        'resourceKey',
         'resourceId',
         'ipAddress',
         'createdAt'
@@ -257,20 +257,19 @@ export const user = tsr.router(contract.user, {
         ...safeUser
       } = newUser;
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'create',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'create',
         resourceId: newUser.id,
         resourceLabel: `${newUser.firstName} ${newUser.lastName}`,
         status: 'success',
         afterValue: {
           ...safeUser,
+          _roleIds: roles?.map((r) => r.roleId) ?? [],
         },
         ipAddress,
         userAgent,
-        metadata: {
-          action: 'create',
-        },
       });
 
       return { status: 201, body: safeUser };
@@ -279,13 +278,13 @@ export const user = tsr.router(contract.user, {
         genericMsg: 'Error al crear usuario',
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'create',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'create',
         status: 'failure',
         errorMessage: error?.body.message,
         metadata: {
-          action: 'create',
           body,
         },
         ipAddress,
@@ -326,6 +325,11 @@ export const user = tsr.router(contract.user, {
         });
       }
 
+      // Query existing roles before update for audit
+      const existingRoles = await db.query.userRoles.findMany({
+        where: eq(userRoles.userId, id),
+      });
+
       // Prepare update data with optional password
       const updateData: Partial<User> = { ...data };
       if (password && password.length >= 8) {
@@ -364,23 +368,23 @@ export const user = tsr.router(contract.user, {
       } = updated;
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'update',
         resourceId: existing.id,
         resourceLabel: `${existing.firstName} ${existing.lastName}`,
         status: 'success',
         beforeValue: {
           ...existing,
+          _roleIds: existingRoles.map((r) => r.roleId),
         },
         afterValue: {
           ...safeUser,
+          _roleIds: roles?.map((r) => r.roleId) ?? existingRoles.map((r) => r.roleId),
         },
         ipAddress,
         userAgent,
-        metadata: {
-          action: 'update',
-        },
       });
 
       return { status: 200, body: safeUser };
@@ -389,14 +393,14 @@ export const user = tsr.router(contract.user, {
         genericMsg: `Error al actualizar usuario ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'update',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
         metadata: {
-          action: 'update',
           body,
         },
         ipAddress,
@@ -436,18 +440,24 @@ export const user = tsr.router(contract.user, {
         });
       }
 
+      // Query existing roles before delete for audit
+      const existingRoles = await db.query.userRoles.findMany({
+        where: eq(userRoles.userId, id),
+      });
+
       await db.delete(users).where(eq(users.id, id));
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'delete',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'delete',
         resourceId: existing.id,
         resourceLabel: `${existing.firstName} ${existing.lastName}`,
         status: 'success',
         beforeValue: {
           ...existing,
-          action: 'delete',
+          _roleIds: existingRoles.map((r) => r.roleId),
         },
         ipAddress,
         userAgent,
@@ -462,16 +472,13 @@ export const user = tsr.router(contract.user, {
         genericMsg: `Error al eliminar usuario ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'delete',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'delete',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
-        metadata: {
-          id,
-          action: 'delete',
-        },
         ipAddress,
         userAgent,
       });
@@ -522,15 +529,13 @@ export const user = tsr.router(contract.user, {
         .where(eq(users.id, id));
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'setPassword',
         resourceId: existing.id,
         resourceLabel: `${existing.firstName} ${existing.lastName}`,
         status: 'success',
-        metadata: {
-          action: 'set_password',
-        },
         ipAddress,
         userAgent,
       });
@@ -543,15 +548,13 @@ export const user = tsr.router(contract.user, {
         genericMsg: `Error al establecer password para usuario ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'setPassword',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
-        metadata: {
-          action: 'set_password',
-        },
         ipAddress,
         userAgent,
       });
@@ -606,9 +609,10 @@ export const user = tsr.router(contract.user, {
       } = updated;
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'suspend',
         resourceId: existing.id,
         resourceLabel: `${existing.firstName} ${existing.lastName}`,
         status: 'success',
@@ -617,9 +621,6 @@ export const user = tsr.router(contract.user, {
         },
         afterValue: {
           ...safeUser,
-        },
-        metadata: {
-          action: 'suspend',
         },
         ipAddress,
         userAgent,
@@ -630,15 +631,13 @@ export const user = tsr.router(contract.user, {
         genericMsg: `Error al suspender usuario ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'suspend',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
-        metadata: {
-          action: 'suspend',
-        },
         ipAddress,
         userAgent,
       });
@@ -693,9 +692,10 @@ export const user = tsr.router(contract.user, {
       } = updated;
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'activate',
         resourceId: existing.id,
         resourceLabel: `${existing.firstName} ${existing.lastName}`,
         status: 'success',
@@ -704,9 +704,6 @@ export const user = tsr.router(contract.user, {
         },
         afterValue: {
           ...safeUser,
-        },
-        metadata: {
-          action: 'activate',
         },
         ipAddress,
         userAgent,
@@ -717,15 +714,13 @@ export const user = tsr.router(contract.user, {
         genericMsg: `Error al activar usuario ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'activate',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
-        metadata: {
-          action: 'activate',
-        },
         ipAddress,
         userAgent,
       });
@@ -781,9 +776,10 @@ export const user = tsr.router(contract.user, {
       } = updated;
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'unlock',
         resourceId: existing.id,
         resourceLabel: `${existing.firstName} ${existing.lastName}`,
         status: 'success',
@@ -792,9 +788,6 @@ export const user = tsr.router(contract.user, {
         },
         afterValue: {
           ...safeUser,
-        },
-        metadata: {
-          action: 'unlock',
         },
         ipAddress,
         userAgent,
@@ -805,15 +798,13 @@ export const user = tsr.router(contract.user, {
         genericMsg: `Error al desbloquear usuario ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'users',
+        functionName: 'unlock',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
-        metadata: {
-          action: 'unlock',
-        },
         ipAddress,
         userAgent,
       });

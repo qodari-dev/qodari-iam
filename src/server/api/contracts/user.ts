@@ -22,7 +22,10 @@ export const user = c.router(
       query: ListUsersQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'users:read',
+        permissionKey: {
+          resourceKey: 'users',
+          actionKey: 'read',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Paginated<SafeUser>>(),
@@ -39,7 +42,10 @@ export const user = c.router(
       query: GetUserQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'users:read',
+        permissionKey: {
+          resourceKey: 'users',
+          actionKey: 'read',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<SafeUser>(),
@@ -56,7 +62,10 @@ export const user = c.router(
       body: CreateUserBodySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'users:create',
+        permissionKey: {
+          resourceKey: 'users',
+          actionKey: 'create',
+        },
       } satisfies TsRestMetaData,
       responses: {
         201: c.type<SafeUser>(),
@@ -75,7 +84,10 @@ export const user = c.router(
       body: UpdateUserBodySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'users:update',
+        permissionKey: {
+          resourceKey: 'users',
+          actionKey: 'update',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<SafeUser>(),
@@ -93,7 +105,10 @@ export const user = c.router(
       body: c.noBody(),
       metadata: {
         auth: 'required',
-        permissionKey: 'users:delete',
+        permissionKey: {
+          resourceKey: 'users',
+          actionKey: 'delete',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<SafeUser>(),
@@ -111,7 +126,10 @@ export const user = c.router(
       body: SetUserPasswordBodySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'users:update',
+        permissionKey: {
+          resourceKey: 'users',
+          actionKey: 'update',
+        },
       } satisfies TsRestMetaData,
       responses: {
         204: c.noBody(),
@@ -129,7 +147,10 @@ export const user = c.router(
       body: c.noBody(),
       metadata: {
         auth: 'required',
-        permissionKey: 'users:update',
+        permissionKey: {
+          resourceKey: 'users',
+          actionKey: 'update',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<SafeUser>(),
@@ -147,7 +168,10 @@ export const user = c.router(
       body: c.noBody(),
       metadata: {
         auth: 'required',
-        permissionKey: 'users:update',
+        permissionKey: {
+          resourceKey: 'users',
+          actionKey: 'update',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<SafeUser>(),
@@ -165,7 +189,10 @@ export const user = c.router(
       body: c.noBody(),
       metadata: {
         auth: 'required',
-        permissionKey: 'users:update',
+        permissionKey: {
+          resourceKey: 'users',
+          actionKey: 'update',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<SafeUser>(),

@@ -1,7 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
-import { Eye, Pencil, Trash, Copy } from 'lucide-react';
+import { Eye, Pencil, Trash, Copy, Lock } from 'lucide-react';
 import { DataTableRowActions, type RowAction, type RowActionGroup } from '@/components/data-table';
 import { Application } from '@/schemas/application';
 import { Row, Table } from '@tanstack/react-table';
@@ -35,6 +35,12 @@ export function ApplicationRowActions({ row, table }: ApplicationRowActionsProps
       label: 'View Details',
       icon: Eye,
       onClick: meta?.onRowView,
+      hidden: !canReadApps,
+    },
+    {
+      label: 'Report Roles',
+      icon: Lock,
+      onClick: meta?.onRowReport,
       hidden: !canReadApps,
     },
     {

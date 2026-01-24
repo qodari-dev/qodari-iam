@@ -43,6 +43,13 @@
       "when": 1768941986695,
       "tag": "0005_workable_the_professor",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1769217576433,
+      "tag": "0006_blushing_norrin_radd",
+      "breakpoints": true
     }
   ]
 }

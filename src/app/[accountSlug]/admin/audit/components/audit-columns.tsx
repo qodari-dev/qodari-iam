@@ -61,13 +61,7 @@ function StatusBadge({ status }: { status: AuditStatus }) {
 // Actor Type Badge
 // ============================================================================
 
-function ActorBadge({
-  actorType,
-  name,
-}: {
-  actorType: ActorType;
-  name: string | null;
-}) {
+function ActorBadge({ actorType, name }: { actorType: ActorType; name: string | null }) {
   const isUser = actorType === 'user';
 
   return (
@@ -189,17 +183,17 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
     accessorKey: 'resource',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Resource" />,
     cell: ({ row }) => {
-      const { resource, resourceLabel, resourceId } = row.original;
+      const { resourceKey, resourceLabel, resourceId } = row.original;
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{resource}</span>
+          <span className="font-medium">{resourceKey}</span>
           {resourceLabel && (
-            <span className="text-muted-foreground text-xs truncate max-w-[200px]">
+            <span className="text-muted-foreground max-w-[200px] truncate text-xs">
               {resourceLabel}
             </span>
           )}
           {!resourceLabel && resourceId && (
-            <span className="text-muted-foreground text-xs truncate max-w-[200px]">
+            <span className="text-muted-foreground max-w-[200px] truncate text-xs">
               ID: {resourceId}
             </span>
           )}
@@ -251,11 +245,7 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
     cell: ({ table, row }) => {
       const meta = table.options.meta as { onRowView?: (row: AuditLog) => void } | undefined;
       return (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => meta?.onRowView?.(row.original)}
-        >
+        <Button variant="ghost" size="sm" onClick={() => meta?.onRowView?.(row.original)}>
           <Eye className="h-4 w-4" />
           <span className="sr-only">View details</span>
         </Button>

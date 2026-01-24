@@ -149,16 +149,20 @@ function buildDateCondition(col: PgColumn, value: Date | DateOps): SQL | undefin
     return eq(col, value);
   }
 
-  if (value.eq) return eq(col, value.eq);
-  if (value.ne) return ne(col, value.ne);
-  if (value.gt) return gt(col, value.gt);
-  if (value.gte) return gte(col, value.gte);
-  if (value.lt) return lt(col, value.lt);
-  if (value.lte) return lte(col, value.lte);
-  if (value.isNull) return isNull(col);
-  if (value.isNotNull) return isNotNull(col);
+  const conditions: SQL[] = [];
 
-  return undefined;
+  if (value.eq) conditions.push(eq(col, value.eq));
+  if (value.ne) conditions.push(ne(col, value.ne));
+  if (value.gt) conditions.push(gt(col, value.gt));
+  if (value.gte) conditions.push(gte(col, value.gte));
+  if (value.lt) conditions.push(lt(col, value.lt));
+  if (value.lte) conditions.push(lte(col, value.lte));
+  if (value.isNull) conditions.push(isNull(col));
+  if (value.isNotNull) conditions.push(isNotNull(col));
+
+  if (conditions.length === 0) return undefined;
+  if (conditions.length === 1) return conditions[0];
+  return and(...conditions);
 }
 
 // ============================================

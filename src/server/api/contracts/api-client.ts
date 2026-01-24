@@ -27,7 +27,10 @@ export const apiClient = c.router(
       query: ListApiClientsQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'api-clients:read',
+        permissionKey: {
+          resourceKey: 'api-clients',
+          actionKey: 'read',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Paginated<SafeApiClient>>(),
@@ -44,7 +47,10 @@ export const apiClient = c.router(
       query: GetApiClientQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'api-clients:read',
+        permissionKey: {
+          resourceKey: 'api-clients',
+          actionKey: 'read',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<SafeApiClient>(),
@@ -61,7 +67,10 @@ export const apiClient = c.router(
       body: CreateApiClientBodySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'api-clients:create',
+        permissionKey: {
+          resourceKey: 'api-clients',
+          actionKey: 'create',
+        },
       } satisfies TsRestMetaData,
       responses: {
         201: c.type<ApiClientWithSecret>(),
@@ -79,7 +88,10 @@ export const apiClient = c.router(
       body: UpdateApiClientBodySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'api-clients:update',
+        permissionKey: {
+          resourceKey: 'api-clients',
+          actionKey: 'update',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<SafeApiClient>(),
@@ -97,7 +109,10 @@ export const apiClient = c.router(
       body: c.noBody(),
       metadata: {
         auth: 'required',
-        permissionKey: 'api-clients:delete',
+        permissionKey: {
+          resourceKey: 'api-clients',
+          actionKey: 'delete',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<SafeApiClient>(),
@@ -115,7 +130,10 @@ export const apiClient = c.router(
       body: c.noBody(),
       metadata: {
         auth: 'required',
-        permissionKey: 'api-clients:update',
+        permissionKey: {
+          resourceKey: 'api-clients',
+          actionKey: 'update',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: RegenerateSecretResponseSchema,
@@ -133,7 +151,10 @@ export const apiClient = c.router(
       body: c.noBody(),
       metadata: {
         auth: 'required',
-        permissionKey: 'api-clients:update',
+        permissionKey: {
+          resourceKey: 'api-clients',
+          actionKey: 'update',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<SafeApiClient>(),
@@ -151,7 +172,10 @@ export const apiClient = c.router(
       body: c.noBody(),
       metadata: {
         auth: 'required',
-        permissionKey: 'api-clients:update',
+        permissionKey: {
+          resourceKey: 'api-clients',
+          actionKey: 'update',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<SafeApiClient>(),

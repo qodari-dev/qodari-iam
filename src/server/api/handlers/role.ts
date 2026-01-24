@@ -243,14 +243,16 @@ export const role = tsr.router(contract.role, {
       });
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'create',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'roles',
+        functionName: 'create',
         resourceId: newRole.id,
         resourceLabel: newRole.name,
         status: 'success',
         afterValue: {
           ...newRole,
+          _permissionIds: body.permissions?.map((p) => p.permissionId) ?? [],
         },
         ipAddress,
         userAgent,
@@ -261,9 +263,10 @@ export const role = tsr.router(contract.role, {
         genericMsg: 'Error al crear',
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'create',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'roles',
+        functionName: 'create',
         status: 'failure',
         errorMessage: error?.body.message,
         metadata: {
@@ -304,6 +307,11 @@ export const role = tsr.router(contract.role, {
           code: 'ROLE_NOT_FOUND',
         });
       }
+
+      // Query existing role permissions before update for audit
+      const existingRolePerms = await db.query.rolePermissions.findMany({
+        where: eq(rolePermissions.roleId, id),
+      });
 
       const [updated] = await db.transaction(async (tx) => {
         if (body.applicationId) {
@@ -370,17 +378,22 @@ export const role = tsr.router(contract.role, {
       });
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'roles',
+        functionName: 'update',
         resourceId: existing.id,
         resourceLabel: updated.name,
         status: 'success',
         beforeValue: {
           ...existing,
+          _permissionIds: existingRolePerms.map((rp) => rp.permissionId),
         },
         afterValue: {
           ...updated,
+          _permissionIds:
+            body.permissions?.map((p) => p.permissionId) ??
+            existingRolePerms.map((rp) => rp.permissionId),
         },
         ipAddress,
         userAgent,
@@ -391,9 +404,10 @@ export const role = tsr.router(contract.role, {
         genericMsg: `Error al actualizar ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'roles',
+        functionName: 'update',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
@@ -436,17 +450,24 @@ export const role = tsr.router(contract.role, {
         });
       }
 
+      // Query existing role permissions before delete for audit
+      const existingRolePerms = await db.query.rolePermissions.findMany({
+        where: eq(rolePermissions.roleId, id),
+      });
+
       await db.delete(roles).where(eq(roles.id, id));
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'delete',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'roles',
+        functionName: 'delete',
         resourceId: existing.id,
         resourceLabel: existing.name,
         status: 'success',
         beforeValue: {
           ...existing,
+          _permissionIds: existingRolePerms.map((rp) => rp.permissionId),
         },
         ipAddress,
         userAgent,
@@ -460,9 +481,10 @@ export const role = tsr.router(contract.role, {
         genericMsg: `Error al eliminar ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'delete',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'roles',
+        functionName: 'delete',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,

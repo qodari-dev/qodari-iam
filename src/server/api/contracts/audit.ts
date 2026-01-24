@@ -21,7 +21,10 @@ export const audit = c.router(
       query: ListAuditLogsQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'audit:read',
+        permissionKey: {
+          resourceKey: 'audit',
+          actionKey: 'read',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Paginated<AuditLog>>(),
@@ -38,7 +41,10 @@ export const audit = c.router(
       query: GetAuditLogQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'audit:read',
+        permissionKey: {
+          resourceKey: 'audit',
+          actionKey: 'read',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<AuditLog>(),
@@ -55,7 +61,10 @@ export const audit = c.router(
       body: CreateAuditLogBodySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'audit:create',
+        permissionKey: {
+          resourceKey: 'audit',
+          actionKey: 'create',
+        },
       } satisfies TsRestMetaData,
       responses: {
         201: c.type<AuditLog>(),
@@ -71,7 +80,10 @@ export const audit = c.router(
       query: AuditLogExportQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'audit:read',
+        permissionKey: {
+          resourceKey: 'audit',
+          actionKey: 'read',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<string>(),

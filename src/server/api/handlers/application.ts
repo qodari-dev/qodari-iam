@@ -20,6 +20,8 @@ import { UnifiedAuthContext } from '@/server/utils/auth-context';
 import { tsr } from '@ts-rest/serverless/next';
 import { and, eq, notInArray, sql } from 'drizzle-orm';
 import { contract } from '../contracts';
+import { escapeCSV } from '@/utils/escape-css';
+import { formatDate } from '@/utils/formatters';
 
 type ApplicationColumn = keyof typeof applications.$inferSelect;
 
@@ -177,14 +179,16 @@ export const application = tsr.router(contract.application, {
       });
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'create',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'applications',
+        functionName: 'create',
         resourceId: created.id,
         resourceLabel: created.name,
         status: 'success',
         afterValue: {
           ...created,
+          _permissions: permissionsData ?? [],
         },
         ipAddress,
         userAgent,
@@ -195,9 +199,10 @@ export const application = tsr.router(contract.application, {
         genericMsg: 'Error al crear aplicación',
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'create',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'applications',
+        functionName: 'create',
         status: 'failure',
         errorMessage: error?.body.message,
         metadata: {
@@ -235,6 +240,16 @@ export const application = tsr.router(contract.application, {
           code: 'APP_NOT_FOUND',
         });
       }
+
+      // Query existing permissions before update for audit
+      const existingPermissions = await db.query.permissions.findMany({
+        columns: {
+          id: false,
+          accountId: false,
+          applicationId: false,
+        },
+        where: eq(permissions.applicationId, id),
+      });
 
       // Check if we need to delete old images
       const oldLogoKey = app.logo;
@@ -327,17 +342,20 @@ export const application = tsr.router(contract.application, {
       );
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'applications',
+        functionName: 'update',
         resourceId: app.id,
         resourceLabel: updated.name,
         status: 'success',
         beforeValue: {
           ...app,
+          _permissions: existingPermissions,
         },
         afterValue: {
           ...updated,
+          _permissions: body.permissions ?? existingPermissions,
         },
         ipAddress,
         userAgent,
@@ -348,9 +366,10 @@ export const application = tsr.router(contract.application, {
         genericMsg: `Error al actualizar aplicación ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'applications',
+        functionName: 'update',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
@@ -390,6 +409,11 @@ export const application = tsr.router(contract.application, {
         });
       }
 
+      // Query existing permissions before delete for audit
+      const existingPermissions = await db.query.permissions.findMany({
+        where: eq(permissions.applicationId, id),
+      });
+
       const imagesToDelete = [app.logo, app.image, app.imageAd].filter(
         (key): key is string => Boolean(key) && isStorageKey(key)
       );
@@ -411,14 +435,16 @@ export const application = tsr.router(contract.application, {
       );
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'delete',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'applications',
+        functionName: 'delete',
         resourceId: app.id,
         resourceLabel: app.name,
         status: 'success',
         beforeValue: {
           ...app,
+          _permissions: existingPermissions,
         },
         ipAddress,
         userAgent,
@@ -429,9 +455,10 @@ export const application = tsr.router(contract.application, {
         genericMsg: `Error al eliminar aplicación ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'delete',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'applications',
+        functionName: 'delete',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
@@ -442,6 +469,59 @@ export const application = tsr.router(contract.application, {
         userAgent,
       });
       return error;
+    }
+  },
+  // ==========================================
+  // Reporte - GET /applicstions/:id/report/
+  // ==========================================
+  report: async ({ params: { id } }, { request, appRoute }) => {
+    try {
+      const ctx = await requireAdminPermission(request, appRoute.metadata);
+      if (!ctx) {
+        throwHttpError({
+          status: 401,
+          message: 'Not authenticated',
+          code: 'UNAUTHENTICATED',
+        });
+      }
+      const accountId = ctx.accountId;
+
+      const data = await db.query.permissions.findMany({
+        where: and(eq(permissions.accountId, accountId), eq(permissions.applicationId, id)),
+        orderBy: (table, { desc }) => [desc(table.createdAt)],
+      });
+
+      // CSV format
+      const headers = ['name', 'resource', 'action', 'description', 'createdAt', 'updatedAt'];
+
+      const csvRows = [
+        headers.join(','),
+        ...data.map((row) =>
+          [
+            row.name,
+            row.resource,
+            row.action,
+            row.description,
+            formatDate(row.createdAt),
+            formatDate(row.updatedAt),
+          ]
+            .map(escapeCSV)
+            .join(',')
+        ),
+      ];
+
+      return {
+        status: 200,
+        body: csvRows.join('\n'),
+        headers: {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': `attachment; filename="roles-applications-${new Date().toISOString().split('T')[0]}.csv"`,
+        },
+      };
+    } catch (e) {
+      return genericTsRestErrorResponse(e, {
+        genericMsg: 'Error exporting audit logs',
+      });
     }
   },
 });

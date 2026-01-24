@@ -19,8 +19,9 @@ export type AuditLogParams = {
 
   // Operation
   action: AuditAction;
-  actionKey?: string;
-  resource: string;
+  actionKey: string;
+  resourceKey: string;
+  functionName: string;
   resourceId?: string;
   resourceLabel?: string;
 

@@ -21,10 +21,14 @@ import { applicationColumns } from './application-columns';
 import { ApplicationForm } from './application-form';
 import { ApplicationsToolbar } from './application-toolbar';
 import { ApplicationInfo } from './application-info';
+import { toast } from 'sonner';
+import { api } from '@/clients/api';
+import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 
 declare module '@tanstack/table-core' {
   interface TableMeta<TData extends RowData> {
     onRowView?: (row: TData) => void;
+    onRowReport?: (row: TData) => void;
     onRowEdit?: (row: TData) => void;
     onRowDelete?: (row: TData) => void;
   }
@@ -83,13 +87,35 @@ export function Applications() {
     setApplication(undefined);
   }, [application, deleteApplication]);
 
+  const handleRowReport = React.useCallback(async (row: Application) => {
+    try {
+      const result = await api.application.report.query({ params: { id: row.id } });
+      if (result.status === 200) {
+        const blob = new Blob([result.body], {
+          type: 'text/csv',
+        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `applications-roles-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      toast.error(getTsRestErrorMessage(error));
+    }
+  }, []);
+
   const tableMeta = React.useMemo<TableMeta<Application>>(
     () => ({
       onRowView: handleRowView,
+      onRowReport: handleRowReport,
       onRowEdit: handleRowEdit,
       onRowDelete: handleRowDelete,
     }),
-    [handleRowView, handleRowEdit, handleRowDelete]
+    [handleRowView, handleRowEdit, handleRowDelete, handleRowReport]
   );
 
   return (

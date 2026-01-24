@@ -13,16 +13,19 @@ async function requirePermission(
   if (metadata.auth === 'public') {
     return;
   }
+  const permissionKey = metadata.permissionKey
+    ? `${metadata.permissionKey?.resourceKey}:${metadata.permissionKey?.actionKey}`
+    : undefined;
   const ctx = await getUnifiedAuthContext(request, {
-    requiredPermission: metadata.permissionKey,
+    requiredPermission: permissionKey,
     appSlug: opts?.appSlug,
   });
 
-  if (!metadata.permissionKey || (ctx.type === 'user' && ctx.user.isAdmin)) {
+  if (!permissionKey || (ctx.type === 'user' && ctx.user.isAdmin)) {
     return ctx;
   }
 
-  const hasPerm = ctx.permissions?.includes(metadata.permissionKey);
+  const hasPerm = ctx.permissions?.includes(permissionKey);
 
   if (!hasPerm) {
     throwHttpError({

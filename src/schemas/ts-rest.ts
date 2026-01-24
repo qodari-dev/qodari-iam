@@ -12,5 +12,8 @@ export type TsRestMetaData =
   | { auth: 'public' }
   | {
       auth: 'required';
-      permissionKey?: string;
+      permissionKey?: {
+        resourceKey: string;
+        actionKey: string;
+      };
     };

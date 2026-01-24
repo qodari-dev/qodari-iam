@@ -20,7 +20,10 @@ export const application = c.router(
       query: ListApplicationsQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'applications:read',
+        permissionKey: {
+          resourceKey: 'applications',
+          actionKey: 'read',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Paginated<Application>>(),
@@ -37,7 +40,10 @@ export const application = c.router(
       query: GetApplicationQuerySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'applications:read',
+        permissionKey: {
+          resourceKey: 'applications',
+          actionKey: 'read',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Application>(),
@@ -54,7 +60,10 @@ export const application = c.router(
       body: CreateApplicationBodySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'applications:create',
+        permissionKey: {
+          resourceKey: 'applications',
+          actionKey: 'create',
+        },
       } satisfies TsRestMetaData,
       responses: {
         201: c.type<Application>(),
@@ -72,7 +81,10 @@ export const application = c.router(
       body: UpdateApplicationBodySchema,
       metadata: {
         auth: 'required',
-        permissionKey: 'applications:update',
+        permissionKey: {
+          resourceKey: 'applications',
+          actionKey: 'update',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Application>(),
@@ -90,10 +102,33 @@ export const application = c.router(
       body: c.noBody(),
       metadata: {
         auth: 'required',
-        permissionKey: 'applications:delete',
+        permissionKey: {
+          resourceKey: 'applications',
+          actionKey: 'delete',
+        },
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<Application>(),
+        400: TsRestErrorSchema,
+        401: TsRestErrorSchema,
+        403: TsRestErrorSchema,
+        404: TsRestErrorSchema,
+        500: TsRestErrorSchema,
+      },
+    },
+    report: {
+      method: 'GET',
+      path: '/:id/report',
+      pathParams: IdParamSchema,
+      metadata: {
+        auth: 'required',
+        permissionKey: {
+          resourceKey: 'applications',
+          actionKey: 'read',
+        },
+      } satisfies TsRestMetaData,
+      responses: {
+        200: c.type<string>(),
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,

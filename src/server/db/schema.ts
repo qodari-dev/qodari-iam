@@ -683,7 +683,8 @@ export const auditLogs = pgTable(
     // Operation
     action: varchar('action', { length: 50 }).notNull(),
     actionKey: varchar('action_key', { length: 50 }),
-    resource: varchar('resource', { length: 100 }).notNull(),
+    resourceKey: varchar('resource_key', { length: 100 }).notNull(),
+    functionName: varchar('function_name', { length: 100 }).notNull(),
     resourceId: varchar('resource_id', { length: 255 }),
     resourceLabel: varchar('resource_label', { length: 255 }),
 
@@ -711,7 +712,7 @@ export const auditLogs = pgTable(
     index('audit_api_client_idx').on(table.apiClientId),
     index('audit_app_idx').on(table.applicationId),
     index('audit_action_idx').on(table.action),
-    index('audit_resource_idx').on(table.resource),
+    index('audit_resource_key_idx').on(table.resourceKey),
     index('audit_resource_id_idx').on(table.resourceId),
     index('audit_status_idx').on(table.status),
     index('audit_created_idx').on(table.createdAt),

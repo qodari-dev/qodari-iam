@@ -224,14 +224,16 @@ export const apiClient = tsr.router(contract.apiClient, {
       // Return with plain text secret (only time it's returned)
       const { clientSecretHash: _, ...safeClient } = created;
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'create',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'api_clients',
+        functionName: 'create',
         resourceId: safeClient.id,
         resourceLabel: safeClient.name,
         status: 'success',
         afterValue: {
           ...safeClient,
+          _roleIds: roleIds ?? [],
         },
         ipAddress,
         userAgent,
@@ -245,9 +247,10 @@ export const apiClient = tsr.router(contract.apiClient, {
         genericMsg: 'Error al crear API Client',
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'create',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'api_clients',
+        functionName: 'create',
         status: 'failure',
         errorMessage: error?.body.message,
         metadata: {
@@ -289,6 +292,11 @@ export const apiClient = tsr.router(contract.apiClient, {
         });
       }
 
+      // Query existing roles before update for audit
+      const existingRoles = await db.query.apiClientRoles.findMany({
+        where: eq(apiClientRoles.apiClientId, id),
+      });
+
       const { roleIds, ...data } = body;
 
       const updated = await db.transaction(async (tx) => {
@@ -327,17 +335,20 @@ export const apiClient = tsr.router(contract.apiClient, {
 
       const safeUpdated = sanitizeApiClient(updated);
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'api_clients',
+        functionName: 'update',
         resourceId: existing.id,
         resourceLabel: safeUpdated.name,
         status: 'success',
         beforeValue: {
           ...sanitizeApiClient(existing),
+          _roleIds: existingRoles.map((r) => r.roleId),
         },
         afterValue: {
           ...safeUpdated,
+          _roleIds: roleIds ?? existingRoles.map((r) => r.roleId),
         },
         ipAddress,
         userAgent,
@@ -348,9 +359,10 @@ export const apiClient = tsr.router(contract.apiClient, {
         genericMsg: `Error al actualizar API Client ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'api_clients',
+        functionName: 'update',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
@@ -393,20 +405,27 @@ export const apiClient = tsr.router(contract.apiClient, {
         });
       }
 
+      // Query existing roles before delete for audit
+      const existingRoles = await db.query.apiClientRoles.findMany({
+        where: eq(apiClientRoles.apiClientId, id),
+      });
+
       const [deleted] = await db
         .delete(apiClients)
         .where(and(eq(apiClients.id, id), eq(apiClients.accountId, session.accountId)))
         .returning();
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'delete',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'api_clients',
+        functionName: 'delete',
         resourceId: existing.id,
         resourceLabel: existing.name,
         status: 'success',
         beforeValue: {
           ...sanitizeApiClient(existing),
+          _roleIds: existingRoles.map((r) => r.roleId),
         },
         ipAddress,
         userAgent,
@@ -417,9 +436,10 @@ export const apiClient = tsr.router(contract.apiClient, {
         genericMsg: `Error al eliminar API Client ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'delete',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'api_clients',
+        functionName: 'delete',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
@@ -472,15 +492,13 @@ export const apiClient = tsr.router(contract.apiClient, {
         .where(and(eq(apiClients.id, id), eq(apiClients.accountId, session.accountId)));
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'api_clients',
+        functionName: 'regenerateSecret',
         resourceId: existing.id,
         resourceLabel: existing.name,
         status: 'success',
-        metadata: {
-          action: 'regenerate_secret',
-        },
         ipAddress,
         userAgent,
       });
@@ -493,15 +511,13 @@ export const apiClient = tsr.router(contract.apiClient, {
         genericMsg: `Error al regenerar secret para API Client ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'api_clients',
+        functionName: 'regenerateSecret',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
-        metadata: {
-          action: 'regenerate_secret',
-        },
         ipAddress,
         userAgent,
       });
@@ -545,9 +561,10 @@ export const apiClient = tsr.router(contract.apiClient, {
         .returning();
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'api_clients',
+        functionName: 'suspend',
         resourceId: existing.id,
         resourceLabel: existing.name,
         status: 'success',
@@ -556,9 +573,6 @@ export const apiClient = tsr.router(contract.apiClient, {
         },
         afterValue: {
           ...sanitizeApiClient(updated),
-        },
-        metadata: {
-          action: 'suspend',
         },
         ipAddress,
         userAgent,
@@ -569,15 +583,13 @@ export const apiClient = tsr.router(contract.apiClient, {
         genericMsg: `Error al suspender API Client ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'api_clients',
+        functionName: 'suspend',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
-        metadata: {
-          action: 'suspend',
-        },
         ipAddress,
         userAgent,
       });
@@ -621,9 +633,10 @@ export const apiClient = tsr.router(contract.apiClient, {
         .returning();
 
       logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'api_clients',
+        functionName: 'activate',
         resourceId: existing.id,
         resourceLabel: existing.name,
         status: 'success',
@@ -632,9 +645,6 @@ export const apiClient = tsr.router(contract.apiClient, {
         },
         afterValue: {
           ...sanitizeApiClient(updated),
-        },
-        metadata: {
-          action: 'activate',
         },
         ipAddress,
         userAgent,
@@ -645,15 +655,13 @@ export const apiClient = tsr.router(contract.apiClient, {
         genericMsg: `Error al activar API Client ${id}`,
       });
       await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'update',
-        actionKey: appRoute.metadata.permissionKey,
-        resource: 'api_clients',
+        functionName: 'activate',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,
-        metadata: {
-          action: 'activate',
-        },
         ipAddress,
         userAgent,
       });

@@ -469,6 +469,13 @@ export const auth = tsr.router(contract.auth, {
           userId: authCode.userId,
           applicationId: authCode.applicationId,
         });
+
+        // Get user basic info for the token
+        const tokenUser = await db.query.users.findFirst({
+          where: eq(users.id, authCode.userId),
+          columns: { email: true, firstName: true, lastName: true, isAdmin: true },
+        });
+
         const accessToken = await signAccessToken({
           payload: {
             sub: authCode.userId,
@@ -476,6 +483,14 @@ export const auth = tsr.router(contract.auth, {
             appId: authCode.applicationId,
             roles,
             permissions,
+            user: tokenUser
+              ? {
+                  email: tokenUser.email,
+                  firstName: tokenUser.firstName,
+                  lastName: tokenUser.lastName,
+                  isAdmin: tokenUser.isAdmin,
+                }
+              : undefined,
           },
           expiresInSec: app.accessTokenExp,
           issuer: env.IAM_ISSUER,
@@ -607,6 +622,13 @@ export const auth = tsr.router(contract.auth, {
           userId: existingRefresh.userId,
           applicationId: existingRefresh.applicationId,
         });
+
+        // Get user basic info for the token
+        const tokenUser = await db.query.users.findFirst({
+          where: eq(users.id, existingRefresh.userId),
+          columns: { email: true, firstName: true, lastName: true, isAdmin: true },
+        });
+
         const accessToken = await signAccessToken({
           payload: {
             sub: existingRefresh.userId,
@@ -614,6 +636,14 @@ export const auth = tsr.router(contract.auth, {
             appId: existingRefresh.applicationId,
             roles,
             permissions,
+            user: tokenUser
+              ? {
+                  email: tokenUser.email,
+                  firstName: tokenUser.firstName,
+                  lastName: tokenUser.lastName,
+                  isAdmin: tokenUser.isAdmin,
+                }
+              : undefined,
           },
           expiresInSec: app.accessTokenExp,
           issuer: env.IAM_ISSUER,

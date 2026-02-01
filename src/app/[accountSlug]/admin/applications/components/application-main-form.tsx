@@ -40,6 +40,47 @@ const clientTypeOptions: Array<{ label: string; value: FormValues['clientType'] 
   { label: 'Confidential', value: 'confidential' },
 ];
 
+function LogoutUrlsField() {
+  const form = useFormContext<FormValues>();
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'logoutUrl' as never,
+  });
+
+  return (
+    <Field>
+      <FieldLabel>Logout URLs</FieldLabel>
+      <div className="space-y-2">
+        {fields.map((field, index) => (
+          <div key={field.id} className="flex gap-2">
+            <Controller
+              name={`logoutUrl.${index}`}
+              control={form.control}
+              render={({ field: inputField, fieldState }) => (
+                <div className="flex-1">
+                  <Input
+                    {...inputField}
+                    placeholder="https://example.com/logout"
+                    aria-invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </div>
+              )}
+            />
+            <Button type="button" variant="outline" size="icon" onClick={() => remove(index)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        <Button type="button" variant="outline" size="sm" onClick={() => append('')}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Logout URL
+        </Button>
+      </div>
+    </Field>
+  );
+}
+
 function CallbackUrlsField() {
   const form = useFormContext<FormValues>();
   const { fields, append, remove } = useFieldArray({
@@ -182,24 +223,16 @@ export function ApplicationMainForm({
         name="homeUrl"
         control={form.control}
         render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
+          <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
             <FieldLabel htmlFor={field.name}>Home URL</FieldLabel>
             <Input {...field} aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
       />
-      <Controller
-        name="logoutUrl"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Logout URL</FieldLabel>
-            <Input {...field} aria-invalid={fieldState.invalid} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
+      <div className="lg:col-span-2">
+        <LogoutUrlsField />
+      </div>
       <Controller
         name="clientType"
         control={form.control}
@@ -330,7 +363,6 @@ export function ApplicationMainForm({
           </Field>
         )}
       />
-
       <div className="lg:col-span-2">
         <CallbackUrlsField />
       </div>

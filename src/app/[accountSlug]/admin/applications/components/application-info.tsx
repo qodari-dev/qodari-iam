@@ -39,6 +39,8 @@ export function ApplicationInfo({
   if (!application) return null;
 
   const logoUrl = getStorageUrl(application.logo);
+  const portalUrl = getStorageUrl(application.image);
+  const authUrl = getStorageUrl(application.imageAd);
 
   const sections: DescriptionSection[] = [
     {
@@ -72,6 +74,38 @@ export function ApplicationInfo({
             '—'
           ),
         },
+        {
+          label: 'Portal Image',
+          value: portalUrl ? (
+            <div className="relative h-16 w-16 overflow-hidden rounded-lg border">
+              <Image
+                src={portalUrl}
+                alt={application.name}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+          ) : (
+            '—'
+          ),
+        },
+        {
+          label: 'Auth Ad Image',
+          value: authUrl ? (
+            <div className="relative h-16 w-16 overflow-hidden rounded-lg border">
+              <Image
+                src={authUrl}
+                alt={application.name}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+          ) : (
+            '—'
+          ),
+        },
       ],
     },
     {
@@ -79,7 +113,21 @@ export function ApplicationInfo({
       columns: 1,
       items: [
         { label: 'Home URL', value: application.homeUrl ?? '—' },
-        { label: 'Logout URL', value: application.logoutUrl ?? '—' },
+        {
+          label: 'Logout URLs',
+          value:
+            application.logoutUrl && application.logoutUrl.length > 0 ? (
+              <ul className="list-inside list-disc space-y-1">
+                {application.logoutUrl.map((url, index) => (
+                  <li key={index} className="text-sm break-all">
+                    {url}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              '—'
+            ),
+        },
         {
           label: 'Callback URLs',
           value:

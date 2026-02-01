@@ -80,7 +80,7 @@ export const CreateApplicationBodySchema = z.object({
   image: z.string().nullable().optional(),
   imageAd: z.string().nullable().optional(),
   homeUrl: z.string().url().optional(),
-  logoutUrl: z.string().url().optional(),
+  logoutUrl: z.array(z.string().url()).min(1),
   callbackUrls: z.array(z.string().url()).min(1),
   permissions: PermissionInputSchema.array().optional(),
   mfaEnabled: z.boolean().optional(),

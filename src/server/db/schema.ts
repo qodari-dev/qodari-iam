@@ -258,7 +258,7 @@ export const applications = pgTable(
     clientSecret: text('client_secret').notNull(),
     clientJwtSecret: text('client_jwt_secret').notNull(),
     homeUrl: varchar('home_url', { length: 255 }),
-    logoutUrl: varchar('logout_url', { length: 255 }),
+    logoutUrl: text('logout_url').array().default([]),
     callbackUrls: text('callback_urls').array().default([]),
     status: statusEnum('status').notNull().default('active'),
     authCodeExp: integer('auth_code_exp').notNull().default(300),

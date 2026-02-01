@@ -58,7 +58,7 @@ export function ApplicationForm({
       image: null,
       imageAd: null,
       homeUrl: '',
-      logoutUrl: '',
+      logoutUrl: [],
       callbackUrls: [],
       permissions: [],
     },
@@ -82,7 +82,7 @@ export function ApplicationForm({
         image: application?.image ?? null,
         imageAd: application?.imageAd ?? null,
         homeUrl: application?.homeUrl ?? '',
-        logoutUrl: application?.logoutUrl ?? '',
+        logoutUrl: application?.logoutUrl ?? [],
         callbackUrls: application?.callbackUrls ?? [],
         permissions:
           application?.permissions?.map((p) => ({

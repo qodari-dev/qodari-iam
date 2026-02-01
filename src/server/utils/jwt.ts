@@ -14,6 +14,13 @@ export type AccessTokenPayload = {
   roles?: string[]; // slugs de roles de esa app en esa account (only for user tokens)
   permissions: string[]; // "resource:action" de esa app en esa account
   grantType?: 'client_credentials'; // Only for M2M tokens
+  // Basic user info (only for user tokens, not M2M)
+  user?: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    isAdmin: boolean;
+  };
 };
 
 export async function signAccessToken(opts: {

@@ -50,6 +50,13 @@
       "when": 1769217576433,
       "tag": "0006_blushing_norrin_radd",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1769914560023,
+      "tag": "0007_true_sasquatch",
+      "breakpoints": true
     }
   ]
 }

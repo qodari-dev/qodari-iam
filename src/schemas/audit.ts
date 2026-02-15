@@ -61,13 +61,21 @@ export const actorTypeOptions = [
 // ============================================
 
 export const CreateAuditLogBodySchema = z.object({
+  actorType: ActorTypeEnum,
   action: AuditActionEnum,
   resourceKey: z.string().min(1).max(100),
+  actionKey: z.string().min(1).max(100),
   functionName: z.string().min(1).max(100),
   resourceId: z.string().max(255).optional(),
   resourceLabel: z.string().max(255).optional(),
   userId: z.string().uuid().optional(),
   userName: z.string().max(100).optional(),
+  ipAddress: z.string(),
+  userAgent: z.string(),
+  applicationId: z.string(),
+  applicationName: z.string(),
+  apiClientId: z.string().optional(),
+  apiClientName: z.string().optional(),
   status: AuditStatusEnum,
   errorMessage: z.string().max(1000).optional(),
   beforeValue: z.record(z.unknown()).optional(),

@@ -3,7 +3,6 @@ import { cookies } from 'next/headers';
 import { sessions } from '@/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { parse } from 'cookie';
-import { argon2i, hash } from 'argon2';
 import { createHash } from 'node:crypto';
 
 export const SESSION_COOKIE_NAME = 'qodari_iam_session';
@@ -88,12 +87,9 @@ export async function getSessionFromCookies() {
 }
 
 export async function hashToken(token: string): Promise<string> {
-  return await hash(token, {
-    type: argon2i,
-    memoryCost: 2 ** 16,
-    timeCost: 3,
-    parallelism: 1,
-  });
+  // Refresh tokens are looked up by exact hash match in DB.
+  // Use a deterministic hash so the same token always maps to the same value.
+  return createHash('sha256').update(token).digest('hex');
 }
 
 /**

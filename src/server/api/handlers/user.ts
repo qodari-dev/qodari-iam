@@ -337,7 +337,7 @@ export const user = tsr.router(contract.user, {
       }
 
       const updated = await db.transaction(async (tx) => {
-        const [updated] = await db
+        const [updated] = await tx
           .update(users)
           .set(updateData)
           .where(eq(users.id, id))

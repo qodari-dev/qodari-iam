@@ -334,7 +334,7 @@ export const auth = tsr.router(contract.auth, {
       });
     }
   }, // --------------------------------------
-  // POST - /oauthToken
+  // POST - /token
   // --------------------------------------
   oauthToken: async ({ body }, { nextRequest }) => {
     try {

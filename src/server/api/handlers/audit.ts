@@ -193,53 +193,15 @@ export const audit = tsr.router(contract.audit, {
         null;
       const userAgent = nextRequest?.headers.get('user-agent') || null;
 
-      let insertData: typeof auditLogs.$inferInsert;
-
-      if (ctx.type === 'api_client') {
-        // M2M context - API Client is creating the log
-        insertData = {
-          accountId,
-          actorType: 'api_client',
-          apiClientId: ctx.apiClientId,
-          apiClientName: ctx.apiClientName,
-          applicationId: ctx.applicationId,
-          applicationName: ctx.applicationName,
-          action: body.action,
-          resourceKey: body.resourceKey,
-          functionName: body.functionName,
-          resourceId: body.resourceId,
-          resourceLabel: body.resourceLabel,
-          userId: body.userId,
-          userName: body.userName,
-          status: body.status,
-          errorMessage: body.errorMessage,
-          beforeValue: body.beforeValue,
-          afterValue: body.afterValue,
-          metadata: body.metadata,
-          ipAddress,
+      const insertData = {
+        ...body,
+        accountId,
+        metadata: {
+          ...body.metadata,
           userAgent,
-        };
-      } else {
-        // User context - User is creating the log (rare, but possible for internal use)
-        insertData = {
-          accountId,
-          actorType: 'user',
-          userId: ctx.user.id,
-          userName: `${ctx.user.firstName} ${ctx.user.lastName}`,
-          action: body.action,
-          resourceKey: body.resourceKey,
-          functionName: body.functionName,
-          resourceId: body.resourceId,
-          resourceLabel: body.resourceLabel,
-          status: body.status,
-          errorMessage: body.errorMessage,
-          beforeValue: body.beforeValue,
-          afterValue: body.afterValue,
-          metadata: body.metadata,
           ipAddress,
-          userAgent,
-        };
-      }
+        },
+      } satisfies typeof auditLogs.$inferInsert;
 
       const [newAuditLog] = await db.insert(auditLogs).values(insertData).returning();
 

@@ -17,19 +17,19 @@ export function RoleInfo({
 
   const sections: DescriptionSection[] = [
     {
-      title: 'Basics',
+      title: 'Datos basicos',
       columns: 2,
       items: [
-        { label: 'Name', value: role.name },
+        { label: 'Nombre', value: role.name },
         { label: 'Slug', value: role.slug },
-        { label: 'Application', value: role?.application?.name ?? '—' },
+        { label: 'Aplicacion', value: role?.application?.name ?? '—' },
       ],
     },
     {
-      title: 'Permissions',
+      title: 'Permisos',
       items: [
         {
-          label: 'Assigned Permissions',
+          label: 'Permisos asignados',
           value: role?.rolePermissions?.length ? (
             <div className="flex flex-wrap gap-1">
               {role.rolePermissions.map((rp) => (
@@ -49,11 +49,11 @@ export function RoleInfo({
       ],
     },
     {
-      title: 'Activity',
+      title: 'Actividad',
       columns: 2,
       items: [
-        { label: 'Created', value: formatDate(role.createdAt) },
-        { label: 'Updated', value: formatDate(role.updatedAt) },
+        { label: 'Creado', value: formatDate(role.createdAt) },
+        { label: 'Actualizado', value: formatDate(role.updatedAt) },
       ],
     },
   ];
@@ -62,7 +62,7 @@ export function RoleInfo({
     <Sheet open={opened} onOpenChange={(open) => onOpened(open)}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>Role</SheetTitle>
+          <SheetTitle>Rol</SheetTitle>
         </SheetHeader>
         <div className="px-4">
           <DescriptionList sections={sections} columns={2} />

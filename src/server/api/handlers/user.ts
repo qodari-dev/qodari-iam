@@ -116,7 +116,7 @@ export const user = tsr.router(contract.user, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -170,7 +170,7 @@ export const user = tsr.router(contract.user, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -184,7 +184,7 @@ export const user = tsr.router(contract.user, {
       if (!user) {
         throwHttpError({
           status: 404,
-          message: 'User not found',
+          message: 'Usuario no encontrado',
           code: 'USER_NOT_FOUND',
         });
       }
@@ -209,7 +209,7 @@ export const user = tsr.router(contract.user, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -306,7 +306,7 @@ export const user = tsr.router(contract.user, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -422,7 +422,7 @@ export const user = tsr.router(contract.user, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -498,7 +498,7 @@ export const user = tsr.router(contract.user, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -545,7 +545,7 @@ export const user = tsr.router(contract.user, {
       };
     } catch (e) {
       const error = genericTsRestErrorResponse(e, {
-        genericMsg: `Error al establecer password para usuario ${id}`,
+        genericMsg: `Error al establecer contrasena para usuario ${id}`,
       });
       await logAudit(session, {
         resourceKey: appRoute.metadata.permissionKey.resourceKey,
@@ -574,7 +574,7 @@ export const user = tsr.router(contract.user, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -657,7 +657,7 @@ export const user = tsr.router(contract.user, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -740,7 +740,7 @@ export const user = tsr.router(contract.user, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }

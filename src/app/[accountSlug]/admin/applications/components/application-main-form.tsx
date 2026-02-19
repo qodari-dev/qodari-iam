@@ -31,13 +31,13 @@ type ApplicationMainFormProps = {
 };
 
 const statusOptions: Array<{ label: string; value: FormValues['status'] }> = [
-  { label: 'Active', value: 'active' },
-  { label: 'Suspended', value: 'suspended' },
+  { label: 'Activo', value: 'active' },
+  { label: 'Suspendido', value: 'suspended' },
 ];
 
 const clientTypeOptions: Array<{ label: string; value: FormValues['clientType'] }> = [
-  { label: 'Public', value: 'public' },
-  { label: 'Confidential', value: 'confidential' },
+  { label: 'Publico', value: 'public' },
+  { label: 'Confidencial', value: 'confidential' },
 ];
 
 function LogoutUrlsField() {
@@ -49,7 +49,7 @@ function LogoutUrlsField() {
 
   return (
     <Field>
-      <FieldLabel>Logout URLs</FieldLabel>
+      <FieldLabel>URLs de logout</FieldLabel>
       <div className="space-y-2">
         {fields.map((field, index) => (
           <div key={field.id} className="flex gap-2">
@@ -74,7 +74,7 @@ function LogoutUrlsField() {
         ))}
         <Button type="button" variant="outline" size="sm" onClick={() => append('')}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Logout URL
+          Agregar URL de logout
         </Button>
       </div>
     </Field>
@@ -90,7 +90,7 @@ function CallbackUrlsField() {
 
   return (
     <Field>
-      <FieldLabel>Callback URLs</FieldLabel>
+      <FieldLabel>URLs de callback</FieldLabel>
       <div className="space-y-2">
         {fields.map((field, index) => (
           <div key={field.id} className="flex gap-2">
@@ -115,7 +115,7 @@ function CallbackUrlsField() {
         ))}
         <Button type="button" variant="outline" size="sm" onClick={() => append('')}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Callback URL
+          Agregar URL de callback
         </Button>
       </div>
     </Field>
@@ -134,7 +134,7 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Nombre</FieldLabel>
             <Input {...field} aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -156,7 +156,7 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Descripcion</FieldLabel>
             <Textarea {...field} aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -169,7 +169,7 @@ export function ApplicationMainForm({
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
             <FieldLabel htmlFor={field.name}>Logo</FieldLabel>
             <p className="text-muted-foreground mb-2 text-sm">
-              Used in the header of authentication pages for this app.
+              Se usa en el encabezado de las pantallas de autenticacion de esta aplicacion.
             </p>
             <ImageUpload
               value={field.value}
@@ -186,9 +186,9 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>Portal Image</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Imagen del portal</FieldLabel>
             <p className="text-muted-foreground mb-2 text-sm">
-              Shown in the app card on the user portal.
+              Se muestra en la tarjeta de la aplicacion dentro del portal del usuario.
             </p>
             <ImageUpload
               value={field.value}
@@ -205,9 +205,9 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>Auth Page Image</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Imagen de la pagina de auth</FieldLabel>
             <p className="text-muted-foreground mb-2 text-sm">
-              Shown in the right panel of login and password reset pages.
+              Se muestra en el panel derecho del login y recuperacion de contrasena.
             </p>
             <ImageUpload
               value={field.value}
@@ -224,7 +224,7 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>Home URL</FieldLabel>
+            <FieldLabel htmlFor={field.name}>URL de inicio</FieldLabel>
             <Input {...field} aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -238,10 +238,10 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Client Type</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Tipo de cliente</FieldLabel>
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="">
-                <SelectValue placeholder="Application" />
+                <SelectValue placeholder="Aplicacion" />
               </SelectTrigger>
               <SelectContent>
                 {clientTypeOptions.map((opt) => (
@@ -260,13 +260,13 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>Client JWT Secret</FieldLabel>
+            <FieldLabel htmlFor={field.name}>JWT secret del cliente</FieldLabel>
             <InputGroup>
               <InputGroupInput {...field} aria-invalid={fieldState.invalid} />
               <InputGroupAddon align="inline-end">
                 <InputGroupButton
-                  aria-label="Generate"
-                  title="Generate"
+                  aria-label="Generar"
+                  title="Generar"
                   size="icon-xs"
                   onClick={() => {
                     form.setValue(field.name, randomBase64Url(30));
@@ -285,13 +285,13 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>Client ID</FieldLabel>
+            <FieldLabel htmlFor={field.name}>ID de cliente</FieldLabel>
             <InputGroup>
               <InputGroupInput {...field} aria-invalid={fieldState.invalid} />
               <InputGroupAddon align="inline-end">
                 <InputGroupButton
-                  aria-label="Generate"
-                  title="Generate"
+                  aria-label="Generar"
+                  title="Generar"
                   size="icon-xs"
                   onClick={() => {
                     form.setValue(field.name, generateClientId('cli_'));
@@ -310,13 +310,13 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>Client Secret</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Secreto del cliente</FieldLabel>
             <InputGroup>
               <InputGroupInput {...field} aria-invalid={fieldState.invalid} />
               <InputGroupAddon align="inline-end">
                 <InputGroupButton
-                  aria-label="Generate"
-                  title="Generate"
+                  aria-label="Generar"
+                  title="Generar"
                   size="icon-xs"
                   onClick={() => {
                     form.setValue(field.name, randomBase64Url(48));
@@ -335,7 +335,7 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Auth Code Expiration</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Expiracion del codigo auth</FieldLabel>
             <Input {...field} type="number" aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -346,7 +346,7 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Access Token Expiration</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Expiracion del access token</FieldLabel>
             <Input {...field} type="number" aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -357,7 +357,7 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Refresh Token Expiration</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Expiracion del refresh token</FieldLabel>
             <Input {...field} type="number" aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -373,9 +373,9 @@ export function ApplicationMainForm({
           <Field className="lg:col-span-2">
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <FieldLabel htmlFor={field.name}>Multi-Factor Authentication (MFA)</FieldLabel>
+                <FieldLabel htmlFor={field.name}>Autenticacion multifactor (MFA)</FieldLabel>
                 <p className="text-muted-foreground text-sm">
-                  Require users to verify their identity with a code sent to their email
+                  Requiere validar identidad con un codigo enviado por correo
                 </p>
               </div>
               <Switch checked={field.value ?? false} onCheckedChange={field.onChange} />
@@ -388,10 +388,10 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Status</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Estado</FieldLabel>
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((opt) => (

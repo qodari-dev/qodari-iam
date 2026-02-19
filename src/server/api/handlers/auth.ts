@@ -99,7 +99,7 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 429,
           body: {
-            message: 'Too many requests. Please try again later.',
+            message: 'Demasiadas solicitudes. Intentalo de nuevo mas tarde.',
             code: 'RATE_LIMIT_EXCEEDED',
           },
           headers: {
@@ -117,7 +117,7 @@ export const auth = tsr.router(contract.auth, {
       if (!account) {
         return {
           status: 401,
-          body: { message: `Invalid account` },
+          body: { message: `Cuenta invalida` },
         };
       }
 
@@ -132,7 +132,7 @@ export const auth = tsr.router(contract.auth, {
       if (!application) {
         return {
           status: 401,
-          body: { message: `Invalid application` },
+          body: { message: `Aplicacion invalida` },
         };
       }
 
@@ -147,7 +147,7 @@ export const auth = tsr.router(contract.auth, {
       if (!user) {
         return {
           status: 401,
-          body: { message: `Invalid credentials` },
+          body: { message: `Credenciales invalidas` },
         };
       }
 
@@ -156,7 +156,8 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 401,
           body: {
-            message: 'Account locked due to failed login attempts. Contact your system administrator.',
+            message:
+              'Cuenta bloqueada por intentos fallidos. Contacta al area de sistemas para desbloquearla.',
             code: 'ACCOUNT_LOCKED',
           },
         };
@@ -192,7 +193,7 @@ export const auth = tsr.router(contract.auth, {
             status: 401,
             body: {
               message:
-                'Account locked due to failed login attempts. Contact your system administrator.',
+                'Cuenta bloqueada por intentos fallidos. Contacta al area de sistemas para desbloquearla.',
               code: 'ACCOUNT_LOCKED',
             },
           };
@@ -200,7 +201,7 @@ export const auth = tsr.router(contract.auth, {
 
         return {
           status: 401,
-          body: { message: `Invalid credentials` },
+          body: { message: `Credenciales invalidas` },
         };
       }
 
@@ -318,7 +319,7 @@ export const auth = tsr.router(contract.auth, {
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Something went wrong querying applications.',
+        genericMsg: 'Ocurrio un error al consultar las aplicaciones.',
         logPrefix: '[auth.login]',
       });
     }
@@ -335,7 +336,7 @@ export const auth = tsr.router(contract.auth, {
       return { status: 200, body };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Something went wrong querying applications.',
+        genericMsg: 'Ocurrio un error al consultar las aplicaciones.',
         logPrefix: '[auth.me]',
       });
     }
@@ -394,7 +395,7 @@ export const auth = tsr.router(contract.auth, {
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Something went wrong querying applications.',
+        genericMsg: 'Ocurrio un error al consultar las aplicaciones.',
         logPrefix: '[auth.logout]',
       });
     }
@@ -420,7 +421,7 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 429,
           body: {
-            message: 'Too many requests. Please try again later.',
+            message: 'Demasiadas solicitudes. Intentalo de nuevo mas tarde.',
             code: 'RATE_LIMIT_EXCEEDED',
           },
           headers: {
@@ -440,7 +441,7 @@ export const auth = tsr.router(contract.auth, {
         if (!app || app.status !== 'active') {
           return {
             status: 401,
-            body: { message: 'Invalid client', code: 'invalid_client' },
+            body: { message: 'Cliente invalido', code: 'invalid_client' },
           };
         }
 
@@ -449,7 +450,7 @@ export const auth = tsr.router(contract.auth, {
           return {
             status: 401,
             body: {
-              message: 'Invalid client credentials',
+              message: 'Credenciales de cliente invalidas',
               code: 'invalid_client',
             },
           };
@@ -464,7 +465,7 @@ export const auth = tsr.router(contract.auth, {
           return {
             status: 400,
             body: {
-              message: 'Invalid authorization code',
+              message: 'Codigo de autorizacion invalido',
               code: 'invalid_grant',
             },
           };
@@ -475,7 +476,7 @@ export const auth = tsr.router(contract.auth, {
           return {
             status: 400,
             body: {
-              message: 'Invalid or expired authorization code',
+              message: 'Codigo de autorizacion invalido o expirado',
               code: 'invalid_grant',
             },
           };
@@ -486,7 +487,7 @@ export const auth = tsr.router(contract.auth, {
             return {
               status: 400,
               body: {
-                message: 'Invalid redirect_uri',
+                message: 'redirect_uri invalido',
                 code: 'invalid_request',
               },
             };
@@ -498,7 +499,7 @@ export const auth = tsr.router(contract.auth, {
           return {
             status: 400,
             body: {
-              message: 'PKCE is required for public clients',
+              message: 'PKCE es obligatorio para clientes publicos',
               code: 'invalid_request',
             },
           };
@@ -508,7 +509,7 @@ export const auth = tsr.router(contract.auth, {
             return {
               status: 400,
               body: {
-                message: 'code_verifier is required for PKCE',
+                message: 'code_verifier es obligatorio para PKCE',
                 code: 'invalid_request',
               },
             };
@@ -518,7 +519,7 @@ export const auth = tsr.router(contract.auth, {
           if (hash !== authCode.codeChallenge) {
             return {
               status: 400,
-              body: { message: 'Invalid code_verifier', code: 'invalid_grant' },
+              body: { message: 'code_verifier invalido', code: 'invalid_grant' },
             };
           }
         }
@@ -598,7 +599,7 @@ export const auth = tsr.router(contract.auth, {
         if (!app || app.status !== 'active') {
           return {
             status: 401,
-            body: { message: 'Invalid client', code: 'invalid_client' },
+            body: { message: 'Cliente invalido', code: 'invalid_client' },
           };
         }
 
@@ -606,7 +607,7 @@ export const auth = tsr.router(contract.auth, {
           return {
             status: 401,
             body: {
-              message: 'Invalid client credentials',
+              message: 'Credenciales de cliente invalidas',
               code: 'invalid_client',
             },
           };
@@ -622,7 +623,7 @@ export const auth = tsr.router(contract.auth, {
         if (!existingRefresh) {
           return {
             status: 401,
-            body: { message: 'Invalid refresh token', code: 'invalid_grant' },
+            body: { message: 'Refresh token invalido', code: 'invalid_grant' },
           };
         }
 
@@ -643,7 +644,7 @@ export const auth = tsr.router(contract.auth, {
           return {
             status: 401,
             body: {
-              message: 'Refresh token reuse detected',
+              message: 'Se detecto reutilizacion de refresh token',
               code: 'invalid_grant',
             },
           };
@@ -652,7 +653,7 @@ export const auth = tsr.router(contract.auth, {
         if (existingRefresh.expiresAt && existingRefresh.expiresAt < now) {
           return {
             status: 401,
-            body: { message: 'Expired refresh token', code: 'invalid_grant' },
+            body: { message: 'Refresh token expirado', code: 'invalid_grant' },
           };
         }
 
@@ -741,7 +742,7 @@ export const auth = tsr.router(contract.auth, {
         if (!apiClient) {
           return {
             status: 401,
-            body: { message: 'Invalid client credentials', code: 'invalid_client' },
+            body: { message: 'Credenciales de cliente invalidas', code: 'invalid_client' },
           };
         }
 
@@ -749,7 +750,7 @@ export const auth = tsr.router(contract.auth, {
         if (apiClient.status !== 'active') {
           return {
             status: 401,
-            body: { message: 'API Client is suspended', code: 'invalid_client' },
+            body: { message: 'Cliente API suspendido', code: 'invalid_client' },
           };
         }
 
@@ -758,7 +759,7 @@ export const auth = tsr.router(contract.auth, {
         if (!isValidSecret) {
           return {
             status: 401,
-            body: { message: 'Invalid client credentials', code: 'invalid_client' },
+            body: { message: 'Credenciales de cliente invalidas', code: 'invalid_client' },
           };
         }
 
@@ -774,7 +775,7 @@ export const auth = tsr.router(contract.auth, {
         if (!app) {
           return {
             status: 400,
-            body: { message: 'Invalid application', code: 'invalid_request' },
+            body: { message: 'Aplicacion invalida', code: 'invalid_request' },
           };
         }
 
@@ -789,7 +790,7 @@ export const auth = tsr.router(contract.auth, {
           return {
             status: 403,
             body: {
-              message: 'API Client has no permissions for this application',
+              message: 'El cliente API no tiene permisos para esta aplicacion',
               code: 'access_denied',
             },
           };
@@ -828,11 +829,11 @@ export const auth = tsr.router(contract.auth, {
 
       return {
         status: 400,
-        body: { message: 'Unsupported grant_type' },
+        body: { message: 'grant_type no soportado' },
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Something went wrong querying applications.',
+        genericMsg: 'Ocurrio un error al consultar las aplicaciones.',
         logPrefix: '[auth.oauthToken]',
       });
     }
@@ -866,7 +867,7 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 429,
           body: {
-            message: 'Too many requests. Please try again later.',
+            message: 'Demasiadas solicitudes. Intentalo de nuevo mas tarde.',
             code: 'RATE_LIMIT_EXCEEDED',
           },
           headers: {
@@ -886,7 +887,7 @@ export const auth = tsr.router(contract.auth, {
           status: 200,
           body: {
             message:
-              'If an account with that email exists, we have sent instructions to reset your password.',
+              'Si existe una cuenta con ese correo, hemos enviado instrucciones para restablecer tu contrasena.',
           } satisfies ForgotPasswordResponse,
         };
       }
@@ -904,7 +905,7 @@ export const auth = tsr.router(contract.auth, {
           status: 200,
           body: {
             message:
-              'If an account with that email exists, we have sent instructions to reset your password.',
+              'Si existe una cuenta con ese correo, hemos enviado instrucciones para restablecer tu contrasena.',
           } satisfies ForgotPasswordResponse,
         };
       }
@@ -935,12 +936,12 @@ export const auth = tsr.router(contract.auth, {
         status: 200,
         body: {
           message:
-            'If an account with that email exists, we have sent instructions to reset your password.',
+            'Si existe una cuenta con ese correo, hemos enviado instrucciones para restablecer tu contrasena.',
         } satisfies ForgotPasswordResponse,
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Failed to request password reset.',
+        genericMsg: 'No se pudo solicitar el restablecimiento de contrasena.',
         logPrefix: '[auth.forgotPassword]',
       });
     }
@@ -964,7 +965,7 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 429,
           body: {
-            message: 'Too many requests. Please try again later.',
+            message: 'Demasiadas solicitudes. Intentalo de nuevo mas tarde.',
             code: 'RATE_LIMIT_EXCEEDED',
           },
           headers: {
@@ -984,7 +985,7 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 400,
           body: {
-            message: 'Invalid Account',
+            message: 'Cuenta invalida',
             code: 'INVALID_ACCOUNT',
           },
         };
@@ -1005,7 +1006,7 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 400,
           body: {
-            message: 'Invalid or expired reset token',
+            message: 'Token de restablecimiento invalido o expirado',
             code: 'INVALID_TOKEN',
           },
         };
@@ -1033,7 +1034,7 @@ export const auth = tsr.router(contract.auth, {
         .where(eq(refreshTokens.userId, user.id));
 
       const bodyResponse: ResetPasswordResponse = {
-        message: 'Password reset successfully. You can now log in.',
+        message: 'Contrasena restablecida correctamente. Ya puedes iniciar sesion.',
       };
 
       return {
@@ -1042,7 +1043,7 @@ export const auth = tsr.router(contract.auth, {
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Failed to reset password.',
+        genericMsg: 'No se pudo restablecer la contrasena.',
         logPrefix: '[auth.resetPassword]',
       });
     }
@@ -1064,7 +1065,7 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 429,
           body: {
-            message: 'Too many requests. Please try again later.',
+            message: 'Demasiadas solicitudes. Intentalo de nuevo mas tarde.',
             code: 'RATE_LIMIT_EXCEEDED',
           },
           headers: {
@@ -1078,12 +1079,12 @@ export const auth = tsr.router(contract.auth, {
       const [user] = await db.select().from(users).where(eq(users.id, session.userId));
 
       if (!user || !user.passwordHash) {
-        throw new Error('Invalid User');
+        throw new Error('Usuario invalido');
       }
 
       const match = await verifyPassword(currentPassword, user.passwordHash);
       if (!match) {
-        throw new Error('Check Data');
+        throw new Error('Verifica los datos');
       }
 
       const newHash = await hashPassword(newPassword);
@@ -1093,7 +1094,7 @@ export const auth = tsr.router(contract.auth, {
       return { status: 204, body: undefined };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Failed to change password.',
+        genericMsg: 'No se pudo cambiar la contrasena.',
         logPrefix: '[auth.resetPassword]',
       });
     }
@@ -1120,7 +1121,7 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 429,
           body: {
-            message: 'Too many requests. Please try again later.',
+            message: 'Demasiadas solicitudes. Intentalo de nuevo mas tarde.',
             code: 'RATE_LIMIT_EXCEEDED',
           },
           headers: {
@@ -1139,7 +1140,7 @@ export const auth = tsr.router(contract.auth, {
       if (!app || app.status !== 'active') {
         return {
           status: 401,
-          body: { message: 'Invalid client', code: 'invalid_client' },
+          body: { message: 'Cliente invalido', code: 'invalid_client' },
         };
       }
 
@@ -1148,7 +1149,7 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 401,
           body: {
-            message: 'Invalid client credentials',
+            message: 'Credenciales de cliente invalidas',
             code: 'invalid_client',
           },
         };
@@ -1178,7 +1179,7 @@ export const auth = tsr.router(contract.auth, {
       return { status: 200, body: undefined };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Failed to revoke token.',
+        genericMsg: 'No se pudo revocar el token.',
         logPrefix: '[auth.revoke]',
       });
     }
@@ -1215,7 +1216,7 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 429,
           body: {
-            message: 'Too many requests. Please try again later.',
+            message: 'Demasiadas solicitudes. Intentalo de nuevo mas tarde.',
             code: 'RATE_LIMIT_EXCEEDED',
           },
           headers: {
@@ -1239,7 +1240,7 @@ export const auth = tsr.router(contract.auth, {
       if (!mfaRecord) {
         return {
           status: 401,
-          body: { message: 'Invalid or expired MFA token', code: 'INVALID_MFA_TOKEN' },
+          body: { message: 'Token MFA invalido o expirado', code: 'INVALID_MFA_TOKEN' },
         };
       }
 
@@ -1249,7 +1250,7 @@ export const auth = tsr.router(contract.auth, {
         await db.delete(mfaPending).where(eq(mfaPending.id, mfaToken));
         return {
           status: 401,
-          body: { message: 'MFA code expired. Please login again.', code: 'MFA_EXPIRED' },
+          body: { message: 'El codigo MFA expiro. Inicia sesion nuevamente.', code: 'MFA_EXPIRED' },
         };
       }
 
@@ -1257,7 +1258,7 @@ export const auth = tsr.router(contract.auth, {
       if (mfaRecord.account?.slug !== accountSlug || mfaRecord.application?.slug !== appSlug) {
         return {
           status: 401,
-          body: { message: 'Invalid request', code: 'INVALID_REQUEST' },
+          body: { message: 'Solicitud invalida', code: 'INVALID_REQUEST' },
         };
       }
 
@@ -1267,7 +1268,7 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 401,
           body: {
-            message: 'Too many failed attempts. Please login again.',
+            message: 'Demasiados intentos fallidos. Inicia sesion nuevamente.',
             code: 'MFA_MAX_ATTEMPTS',
           },
         };
@@ -1283,7 +1284,7 @@ export const auth = tsr.router(contract.auth, {
 
         return {
           status: 401,
-          body: { message: 'Invalid code', code: 'INVALID_CODE' },
+          body: { message: 'Codigo invalido', code: 'INVALID_CODE' },
         };
       }
 
@@ -1326,7 +1327,7 @@ export const auth = tsr.router(contract.auth, {
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Failed to verify MFA code.',
+        genericMsg: 'No se pudo verificar el codigo MFA.',
         logPrefix: '[auth.mfaVerify]',
       });
     }
@@ -1363,7 +1364,7 @@ export const auth = tsr.router(contract.auth, {
         return {
           status: 429,
           body: {
-            message: 'Too many requests. Please try again later.',
+            message: 'Demasiadas solicitudes. Intentalo de nuevo mas tarde.',
             code: 'RATE_LIMIT_EXCEEDED',
           },
           headers: {
@@ -1387,7 +1388,7 @@ export const auth = tsr.router(contract.auth, {
       if (!mfaRecord) {
         return {
           status: 400,
-          body: { message: 'Invalid or expired MFA token', code: 'INVALID_MFA_TOKEN' },
+          body: { message: 'Token MFA invalido o expirado', code: 'INVALID_MFA_TOKEN' },
         };
       }
 
@@ -1395,7 +1396,7 @@ export const auth = tsr.router(contract.auth, {
       if (mfaRecord.account?.slug !== accountSlug || mfaRecord.application?.slug !== appSlug) {
         return {
           status: 400,
-          body: { message: 'Invalid request', code: 'INVALID_REQUEST' },
+          body: { message: 'Solicitud invalida', code: 'INVALID_REQUEST' },
         };
       }
 
@@ -1425,7 +1426,7 @@ export const auth = tsr.router(contract.auth, {
       });
 
       const response: MfaResendResponse = {
-        message: 'A new code has been sent to your email.',
+        message: 'Se envio un nuevo codigo a tu correo.',
         maskedEmail: maskEmail(user.email),
       };
 
@@ -1435,7 +1436,7 @@ export const auth = tsr.router(contract.auth, {
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Failed to resend MFA code.',
+        genericMsg: 'No se pudo reenviar el codigo MFA.',
         logPrefix: '[auth.mfaResend]',
       });
     }
@@ -1454,7 +1455,7 @@ export const auth = tsr.router(contract.auth, {
       if (!account) {
         return {
           status: 404,
-          body: { message: 'Account not found', code: 'ACCOUNT_NOT_FOUND' },
+          body: { message: 'Cuenta no encontrada', code: 'ACCOUNT_NOT_FOUND' },
         };
       }
 
@@ -1492,7 +1493,7 @@ export const auth = tsr.router(contract.auth, {
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Failed to get branding info.',
+        genericMsg: 'No se pudo obtener la informacion de marca.',
         logPrefix: '[auth.branding]',
       });
     }

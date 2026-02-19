@@ -95,7 +95,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -135,7 +135,7 @@ export const apiClient = tsr.router(contract.apiClient, {
         },
       };
     } catch (e) {
-      return genericTsRestErrorResponse(e, { genericMsg: 'Error al listar API Clients' });
+      return genericTsRestErrorResponse(e, { genericMsg: 'Error al listar clientes API' });
     }
   },
 
@@ -148,7 +148,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -161,14 +161,14 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!client) {
         return {
           status: 404,
-          body: { message: 'API Client not found', code: 'API_CLIENT_NOT_FOUND' },
+          body: { message: 'Cliente API no encontrado', code: 'API_CLIENT_NOT_FOUND' },
         };
       }
 
       return { status: 200, body: sanitizeApiClient(client) };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: `Error al obtener API Client ${id}`,
+        genericMsg: `Error al obtener cliente API ${id}`,
       });
     }
   },
@@ -185,7 +185,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -244,7 +244,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       };
     } catch (e) {
       const error = genericTsRestErrorResponse(e, {
-        genericMsg: 'Error al crear API Client',
+        genericMsg: 'Error al crear cliente API',
       });
       await logAudit(session, {
         resourceKey: appRoute.metadata.permissionKey.resourceKey,
@@ -275,7 +275,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -287,7 +287,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!existing) {
         throwHttpError({
           status: 404,
-          message: 'API Client not found',
+          message: 'Cliente API no encontrado',
           code: 'API_CLIENT_NOT_FOUND',
         });
       }
@@ -356,7 +356,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       return { status: 200, body: safeUpdated };
     } catch (e) {
       const error = genericTsRestErrorResponse(e, {
-        genericMsg: `Error al actualizar API Client ${id}`,
+        genericMsg: `Error al actualizar cliente API ${id}`,
       });
       await logAudit(session, {
         resourceKey: appRoute.metadata.permissionKey.resourceKey,
@@ -388,7 +388,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -400,7 +400,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!existing) {
         throwHttpError({
           status: 404,
-          message: 'API Client not found',
+          message: 'Cliente API no encontrado',
           code: 'API_CLIENT_NOT_FOUND',
         });
       }
@@ -433,7 +433,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       return { status: 200, body: sanitizeApiClient(deleted) };
     } catch (e) {
       const error = genericTsRestErrorResponse(e, {
-        genericMsg: `Error al eliminar API Client ${id}`,
+        genericMsg: `Error al eliminar cliente API ${id}`,
       });
       await logAudit(session, {
         resourceKey: appRoute.metadata.permissionKey.resourceKey,
@@ -465,7 +465,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -477,7 +477,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!existing) {
         throwHttpError({
           status: 404,
-          message: 'API Client not found',
+          message: 'Cliente API no encontrado',
           code: 'API_CLIENT_NOT_FOUND',
         });
       }
@@ -508,7 +508,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       };
     } catch (e) {
       const error = genericTsRestErrorResponse(e, {
-        genericMsg: `Error al regenerar secret para API Client ${id}`,
+        genericMsg: `Error al regenerar secreto para cliente API ${id}`,
       });
       await logAudit(session, {
         resourceKey: appRoute.metadata.permissionKey.resourceKey,
@@ -537,7 +537,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -549,7 +549,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!existing) {
         throwHttpError({
           status: 404,
-          message: 'API Client not found',
+          message: 'Cliente API no encontrado',
           code: 'API_CLIENT_NOT_FOUND',
         });
       }
@@ -580,7 +580,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       return { status: 200, body: sanitizeApiClient(updated) };
     } catch (e) {
       const error = genericTsRestErrorResponse(e, {
-        genericMsg: `Error al suspender API Client ${id}`,
+        genericMsg: `Error al suspender cliente API ${id}`,
       });
       await logAudit(session, {
         resourceKey: appRoute.metadata.permissionKey.resourceKey,
@@ -609,7 +609,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -621,7 +621,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       if (!existing) {
         throwHttpError({
           status: 404,
-          message: 'API Client not found',
+          message: 'Cliente API no encontrado',
           code: 'API_CLIENT_NOT_FOUND',
         });
       }
@@ -652,7 +652,7 @@ export const apiClient = tsr.router(contract.apiClient, {
       return { status: 200, body: sanitizeApiClient(updated) };
     } catch (e) {
       const error = genericTsRestErrorResponse(e, {
-        genericMsg: `Error al activar API Client ${id}`,
+        genericMsg: `Error al activar cliente API ${id}`,
       });
       await logAudit(session, {
         resourceKey: appRoute.metadata.permissionKey.resourceKey,

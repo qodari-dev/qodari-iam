@@ -184,7 +184,7 @@ export function Users() {
 
   return (
     <>
-      <PageHeader title="Users" description="Manage users." />
+      <PageHeader title="Usuarios" description="Administra los usuarios." />
       <PageContent>
         <DataTable
           columns={userColumns}
@@ -225,7 +225,7 @@ export function Users() {
               isRefreshing={isFetching && !isLoading}
             />
           }
-          emptyMessage="No users found. Try adjusting your filters."
+          emptyMessage="No se encontraron usuarios. Intenta ajustar los filtros."
           meta={tableMeta}
         />
       </PageContent>
@@ -236,19 +236,18 @@ export function Users() {
       <AlertDialog open={openedDeleteDialog} onOpenChange={setOpenedDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Estas seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your account and remove
-              your data from our servers.
+              Esta accion no se puede deshacer. Se eliminara el usuario y sus datos asociados.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedDeleteDialog(false)}>
-              Cancel
+              Cancelar
             </AlertDialogCancel>
             <AlertDialogAction disabled={isDeleting} onClick={handleDelete}>
               {isDeleting && <Spinner />}
-              Delete
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -257,18 +256,18 @@ export function Users() {
       <AlertDialog open={openedSuspendDialog} onOpenChange={setOpenedSuspendDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Estas seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will suspend this account.
+              Esta accion no se puede deshacer. El usuario quedara suspendido.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedSuspendDialog(false)}>
-              Cancel
+              Cancelar
             </AlertDialogCancel>
             <AlertDialogAction disabled={isSuspending} onClick={handleSuspend}>
               {isSuspending && <Spinner />}
-              Suspend
+              Suspender
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -277,18 +276,18 @@ export function Users() {
       <AlertDialog open={openedActivateDialog} onOpenChange={setOpenedActivateDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Estas seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will activate this account.
+              Esta accion no se puede deshacer. El usuario quedara activo nuevamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedActivateDialog(false)}>
-              Cancel
+              Cancelar
             </AlertDialogCancel>
             <AlertDialogAction disabled={isActivating} onClick={handleActivate}>
               {isActivating && <Spinner />}
-              Activate
+              Activar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -297,18 +296,18 @@ export function Users() {
       <AlertDialog open={openedUnlockDialog} onOpenChange={setOpenedUnlockDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Unlock this user?</AlertDialogTitle>
+            <AlertDialogTitle>Desbloquear usuario?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will clear failed login attempts and allow the user to sign in again.
+              Esto limpiara los intentos fallidos y permitira iniciar sesion nuevamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedUnlockDialog(false)}>
-              Cancel
+              Cancelar
             </AlertDialogCancel>
             <AlertDialogAction disabled={isUnlocking} onClick={handleUnlock}>
               {isUnlocking && <Spinner />}
-              Unlock
+              Desbloquear
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -22,12 +22,12 @@ const statusConfig: Record<
   }
 > = {
   active: {
-    label: 'Active',
+    label: 'Activo',
     variant: 'default',
     icon: CheckCircle,
   },
   suspended: {
-    label: 'Suspended',
+    label: 'Suspendido',
     variant: 'destructive',
     icon: XCircle,
   },
@@ -54,7 +54,7 @@ function AdminBadge({ isAdmin }: { isAdmin: boolean }) {
     return (
       <Badge variant="default" className="gap-1 bg-amber-600 hover:bg-amber-700">
         <ShieldCheck className="h-3 w-3" />
-        Admin
+        Administrador
       </Badge>
     );
   }
@@ -62,7 +62,7 @@ function AdminBadge({ isAdmin }: { isAdmin: boolean }) {
   return (
     <Badge variant="outline" className="text-muted-foreground gap-1">
       <UserIcon className="h-3 w-3" />
-      User
+      Usuario
     </Badge>
   );
 }
@@ -73,7 +73,7 @@ function AdminBadge({ isAdmin }: { isAdmin: boolean }) {
 
 function RolesBadges({ roles }: { roles?: User['userRoles'] }) {
   if (!roles || roles.length === 0) {
-    return <span className="text-muted-foreground text-sm">No roles</span>;
+    return <span className="text-muted-foreground text-sm">Sin roles</span>;
   }
 
   const displayRoles = roles.slice(0, 2);
@@ -102,7 +102,7 @@ function RolesBadges({ roles }: { roles?: User['userRoles'] }) {
 export const userColumns: ColumnDef<User>[] = [
   {
     accessorKey: 'email',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Correo" />,
     cell: ({ row }) => {
       return (
         <div className="flex flex-col">
@@ -115,7 +115,7 @@ export const userColumns: ColumnDef<User>[] = [
   // First Name Column (hideable)
   {
     accessorKey: 'firstName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="First Name" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Nombre" />,
     cell: ({ row }) => row.getValue('firstName') ?? '—',
     enableHiding: true,
   },
@@ -123,7 +123,7 @@ export const userColumns: ColumnDef<User>[] = [
   // Last Name Column (hideable)
   {
     accessorKey: 'lastName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Name" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Apellido" />,
     cell: ({ row }) => row.getValue('lastName') ?? '—',
     enableHiding: true,
   },
@@ -131,7 +131,7 @@ export const userColumns: ColumnDef<User>[] = [
   // Status Column
   {
     accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
     cell: ({ row }) => {
       const isLocked = Boolean(row.original.lockedUntil);
 
@@ -139,7 +139,7 @@ export const userColumns: ColumnDef<User>[] = [
         return (
           <Badge variant="secondary" className="gap-1">
             <Lock className="h-3 w-3" />
-            Locked
+            Bloqueado
           </Badge>
         );
       }
@@ -154,7 +154,7 @@ export const userColumns: ColumnDef<User>[] = [
   // Is Admin Column
   {
     accessorKey: 'isAdmin',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Rol" />,
     cell: ({ row }) => <AdminBadge isAdmin={row.getValue('isAdmin')} />,
     filterFn: (row, id, value: boolean) => {
       return row.getValue(id) === value;
@@ -164,7 +164,7 @@ export const userColumns: ColumnDef<User>[] = [
   // Roles Column (from include)
   {
     id: 'roles',
-    header: 'Assigned Roles',
+    header: 'Roles asignados',
     cell: ({ row }) => <RolesBadges roles={row.original.userRoles} />,
     enableSorting: false,
   },
@@ -172,7 +172,7 @@ export const userColumns: ColumnDef<User>[] = [
   // Created At Column
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Creado" />,
     cell: ({ row }) => {
       return (
         <div className="flex flex-col">
@@ -185,11 +185,11 @@ export const userColumns: ColumnDef<User>[] = [
   // Last Login Column
   {
     accessorKey: 'lastLoginAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Login" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Ultimo acceso" />,
     cell: ({ row }) => {
       const date = row.original.lastLoginAt;
       if (!date) {
-        return <span className="text-muted-foreground">Never</span>;
+        return <span className="text-muted-foreground">Nunca</span>;
       }
       return (
         <div className="flex flex-col">

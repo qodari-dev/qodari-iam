@@ -17,52 +17,53 @@ export function UserInfo({
   if (!user) return null;
   const lockedUntil = user.lockedUntil ? new Date(user.lockedUntil) : null;
   const isLocked = Boolean(user.lockedUntil);
+  const statusLabel = user.status === 'active' ? 'Activo' : 'Suspendido';
 
   const sections: DescriptionSection[] = [
     {
-      title: 'Basic Information',
+      title: 'Informacion basica',
       columns: 2,
       items: [
-        { label: 'First Name', value: user.firstName },
-        { label: 'Last Name', value: user.lastName },
-        { label: 'Email', value: user.email },
-        { label: 'Phone', value: user.phone },
+        { label: 'Nombre', value: user.firstName },
+        { label: 'Apellido', value: user.lastName },
+        { label: 'Correo', value: user.email },
+        { label: 'Telefono', value: user.phone },
       ],
     },
     {
-      title: 'Account Status',
+      title: 'Estado de cuenta',
       columns: 2,
       items: [
         {
-          label: 'Status',
+          label: 'Estado',
           value: (
             <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
-              {user.status}
+              {statusLabel}
             </Badge>
           ),
         },
         {
-          label: 'Admin',
+          label: 'Administrador',
           value: (
             <Badge variant={user.isAdmin ? 'default' : 'outline'}>
-              {user.isAdmin ? 'Yes' : 'No'}
+              {user.isAdmin ? 'Si' : 'No'}
             </Badge>
           ),
         },
         {
-          label: 'Locked',
+          label: 'Bloqueado',
           value: (
             <Badge variant={isLocked ? 'destructive' : 'secondary'}>
-              {isLocked ? 'Yes' : 'No'}
+              {isLocked ? 'Si' : 'No'}
             </Badge>
           ),
         },
         {
-          label: 'Failed Attempts',
+          label: 'Intentos fallidos',
           value: user.failedLoginAttempts,
         },
         {
-          label: 'Locked Until',
+          label: 'Bloqueado hasta',
           value: lockedUntil ? format(lockedUntil, 'PPP p') : null,
         },
       ],
@@ -71,7 +72,7 @@ export function UserInfo({
       title: 'Roles',
       items: [
         {
-          label: 'Assigned Roles',
+          label: 'Roles asignados',
           value: user.userRoles?.length ? (
             <div className="flex flex-wrap gap-1">
               {user.userRoles.map(({ role }) => (
@@ -86,19 +87,19 @@ export function UserInfo({
       ],
     },
     {
-      title: 'Activity',
+      title: 'Actividad',
       columns: 2,
       items: [
         {
-          label: 'Created',
+          label: 'Creado',
           value: formatDate(user.createdAt),
         },
         {
-          label: 'Updated',
+          label: 'Actualizado',
           value: formatDate(user.updatedAt),
         },
         {
-          label: 'Last Login',
+          label: 'Ultimo acceso',
           value: user.lastLoginAt ? format(new Date(user.lastLoginAt), 'PPP p') : null,
         },
       ],
@@ -109,7 +110,7 @@ export function UserInfo({
     <Sheet open={opened} onOpenChange={(open) => onOpened(open)}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>Info</SheetTitle>
+          <SheetTitle>Informacion</SheetTitle>
         </SheetHeader>
         <div className="px-4">
           <DescriptionList sections={sections} columns={2} />

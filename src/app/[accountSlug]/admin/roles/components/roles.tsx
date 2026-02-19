@@ -96,7 +96,7 @@ export function Roles() {
     <>
       <PageHeader
         title="Roles"
-        description="Manage roles and assign permissions per application."
+        description="Administra roles y asigna permisos por aplicacion."
       />
       <PageContent>
         <DataTable
@@ -120,6 +120,7 @@ export function Roles() {
               isRefreshing={isFetching && !isLoading}
             />
           }
+          emptyMessage="No se encontraron roles."
           meta={tableMeta}
         />
       </PageContent>
@@ -130,17 +131,17 @@ export function Roles() {
       <AlertDialog open={openedDeleteDialog} onOpenChange={setOpenedDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete role</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar rol</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. Are you sure you want to delete{' '}
+              Esta accion no se puede deshacer. Estas seguro de eliminar{' '}
               <strong>{role?.name}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
               {isDeleting && <Spinner className="mr-2 h-4 w-4" />}
-              Delete
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

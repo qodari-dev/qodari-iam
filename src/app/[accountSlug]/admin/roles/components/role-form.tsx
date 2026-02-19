@@ -83,17 +83,17 @@ export function RoleForm({
     <Sheet open={opened} onOpenChange={onOpened}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>{role ? 'Edit Role' : 'New Role'}</SheetTitle>
+          <SheetTitle>{role ? 'Editar rol' : 'Nuevo rol'}</SheetTitle>
           <SheetDescription>
-            Define role scopes and permissions for this application.
+            Define el alcance y los permisos del rol para esta aplicacion.
           </SheetDescription>
         </SheetHeader>
         <FormProvider {...form}>
           <form id={formId} onSubmit={form.handleSubmit(onSubmit, onSubmitError)} className="px-4">
             <Tabs defaultValue="main" className="w-full">
               <TabsList className="mb-4 w-full">
-                <TabsTrigger value="main">Main</TabsTrigger>
-                <TabsTrigger value="permissions">Permissions</TabsTrigger>
+                <TabsTrigger value="main">General</TabsTrigger>
+                <TabsTrigger value="permissions">Permisos</TabsTrigger>
               </TabsList>
               <TabsContent value="main">
                 <RoleMainForm />
@@ -109,10 +109,10 @@ export function RoleForm({
         <SheetFooter>
           <Button type="submit" form={formId} disabled={isLoading}>
             {isLoading && <Spinner />}
-            Save
+            Guardar
           </Button>
           <SheetClose asChild>
-            <Button variant="outline">Close</Button>
+            <Button variant="outline">Cerrar</Button>
           </SheetClose>
         </SheetFooter>
       </SheetContent>

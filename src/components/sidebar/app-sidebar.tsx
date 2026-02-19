@@ -62,7 +62,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ...(canSeeUsers
               ? [
                   {
-                    title: 'Users',
+                    title: 'Usuarios',
                     url: `/${accountSlug}/admin/users`,
                     icon: Users,
                   },
@@ -71,7 +71,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ...(canSeeApplications
               ? [
                   {
-                    title: 'Applications',
+                    title: 'Aplicaciones',
                     url: `/${accountSlug}/admin/applications`,
                     icon: AppWindowMacIcon,
                   },
@@ -89,7 +89,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ...(canSeeApiClients
               ? [
                   {
-                    title: 'API Clients',
+                    title: 'Clientes API',
                     url: `/${accountSlug}/admin/api-clients`,
                     icon: Key,
                   },
@@ -119,7 +119,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     };
   }, [
     user,
-    pathname,
     accountSlug,
     canSeeUsers,
     canSeeApplications,

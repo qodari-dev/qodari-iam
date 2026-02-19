@@ -20,8 +20,8 @@ import { z } from 'zod';
 // ============================================
 
 export const userStatusOptions = [
-  { label: 'Active', value: 'active' },
-  { label: 'Suspended', value: 'suspended' },
+  { label: 'Activo', value: 'active' },
+  { label: 'Suspendido', value: 'suspended' },
 ] as const;
 
 const USER_STATUS = ['active', 'suspended'] as const;

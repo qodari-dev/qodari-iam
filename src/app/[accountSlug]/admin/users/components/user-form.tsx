@@ -86,16 +86,16 @@ export function UserForm({
     <Sheet open={opened} onOpenChange={onOpened}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>User</SheetTitle>
+          <SheetTitle>Usuario</SheetTitle>
           <SheetDescription>
-            Make changes to your profile here. Click save when you&apos;re done.
+            Realiza los cambios del usuario y guarda cuando termines.
           </SheetDescription>
         </SheetHeader>
         <FormProvider {...form}>
           <form id={formId} onSubmit={form.handleSubmit(onSubmit, onSubmitError)} className="px-4">
             <Tabs defaultValue="main" className="w-full">
               <TabsList className="mb-4 w-full">
-                <TabsTrigger value="main">Main</TabsTrigger>
+                <TabsTrigger value="main">General</TabsTrigger>
                 <TabsTrigger value="roles">Roles</TabsTrigger>
               </TabsList>
               <TabsContent value="main">
@@ -111,10 +111,10 @@ export function UserForm({
         <SheetFooter>
           <Button type="submit" form={formId} disabled={isLoading}>
             {isLoading && <Spinner />}
-            Save
+            Guardar
           </Button>
           <SheetClose asChild>
-            <Button variant="outline">Close</Button>
+            <Button variant="outline">Cerrar</Button>
           </SheetClose>
         </SheetFooter>
       </SheetContent>

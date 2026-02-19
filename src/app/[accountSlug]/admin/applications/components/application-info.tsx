@@ -30,10 +30,10 @@ export function ApplicationInfo({
     try {
       await navigator.clipboard.writeText(text);
       setCopiedField(field);
-      toast.success('Copied to clipboard');
+      toast.success('Copiado al portapapeles');
       setTimeout(() => setCopiedField(null), 2000);
     } catch {
-      toast.error('Failed to copy to clipboard');
+      toast.error('No se pudo copiar al portapapeles');
     }
   };
   if (!application) return null;
@@ -41,20 +41,22 @@ export function ApplicationInfo({
   const logoUrl = getStorageUrl(application.logo);
   const portalUrl = getStorageUrl(application.image);
   const authUrl = getStorageUrl(application.imageAd);
+  const statusLabel = application.status === 'active' ? 'Activo' : 'Suspendido';
+  const clientTypeLabel = application.clientType === 'public' ? 'Publico' : 'Confidencial';
 
   const sections: DescriptionSection[] = [
     {
-      title: 'Basics',
+      title: 'Datos basicos',
       columns: 2,
       items: [
-        { label: 'Name', value: application.name },
+        { label: 'Nombre', value: application.name },
         { label: 'Slug', value: application.slug },
-        { label: 'Client Type', value: application.clientType },
+        { label: 'Tipo de cliente', value: clientTypeLabel },
         {
-          label: 'Status',
+          label: 'Estado',
           value: (
             <Badge variant={application.status === 'active' ? 'default' : 'secondary'}>
-              {application.status}
+              {statusLabel}
             </Badge>
           ),
         },
@@ -75,7 +77,7 @@ export function ApplicationInfo({
           ),
         },
         {
-          label: 'Portal Image',
+          label: 'Imagen del portal',
           value: portalUrl ? (
             <div className="relative h-16 w-16 overflow-hidden rounded-lg border">
               <Image
@@ -91,7 +93,7 @@ export function ApplicationInfo({
           ),
         },
         {
-          label: 'Auth Ad Image',
+          label: 'Imagen de anuncio (auth)',
           value: authUrl ? (
             <div className="relative h-16 w-16 overflow-hidden rounded-lg border">
               <Image
@@ -112,9 +114,9 @@ export function ApplicationInfo({
       title: 'URLs',
       columns: 1,
       items: [
-        { label: 'Home URL', value: application.homeUrl ?? '—' },
+        { label: 'URL de inicio', value: application.homeUrl ?? '—' },
         {
-          label: 'Logout URLs',
+          label: 'URLs de logout',
           value:
             application.logoutUrl && application.logoutUrl.length > 0 ? (
               <ul className="list-inside list-disc space-y-1">
@@ -129,7 +131,7 @@ export function ApplicationInfo({
             ),
         },
         {
-          label: 'Callback URLs',
+          label: 'URLs de callback',
           value:
             application.callbackUrls && application.callbackUrls.length > 0 ? (
               <ul className="list-inside list-disc space-y-1">
@@ -146,10 +148,10 @@ export function ApplicationInfo({
       ],
     },
     {
-      title: 'Permissions',
+      title: 'Permisos',
       items: [
         {
-          label: 'Defined Permissions',
+          label: 'Permisos definidos',
           value: application.permissions?.length ? (
             <div className="flex flex-wrap gap-1">
               {application.permissions.map((p) => (
@@ -165,11 +167,11 @@ export function ApplicationInfo({
       ],
     },
     {
-      title: 'Activity',
+      title: 'Actividad',
       columns: 2,
       items: [
-        { label: 'Created', value: formatDate(application.createdAt) },
-        { label: 'Updated', value: formatDate(application.updatedAt) },
+        { label: 'Creado', value: formatDate(application.createdAt) },
+        { label: 'Actualizado', value: formatDate(application.updatedAt) },
       ],
     },
   ];
@@ -178,14 +180,14 @@ export function ApplicationInfo({
     <Sheet open={opened} onOpenChange={(open) => onOpened(open)}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>Application</SheetTitle>
+          <SheetTitle>Aplicacion</SheetTitle>
         </SheetHeader>
         <div className="px-4">
           <DescriptionList sections={sections} columns={2} />
           <div className="mt-4 space-y-4">
-            <h4 className="text-md font-semibold">Credentials</h4>
+            <h4 className="text-md font-semibold">Credenciales</h4>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Jwt Secret</label>
+              <label className="text-sm font-medium">JWT secret</label>
               <div className="flex items-center gap-2">
                 <code className="bg-muted flex-1 overflow-auto rounded-md p-3 font-mono text-sm">
                   {application.clientJwtSecret}
@@ -204,7 +206,7 @@ export function ApplicationInfo({
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Client ID</label>
+              <label className="text-sm font-medium">ID del cliente</label>
               <div className="flex items-center gap-2">
                 <code className="bg-muted flex-1 overflow-auto rounded-md p-3 font-mono text-sm">
                   {application.clientId}
@@ -223,7 +225,7 @@ export function ApplicationInfo({
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Client Secret</label>
+              <label className="text-sm font-medium">Secreto del cliente</label>
               <div className="flex items-center gap-2">
                 <code className="bg-muted flex-1 overflow-auto rounded-md p-3 font-mono text-sm">
                   **********************

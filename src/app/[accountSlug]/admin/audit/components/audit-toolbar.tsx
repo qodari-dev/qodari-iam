@@ -156,16 +156,16 @@ export function AuditToolbar({
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.${format}`;
+        a.download = `registros-auditoria-${new Date().toISOString().split('T')[0]}.${format}`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        toast.success(`Exported audit logs as ${format.toUpperCase()}`);
+        toast.success(`Registros de auditoria exportados en ${format.toUpperCase()}`);
       }
     } catch (error) {
       console.log(error);
-      toast.error('Failed to export audit logs');
+      toast.error('No se pudieron exportar los registros de auditoria');
     }
   };
 
@@ -174,7 +174,7 @@ export function AuditToolbar({
       <div className="flex flex-1 flex-col-reverse items-start gap-2 space-x-2 lg:flex-row lg:items-center">
         {/* Search Input */}
         <Input
-          placeholder="Search by resource, user, or client..."
+          placeholder="Buscar por recurso, usuario o cliente..."
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
           className="md:max-w-xs"
@@ -186,21 +186,21 @@ export function AuditToolbar({
 
         {/* Application Filter (Single-select) */}
         <SimpleSelectFilter
-          title="Application"
+          title="Aplicacion"
           options={applicationFilterData}
           value={applicationFilter}
           onValueChange={onApplicationFilterChange}
         />
         {/* User Filter (Single-select) */}
         <SimpleSelectFilter
-          title="User"
+          title="Usuario"
           options={userFilterData}
           value={userFilter}
           onValueChange={onUserFilterChange}
         />
         {/* API Client Filter (Single-select) */}
         <SimpleSelectFilter
-          title="API Client"
+          title="Cliente API"
           options={apiClientFilterData}
           value={apiClientFilter}
           onValueChange={onApiClientFilterChange}
@@ -208,7 +208,7 @@ export function AuditToolbar({
 
         {/* Action Filter (Multi-select) */}
         <DataTableFacetedFilter
-          title="Action"
+          title="Accion"
           options={[...auditActionOptions]}
           value={actionFilter}
           onValueChange={onActionFilterChange}
@@ -216,7 +216,7 @@ export function AuditToolbar({
 
         {/* Status Filter (Single-select) */}
         <SimpleSelectFilter
-          title="Status"
+          title="Estado"
           options={[...auditStatusOptions]}
           value={statusFilter}
           onValueChange={onStatusFilterChange}
@@ -233,7 +233,7 @@ export function AuditToolbar({
         {/* Reset Button */}
         {isFiltered && (
           <Button variant="ghost" onClick={onReset} className="h-9 px-2 lg:px-3">
-            Reset
+            Limpiar
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}
@@ -259,7 +259,7 @@ export function AuditToolbar({
             className="h-9"
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
+            Actualizar
           </Button>
         )}
       </div>

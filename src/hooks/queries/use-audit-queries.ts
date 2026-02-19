@@ -55,7 +55,7 @@ export function useCreateAuditLog() {
   return api.audit.create.useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: auditLogsKeys.lists() });
-      toast.success('Audit log created');
+      toast.success('Registro de auditoria creado');
     },
     onError: (error) => {
       toast.error(getTsRestErrorMessage(error));

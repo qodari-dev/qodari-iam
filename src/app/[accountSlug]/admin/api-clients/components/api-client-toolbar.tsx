@@ -35,20 +35,20 @@ export function ApiClientsToolbar({
     <div className="flex flex-col-reverse gap-3 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-1 flex-col-reverse items-start gap-2 space-x-2 lg:flex-row lg:items-center">
         <Input
-          placeholder="Search by name or client ID..."
+          placeholder="Buscar por nombre o ID de cliente..."
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
           className="md:max-w-xs"
         />
         <DataTableFacetedFilter
-          title="Status"
+          title="Estado"
           options={[...apiClientStatusOptions]}
           value={statusFilter}
           onValueChange={onStatusFilterChange}
         />
         {hasFilters && (
           <Button variant="ghost" onClick={onReset} className="h-9 px-2 lg:px-3">
-            Reset
+            Limpiar
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}
@@ -62,12 +62,12 @@ export function ApiClientsToolbar({
           className="h-9"
         >
           <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
+          Actualizar
         </Button>
         {canCreateApiClients && (
           <Button size="sm" onClick={onCreate} className="h-9">
             <Plus className="mr-2 h-4 w-4" />
-            New API Client
+            Nuevo cliente API
           </Button>
         )}
       </div>

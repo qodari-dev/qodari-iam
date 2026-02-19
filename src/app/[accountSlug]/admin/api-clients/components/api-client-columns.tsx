@@ -5,13 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { ApiClientItem } from '@/schemas/api-client';
 import { ColumnDef } from '@tanstack/react-table';
 import { format, formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { ApiClientRowActions } from './api-client-row-actions';
 import { formatExpiry } from '@/utils/formatters';
 
 export const apiClientColumns: ColumnDef<ApiClientItem>[] = [
   {
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Nombre" />,
     cell: ({ row }) => {
       const name = row.original.name;
       return (
@@ -25,12 +26,12 @@ export const apiClientColumns: ColumnDef<ApiClientItem>[] = [
   },
   {
     accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
     cell: ({ row }) => {
       const status = row.original.status;
       return (
         <Badge variant={status === 'active' ? 'default' : 'secondary'}>
-          {status === 'active' ? 'Active' : 'Suspended'}
+          {status === 'active' ? 'Activo' : 'Suspendido'}
         </Badge>
       );
     },
@@ -41,7 +42,7 @@ export const apiClientColumns: ColumnDef<ApiClientItem>[] = [
   },
   {
     accessorKey: 'accessTokenExp',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Token Expiry" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Expiracion del token" />,
     cell: ({ row }) => {
       return (
         <span className="text-muted-foreground text-sm">
@@ -52,28 +53,28 @@ export const apiClientColumns: ColumnDef<ApiClientItem>[] = [
   },
   {
     accessorKey: 'lastUsedAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Used" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Ultimo uso" />,
     cell: ({ row }) => {
       const lastUsedAt = row.original.lastUsedAt;
       if (!lastUsedAt) {
-        return <span className="text-muted-foreground text-sm">Never</span>;
+        return <span className="text-muted-foreground text-sm">Nunca</span>;
       }
       const date = new Date(lastUsedAt);
       return (
         <span className="text-muted-foreground text-sm" title={format(date, 'PPpp')}>
-          {formatDistanceToNow(date, { addSuffix: true })}
+          {formatDistanceToNow(date, { addSuffix: true, locale: es })}
         </span>
       );
     },
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Creado" />,
     cell: ({ row }) => {
       const date = new Date(row.original.createdAt);
       return (
         <span className="text-muted-foreground text-sm" title={format(date, 'PPpp')}>
-          {formatDistanceToNow(date, { addSuffix: true })}
+          {formatDistanceToNow(date, { addSuffix: true, locale: es })}
         </span>
       );
     },

@@ -15,7 +15,7 @@ const statusVariant: Record<Application['status'], 'default' | 'destructive' | '
 export const applicationColumns: ColumnDef<Application>[] = [
   {
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Nombre" />,
     cell: ({ row }) => (
       <div className="flex flex-col">
         <span className="font-medium">{row.original.name}</span>
@@ -25,25 +25,25 @@ export const applicationColumns: ColumnDef<Application>[] = [
   },
   {
     accessorKey: 'clientType',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Client Type" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Tipo de cliente" />,
     cell: ({ row }) => (
       <Badge variant="outline" className="text-[11px] uppercase">
-        {row.original.clientType}
+        {row.original.clientType === 'public' ? 'PUBLICO' : 'CONFIDENCIAL'}
       </Badge>
     ),
   },
   {
     accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
     cell: ({ row }) => (
       <Badge variant={statusVariant[row.original.status]} className="capitalize">
-        {row.original.status}
+        {row.original.status === 'active' ? 'activo' : 'suspendido'}
       </Badge>
     ),
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Creado" />,
     cell: ({ row }) => {
       const date = row.getValue('createdAt') as string;
       return (

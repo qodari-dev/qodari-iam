@@ -4,7 +4,7 @@ import { AccountSettings } from './components/account-settings';
 export default function SettingsPage() {
   return (
     <PageLayout
-      breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Settings' }]}
+      breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Configuracion' }]}
       permissionKey="admin:access"
     >
       <AccountSettings />

@@ -124,8 +124,8 @@ export function AuditLogs() {
   return (
     <>
       <PageHeader
-        title="Audit Logs"
-        description="View and export audit logs for all operations in this account."
+        title="Registros de auditoria"
+        description="Consulta y exporta los registros de auditoria de todas las operaciones de esta cuenta."
       />
       <PageContent>
         <DataTable
@@ -189,7 +189,7 @@ export function AuditLogs() {
               isRefreshing={isFetching && !isLoading}
             />
           }
-          emptyMessage="No audit logs found. Try adjusting your filters."
+          emptyMessage="No se encontraron registros de auditoria. Intenta ajustar los filtros."
           meta={tableMeta}
         />
       </PageContent>

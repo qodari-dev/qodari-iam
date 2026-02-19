@@ -167,7 +167,7 @@ export function UserRolesForm() {
                     {selectedRoleId ? (
                       <span className="truncate text-left">{getRoleDisplay(selectedRoleId)}</span>
                     ) : (
-                      <span className="text-muted-foreground">Select rol</span>
+                      <span className="text-muted-foreground">Selecciona un rol</span>
                     )}
 
                     <ChevronsUpDown className="opacity-50" />
@@ -236,7 +236,7 @@ export function UserRolesForm() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-full">Role</TableHead>
+              <TableHead className="w-full">Rol</TableHead>
               <TableHead className="w-[120px] text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>

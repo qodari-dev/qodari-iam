@@ -37,23 +37,23 @@ export const ActorTypeEnum = z.enum(ACTOR_TYPES);
 
 // Options for UI selects
 export const auditActionOptions = [
-  { label: 'Create', value: 'create' },
-  { label: 'Update', value: 'update' },
-  { label: 'Delete', value: 'delete' },
-  { label: 'Read', value: 'read' },
-  { label: 'Login', value: 'login' },
-  { label: 'Logout', value: 'logout' },
-  { label: 'Other', value: 'other' },
+  { label: 'Crear', value: 'create' },
+  { label: 'Actualizar', value: 'update' },
+  { label: 'Eliminar', value: 'delete' },
+  { label: 'Leer', value: 'read' },
+  { label: 'Inicio de sesion', value: 'login' },
+  { label: 'Cierre de sesion', value: 'logout' },
+  { label: 'Otro', value: 'other' },
 ] as const;
 
 export const auditStatusOptions = [
-  { label: 'Success', value: 'success' },
-  { label: 'Failure', value: 'failure' },
+  { label: 'Exito', value: 'success' },
+  { label: 'Fallo', value: 'failure' },
 ] as const;
 
 export const actorTypeOptions = [
-  { label: 'User', value: 'user' },
-  { label: 'API Client', value: 'api_client' },
+  { label: 'Usuario', value: 'user' },
+  { label: 'Cliente API', value: 'api_client' },
 ] as const;
 
 // ============================================

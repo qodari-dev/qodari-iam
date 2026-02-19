@@ -31,7 +31,7 @@ export function UserRowActions({ row, table }: UserRowActionsProps) {
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(user.email);
-    toast.success('Email copied to clipboard');
+    toast.success('Correo copiado al portapapeles');
   };
 
   // ---- Build Actions ----
@@ -39,17 +39,17 @@ export function UserRowActions({ row, table }: UserRowActionsProps) {
   const actions: (RowAction<User> | RowActionGroup<User>)[] = [
     // Copy Actions
     {
-      label: 'Copy Email',
+      label: 'Copiar correo',
       icon: Copy,
       onClick: handleCopyEmail,
     },
     {
-      label: 'View Details',
+      label: 'Ver detalles',
       icon: Eye,
       onClick: meta?.onRowView,
     },
     {
-      label: 'Edit User',
+      label: 'Editar usuario',
       icon: Pencil,
       onClick: meta?.onRowEdit,
       hidden: !canUpdateUsers,
@@ -57,29 +57,29 @@ export function UserRowActions({ row, table }: UserRowActionsProps) {
 
     // Status Group
     {
-      label: 'Status',
+      label: 'Estado',
       actions: [
         {
-          label: 'Activate',
+          label: 'Activar',
           icon: UserCheck,
           onClick: meta?.onRowActivate,
           hidden: !canUpdateUsers || user.status === 'active',
         },
         {
-          label: 'Suspend',
+          label: 'Suspender',
           icon: Ban,
           onClick: meta?.onRowSuspend,
           variant: 'destructive',
           hidden: !canUpdateUsers || user.status === 'suspended',
         },
         {
-          label: 'Unlock',
+          label: 'Desbloquear',
           icon: LockOpen,
           onClick: meta?.onRowUnlock,
           hidden: !canUpdateUsers || !isLocked,
         },
         {
-          label: 'Delete User',
+          label: 'Eliminar usuario',
           icon: Trash,
           onClick: meta?.onRowDelete,
           variant: 'destructive',

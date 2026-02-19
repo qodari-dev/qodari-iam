@@ -16,32 +16,32 @@ export function ApiClientMainForm({ isEditing }: { isEditing: boolean }) {
   return (
     <div className="flex flex-col gap-4">
       <Field data-invalid={!!errors.name}>
-        <FieldLabel htmlFor="name">Name</FieldLabel>
+        <FieldLabel htmlFor="name">Nombre</FieldLabel>
         <Input
           id="name"
-          placeholder="e.g., Third Party Integration"
+          placeholder="ej. Integracion de terceros"
           {...form.register('name')}
         />
-        <FieldDescription>A descriptive name for this API client.</FieldDescription>
+        <FieldDescription>Nombre descriptivo para este cliente API.</FieldDescription>
         <FieldError errors={errors.name ? [errors.name] : undefined} />
       </Field>
 
       <Field data-invalid={!!errors.description}>
-        <FieldLabel htmlFor="description">Description</FieldLabel>
+        <FieldLabel htmlFor="description">Descripcion</FieldLabel>
         <Textarea
           id="description"
-          placeholder="Optional description..."
+          placeholder="Descripcion opcional..."
           rows={3}
           {...form.register('description')}
         />
         <FieldDescription>
-          Optional notes about what this API client is used for.
+          Notas opcionales sobre el uso de este cliente API.
         </FieldDescription>
         <FieldError errors={errors.description ? [errors.description] : undefined} />
       </Field>
 
       <Field data-invalid={!!errors.accessTokenExp}>
-        <FieldLabel htmlFor="accessTokenExp">Access Token Expiration (seconds)</FieldLabel>
+        <FieldLabel htmlFor="accessTokenExp">Expiracion del access token (segundos)</FieldLabel>
         <Input
           id="accessTokenExp"
           type="number"
@@ -51,17 +51,17 @@ export function ApiClientMainForm({ isEditing }: { isEditing: boolean }) {
           {...form.register('accessTokenExp', { valueAsNumber: true })}
         />
         <FieldDescription>
-          How long access tokens are valid (60-3600 seconds). Default is 600 seconds (10 minutes).
+          Tiempo de validez del access token (60-3600 seg). Por defecto: 600 seg (10 min).
         </FieldDescription>
         <FieldError errors={errors.accessTokenExp ? [errors.accessTokenExp] : undefined} />
       </Field>
 
       {!isEditing && (
         <div className="bg-muted/50 rounded-lg border p-4">
-          <h4 className="text-sm font-medium">Client Credentials</h4>
+          <h4 className="text-sm font-medium">Credenciales del cliente</h4>
           <p className="text-muted-foreground mt-1 text-sm">
-            After creating this API client, you will be shown the client ID and secret.
-            Make sure to save the secret securely - it cannot be retrieved later.
+            Al crear este cliente API veras el client ID y el secret.
+            Guarda el secret de forma segura, no se podra recuperar despues.
           </p>
         </div>
       )}

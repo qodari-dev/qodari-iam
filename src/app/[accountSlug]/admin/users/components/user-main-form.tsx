@@ -16,7 +16,7 @@ export function UserMainForm({ isEdit }: { isEdit?: boolean }) {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <FieldLabel htmlFor="email">Correo</FieldLabel>
             <Input {...field} aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -27,7 +27,7 @@ export function UserMainForm({ isEdit }: { isEdit?: boolean }) {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="firstName">First Name</FieldLabel>
+            <FieldLabel htmlFor="firstName">Nombre</FieldLabel>
             <Input {...field} aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -38,7 +38,7 @@ export function UserMainForm({ isEdit }: { isEdit?: boolean }) {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="lastName">Last Name</FieldLabel>
+            <FieldLabel htmlFor="lastName">Apellido</FieldLabel>
             <Input {...field} aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -49,7 +49,7 @@ export function UserMainForm({ isEdit }: { isEdit?: boolean }) {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="phone">Phone</FieldLabel>
+            <FieldLabel htmlFor="phone">Telefono</FieldLabel>
             <Input
               {...field}
               type="tel"
@@ -66,9 +66,10 @@ export function UserMainForm({ isEdit }: { isEdit?: boolean }) {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="phone">Is Admin?</FieldLabel>
+            <FieldLabel htmlFor="isAdmin">Es administrador?</FieldLabel>
             <div>
               <Switch
+                id="isAdmin"
                 checked={field.value}
                 onCheckedChange={field.onChange}
                 aria-invalid={fieldState.invalid}
@@ -83,7 +84,7 @@ export function UserMainForm({ isEdit }: { isEdit?: boolean }) {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="password">Password{isEdit && ' (opcional)'}</FieldLabel>
+            <FieldLabel htmlFor="password">Contrasena{isEdit && ' (opcional)'}</FieldLabel>
             <Input
               {...field}
               type="password"

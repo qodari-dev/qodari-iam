@@ -52,7 +52,7 @@ export function useCreateApiClient() {
   return api.apiClient.create.useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.lists() });
-      toast.success('API Client created successfully');
+      toast.success('Cliente API creado exitosamente');
     },
     onError: (error) => {
       toast.error(getTsRestErrorMessage(error));
@@ -68,7 +68,7 @@ export function useUpdateApiClient() {
       const clientId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.lists() });
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.detail(clientId) });
-      toast.success('API Client updated');
+      toast.success('Cliente API actualizado');
     },
     onError: (error) => {
       toast.error(getTsRestErrorMessage(error));
@@ -84,7 +84,7 @@ export function useDeleteApiClient() {
       const clientId = variables.params.id;
       queryClient.removeQueries({ queryKey: apiClientsKeys.detail(clientId) });
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.lists() });
-      toast.success('API Client deleted');
+      toast.success('Cliente API eliminado');
     },
     onError: (error) => {
       toast.error(getTsRestErrorMessage(error));
@@ -95,7 +95,7 @@ export function useDeleteApiClient() {
 export function useRegenerateApiClientSecret() {
   return api.apiClient.regenerateSecret.useMutation({
     onSuccess: () => {
-      toast.success('Secret regenerated');
+      toast.success('Secreto regenerado');
     },
     onError: (error) => {
       toast.error(getTsRestErrorMessage(error));
@@ -111,7 +111,7 @@ export function useSuspendApiClient() {
       const clientId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.lists() });
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.detail(clientId) });
-      toast.success('API Client suspended');
+      toast.success('Cliente API suspendido');
     },
     onError: (error) => {
       toast.error(getTsRestErrorMessage(error));
@@ -127,7 +127,7 @@ export function useActivateApiClient() {
       const clientId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.lists() });
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.detail(clientId) });
-      toast.success('API Client activated');
+      toast.success('Cliente API activado');
     },
     onError: (error) => {
       toast.error(getTsRestErrorMessage(error));

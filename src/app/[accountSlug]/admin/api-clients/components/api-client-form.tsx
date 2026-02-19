@@ -94,11 +94,11 @@ export function ApiClientForm({
     <Sheet open={opened} onOpenChange={onOpened}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>{apiClient ? 'Edit API Client' : 'New API Client'}</SheetTitle>
+          <SheetTitle>{apiClient ? 'Editar cliente API' : 'Nuevo cliente API'}</SheetTitle>
           <SheetDescription>
             {apiClient
-              ? 'Update the API client configuration.'
-              : 'Create a new API client for machine-to-machine authentication.'}
+              ? 'Actualiza la configuracion del cliente API.'
+              : 'Crea un nuevo cliente API para autenticacion machine-to-machine.'}
           </SheetDescription>
         </SheetHeader>
 
@@ -118,7 +118,7 @@ export function ApiClientForm({
               >
                 <Tabs defaultValue="main" className="w-full">
                   <TabsList className="mb-4 w-full">
-                    <TabsTrigger value="main">Configuration</TabsTrigger>
+                    <TabsTrigger value="main">Configuracion</TabsTrigger>
                     <TabsTrigger value="roles">Roles</TabsTrigger>
                   </TabsList>
                   <TabsContent value="main">
@@ -134,10 +134,10 @@ export function ApiClientForm({
             <SheetFooter>
               <Button type="submit" form={formId} disabled={isLoading}>
                 {isLoading && <Spinner />}
-                {apiClient ? 'Save Changes' : 'Create'}
+                {apiClient ? 'Guardar cambios' : 'Crear'}
               </Button>
               <SheetClose asChild>
-                <Button variant="outline">Cancel</Button>
+                <Button variant="outline">Cancelar</Button>
               </SheetClose>
             </SheetFooter>
           </>

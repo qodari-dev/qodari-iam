@@ -50,8 +50,8 @@ export function AccountSettings() {
       toast.error('Error', { description: getTsRestErrorMessage(error) });
     },
     onSuccess() {
-      toast.success('Settings saved', {
-        description: 'Account settings have been updated successfully.',
+      toast.success('Configuracion guardada', {
+        description: 'La configuracion de la cuenta se actualizo correctamente.',
       });
     },
   });
@@ -75,8 +75,8 @@ export function AccountSettings() {
   return (
     <>
       <PageHeader
-        title="Account Settings"
-        description="Manage your account branding and appearance settings."
+        title="Configuracion de la cuenta"
+        description="Administra la marca y la apariencia de tu cuenta."
       />
       <PageContent>
         <div className="max-w-xl">
@@ -87,7 +87,7 @@ export function AccountSettings() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>Account Name</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>Nombre de la cuenta</FieldLabel>
                     <Input {...field} value={field.value ?? ''} aria-invalid={fieldState.invalid} />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
@@ -101,7 +101,7 @@ export function AccountSettings() {
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor={field.name}>Logo</FieldLabel>
                     <p className="text-muted-foreground mb-2 text-sm">
-                      Used in the header of authentication pages.
+                      Se usa en el encabezado de las paginas de autenticacion.
                     </p>
                     <ImageUpload
                       value={field.value}
@@ -119,9 +119,10 @@ export function AccountSettings() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>Auth Page Image</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>Imagen de la pagina de autenticacion</FieldLabel>
                     <p className="text-muted-foreground mb-2 text-sm">
-                      Shown in the right panel of login and password reset pages.
+                      Se muestra en el panel derecho de las paginas de inicio de sesion y
+                      restablecimiento de contrasena.
                     </p>
                     <ImageUpload
                       value={field.value}
@@ -140,10 +141,10 @@ export function AccountSettings() {
                 {isPending ? (
                   <div className="flex items-center gap-2">
                     <Spinner className="h-4 w-4" />
-                    <span>Saving...</span>
+                    <span>Guardando...</span>
                   </div>
                 ) : (
-                  'Save Changes'
+                  'Guardar cambios'
                 )}
               </Button>
             </div>

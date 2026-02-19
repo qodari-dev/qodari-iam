@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTableFacetedFilter, SimpleSelectFilter } from '@/components/data-table';
 import { userStatusOptions } from '@/schemas/user';
-import { booleanOptions } from '@/schemas/shared';
 import { useHasPermission } from '@/stores/auth-store-provider';
 
 // ============================================================================
@@ -52,13 +51,17 @@ export function UsersToolbar({
 }: UsersToolbarProps) {
   const isFiltered = searchValue || statusFilter.length > 0 || isAdminFilter;
   const canCreateUsers = useHasPermission('users:create');
+  const adminOptions = [
+    { label: 'Si', value: 'true' },
+    { label: 'No', value: 'false' },
+  ] as const;
 
   return (
     <div className="flex flex-col-reverse gap-3 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-1 flex-col-reverse items-start gap-2 space-x-2 lg:flex-row lg:items-center">
         {/* Search Input */}
         <Input
-          placeholder="Search by email, first name, last name..."
+          placeholder="Buscar por correo, nombre o apellido..."
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
           className="md:max-w-xs"
@@ -66,7 +69,7 @@ export function UsersToolbar({
 
         {/* Status Filter (Multi-select) */}
         <DataTableFacetedFilter
-          title="Status"
+          title="Estado"
           options={[...userStatusOptions]}
           value={statusFilter}
           onValueChange={onStatusFilterChange}
@@ -74,8 +77,8 @@ export function UsersToolbar({
 
         {/* Is Admin Filter (Single-select) */}
         <SimpleSelectFilter
-          title="Admin"
-          options={[...booleanOptions]}
+          title="Administrador"
+          options={[...adminOptions]}
           value={isAdminFilter}
           onValueChange={onIsAdminFilterChange}
         />
@@ -83,7 +86,7 @@ export function UsersToolbar({
         {/* Reset Button */}
         {isFiltered && (
           <Button variant="ghost" onClick={onReset} className="h-9 px-2 lg:px-3">
-            Reset
+            Limpiar
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}
@@ -99,7 +102,7 @@ export function UsersToolbar({
             className="h-9"
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
+            Actualizar
           </Button>
         )}
 
@@ -107,7 +110,7 @@ export function UsersToolbar({
         {onCreate && canCreateUsers && (
           <Button type="button" size="sm" onClick={onCreate} className="h-9">
             <Plus className="mr-2 h-4 w-4" />
-            Add User
+            Agregar usuario
           </Button>
         )}
       </div>

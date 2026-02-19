@@ -52,7 +52,7 @@ export function useCreateRole() {
   return api.role.create.useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: rolesKeys.lists() });
-      toast.success('Role creado exitosamente');
+      toast.success('Rol creado exitosamente');
     },
     onError: (error) => {
       toast.error(getTsRestErrorMessage(error));
@@ -68,7 +68,7 @@ export function useUpdateRole() {
       const roleId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: rolesKeys.lists() });
       queryClient.invalidateQueries({ queryKey: rolesKeys.detail(roleId) });
-      toast.success('Role actualizado');
+      toast.success('Rol actualizado');
     },
     onError: (error) => {
       toast.error(getTsRestErrorMessage(error));
@@ -84,7 +84,7 @@ export function useDeleteRole() {
       const roleId = variables.params.id;
       queryClient.removeQueries({ queryKey: rolesKeys.detail(roleId) });
       queryClient.invalidateQueries({ queryKey: rolesKeys.lists() });
-      toast.success('Usuario eliminado');
+      toast.success('Rol eliminado');
     },
     onError: (error) => {
       toast.error(getTsRestErrorMessage(error));

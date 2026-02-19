@@ -26,31 +26,31 @@ export function ApplicationRowActions({ row, table }: ApplicationRowActionsProps
 
   const actions: (RowAction<Application> | RowActionGroup<Application>)[] = [
     {
-      label: 'Copy Slug',
+      label: 'Copiar slug',
       icon: Copy,
       onClick: handleCopySlug,
       hidden: !canReadApps,
     },
     {
-      label: 'View Details',
+      label: 'Ver detalles',
       icon: Eye,
       onClick: meta?.onRowView,
       hidden: !canReadApps,
     },
     {
-      label: 'Report Roles',
+      label: 'Reporte de roles',
       icon: Lock,
       onClick: meta?.onRowReport,
       hidden: !canReadApps,
     },
     {
-      label: 'Edit Application',
+      label: 'Editar aplicacion',
       icon: Pencil,
       onClick: meta?.onRowEdit,
       hidden: !canUpdateApps,
     },
     {
-      label: 'Delete Application',
+      label: 'Eliminar aplicacion',
       icon: Trash,
       variant: 'destructive',
       onClick: meta?.onRowDelete,

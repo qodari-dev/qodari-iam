@@ -91,7 +91,7 @@ export function ApiClientRolesForm() {
     const grouped: Record<string, { appName: string; roles: Role[] }> = {};
     for (const role of availableRoles) {
       const appId = role.applicationId;
-      const appName = (role.application as { name: string } | undefined)?.name ?? 'Unknown App';
+      const appName = (role.application as { name: string } | undefined)?.name ?? 'App desconocida';
       if (!grouped[appId]) {
         grouped[appId] = { appName, roles: [] };
       }
@@ -103,12 +103,12 @@ export function ApiClientRolesForm() {
   const handleSave = () => {
     const value = selectedRoleId?.trim();
     if (!value) {
-      setError('Select a role');
+      setError('Selecciona un rol');
       return;
     }
 
     if (selectedRoleIdsSet.has(value)) {
-      setError('Role already added');
+      setError('El rol ya fue agregado');
       return;
     }
 
@@ -150,29 +150,29 @@ export function ApiClientRolesForm() {
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="text-sm font-medium">Assigned Roles</p>
+          <p className="text-sm font-medium">Roles asignados</p>
           <p className="text-muted-foreground text-sm">
-            Assign roles to grant the API client access to specific applications. The client will
-            only be able to obtain tokens for applications where it has at least one role assigned.
+            Asigna roles para dar acceso a aplicaciones especificas. El cliente solo podra obtener
+            tokens para aplicaciones donde tenga al menos un rol asignado.
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button type="button" size="sm" onClick={handleAddClick}>
               <Plus className="h-4 w-4" />
-              Add Role
+              Agregar rol
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Role</DialogTitle>
+              <DialogTitle>Agregar rol</DialogTitle>
               <DialogDescription>
-                Select a role to assign to this API client. Roles determine which permissions the
-                client will have when accessing an application.
+                Selecciona un rol para este cliente API. El rol define los permisos del cliente
+                cuando accede a una aplicacion.
               </DialogDescription>
             </DialogHeader>
             <Field data-invalid={!!error} className="gap-2">
-              <FieldLabel htmlFor="roleId">Select Role</FieldLabel>
+              <FieldLabel htmlFor="roleId">Seleccionar rol</FieldLabel>
               <Popover open={isComboboxOpen} onOpenChange={setIsComboboxOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -187,7 +187,7 @@ export function ApiClientRolesForm() {
                         {getRoleDisplay(selectedRoleId)} ({getRoleApp(selectedRoleId)})
                       </span>
                     ) : (
-                      <span className="text-muted-foreground">Select role</span>
+                      <span className="text-muted-foreground">Selecciona un rol</span>
                     )}
 
                     <ChevronsUpDown className="opacity-50" />
@@ -195,10 +195,10 @@ export function ApiClientRolesForm() {
                 </PopoverTrigger>
                 <PopoverContent className="w-[380px] p-0">
                   <Command>
-                    <CommandInput placeholder="Search by name..." />
+                    <CommandInput placeholder="Buscar por nombre..." />
                     <CommandList>
                       <CommandEmpty>
-                        {isLoadingRoles ? 'Loading roles...' : 'No roles found'}
+                        {isLoadingRoles ? 'Cargando roles...' : 'No se encontraron roles'}
                       </CommandEmpty>
                       {rolesByApp.map(({ appName, roles }) => (
                         <CommandGroup key={appName} heading={appName}>
@@ -221,7 +221,7 @@ export function ApiClientRolesForm() {
                                 </div>
                                 {isDisabled && (
                                   <Badge variant="outline" className="ml-auto text-[10px]">
-                                    Added
+                                    Agregado
                                   </Badge>
                                 )}
                                 {isSelected && !isDisabled && (
@@ -241,11 +241,11 @@ export function ApiClientRolesForm() {
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline">
-                  Cancel
+                  Cancelar
                 </Button>
               </DialogClose>
               <Button type="button" onClick={handleSave}>
-                Add Role
+                Agregar rol
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -256,9 +256,9 @@ export function ApiClientRolesForm() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Role</TableHead>
-              <TableHead>Application</TableHead>
-              <TableHead className="w-20 text-right">Actions</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead>Aplicacion</TableHead>
+              <TableHead className="w-20 text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -284,7 +284,7 @@ export function ApiClientRolesForm() {
                     onClick={() => handleRemove(roleId)}
                   >
                     <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Remove role</span>
+                    <span className="sr-only">Quitar rol</span>
                   </Button>
                 </TableCell>
               </TableRow>
@@ -293,7 +293,7 @@ export function ApiClientRolesForm() {
         </Table>
       ) : (
         <div className={cn('text-muted-foreground rounded-md border border-dashed p-4 text-sm')}>
-          No roles assigned. Add roles to allow this API client to access applications.
+          Sin roles asignados. Agrega roles para permitir acceso a aplicaciones.
         </div>
       )}
     </div>

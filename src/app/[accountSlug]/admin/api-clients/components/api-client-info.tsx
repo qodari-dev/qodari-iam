@@ -20,30 +20,31 @@ interface ApiClientInfoProps {
 
 export function ApiClientInfo({ apiClient, opened, onOpened }: ApiClientInfoProps) {
   if (!apiClient) return null;
+  const statusLabel = apiClient.status === 'active' ? 'Activo' : 'Suspendido';
 
   const sections: DescriptionSection[] = [
     {
-      title: 'Basic Information',
+      title: 'Informacion basica',
       columns: 2,
       items: [
-        { label: 'Name', value: apiClient.name },
-        { label: 'Description', value: apiClient.description },
+        { label: 'Nombre', value: apiClient.name },
+        { label: 'Descripcion', value: apiClient.description },
         {
-          label: 'Status',
+          label: 'Estado',
           value: (
             <Badge variant={apiClient.status === 'active' ? 'default' : 'secondary'}>
-              {apiClient.status}
+              {statusLabel}
             </Badge>
           ),
         },
-        { label: 'Access Token Expiration', value: formatExpiry(apiClient.accessTokenExp) },
+        { label: 'Expiracion del access token', value: formatExpiry(apiClient.accessTokenExp) },
       ],
     },
     {
       title: 'Roles',
       items: [
         {
-          label: 'Assigned Roles',
+          label: 'Roles asignados',
           value: apiClient.roles?.length ? (
             <div className="flex flex-wrap gap-1">
               {apiClient.roles.map(({ role }) => (
@@ -58,19 +59,19 @@ export function ApiClientInfo({ apiClient, opened, onOpened }: ApiClientInfoProp
       ],
     },
     {
-      title: 'Activity',
+      title: 'Actividad',
       columns: 2,
       items: [
         {
-          label: 'Created',
+          label: 'Creado',
           value: formatDate(apiClient.createdAt),
         },
         {
-          label: 'Updated',
+          label: 'Actualizado',
           value: formatDate(apiClient.updatedAt),
         },
         {
-          label: 'Last Used',
+          label: 'Ultimo uso',
           value: apiClient.lastUsedAt ? formatDateTime(apiClient.lastUsedAt) : null,
         },
       ],
@@ -81,8 +82,8 @@ export function ApiClientInfo({ apiClient, opened, onOpened }: ApiClientInfoProp
     <Sheet open={opened} onOpenChange={onOpened}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>API Client Details</SheetTitle>
-          <SheetDescription>View information about this API client.</SheetDescription>
+          <SheetTitle>Detalles del cliente API</SheetTitle>
+          <SheetDescription>Visualiza la informacion de este cliente API.</SheetDescription>
         </SheetHeader>
         <div className="px-4">
           <DescriptionList sections={sections} columns={2} />

@@ -10,7 +10,7 @@ export default async function AuditPage() {
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <PageLayout
-        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Audit Logs' }]}
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Registros de auditoria' }]}
         permissionKey="audit:read"
       >
         <AuditLogs />

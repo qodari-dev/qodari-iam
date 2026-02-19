@@ -91,7 +91,7 @@ export const audit = tsr.router(contract.audit, {
       if (!ctx) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -132,7 +132,7 @@ export const audit = tsr.router(contract.audit, {
         },
       };
     } catch (e) {
-      return genericTsRestErrorResponse(e, { genericMsg: 'Error listing audit logs' });
+      return genericTsRestErrorResponse(e, { genericMsg: 'Error al listar registros de auditoria' });
     }
   },
 
@@ -145,7 +145,7 @@ export const audit = tsr.router(contract.audit, {
       if (!ctx) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -159,14 +159,14 @@ export const audit = tsr.router(contract.audit, {
       if (!auditLog) {
         return {
           status: 404,
-          body: { message: 'Audit log not found', code: 'AUDIT_LOG_NOT_FOUND' },
+          body: { message: 'Registro de auditoria no encontrado', code: 'AUDIT_LOG_NOT_FOUND' },
         };
       }
 
       return { status: 200, body: auditLog };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: `Error getting audit log ${id}`,
+        genericMsg: `Error al obtener registro de auditoria ${id}`,
       });
     }
   },
@@ -180,7 +180,7 @@ export const audit = tsr.router(contract.audit, {
       if (!ctx) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -208,7 +208,7 @@ export const audit = tsr.router(contract.audit, {
       return { status: 201, body: newAuditLog };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Error creating audit log',
+        genericMsg: 'Error al crear registro de auditoria',
       });
     }
   },
@@ -222,7 +222,7 @@ export const audit = tsr.router(contract.audit, {
       if (!ctx) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -345,7 +345,7 @@ export const audit = tsr.router(contract.audit, {
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Error exporting audit logs',
+        genericMsg: 'Error al exportar registros de auditoria',
       });
     }
   },

@@ -81,7 +81,7 @@ export const role = tsr.router(contract.role, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -134,7 +134,7 @@ export const role = tsr.router(contract.role, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -147,7 +147,7 @@ export const role = tsr.router(contract.role, {
       if (!role) {
         return {
           status: 404,
-          body: { message: 'Role not found', code: 'ROLE_NOT_FOUND' },
+          body: { message: 'Rol no encontrado', code: 'ROLE_NOT_FOUND' },
         };
       }
 
@@ -171,7 +171,7 @@ export const role = tsr.router(contract.role, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -198,7 +198,7 @@ export const role = tsr.router(contract.role, {
         if (!app) {
           throwHttpError({
             status: 404,
-            message: 'Application not found for this account',
+            message: 'Aplicacion no encontrada para esta cuenta',
             code: 'APP_NOT_FOUND',
           });
         }
@@ -291,7 +291,7 @@ export const role = tsr.router(contract.role, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -303,7 +303,7 @@ export const role = tsr.router(contract.role, {
       if (!existing) {
         throwHttpError({
           status: 404,
-          message: `Role con ID ${id} no encontrado`,
+          message: `Rol con ID ${id} no encontrado`,
           code: 'ROLE_NOT_FOUND',
         });
       }
@@ -324,7 +324,7 @@ export const role = tsr.router(contract.role, {
           if (!app) {
             throwHttpError({
               status: 404,
-              message: 'Application not found for this account',
+              message: 'Aplicacion no encontrada para esta cuenta',
               code: 'APP_NOT_FOUND',
             });
           }
@@ -433,7 +433,7 @@ export const role = tsr.router(contract.role, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -445,7 +445,7 @@ export const role = tsr.router(contract.role, {
       if (!existing) {
         throwHttpError({
           status: 404,
-          message: `Role con ID ${id} no encontrado`,
+          message: `Rol con ID ${id} no encontrado`,
           code: 'ROLE_NOT_FOUND',
         });
       }

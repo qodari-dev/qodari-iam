@@ -17,7 +17,7 @@ export const account = tsr.router(contract.account, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -27,12 +27,12 @@ export const account = tsr.router(contract.account, {
       });
 
       if (!acc) {
-        return { status: 404, body: { message: 'Account not found', code: 'ACCOUNT_NOT_FOUND' } };
+        return { status: 404, body: { message: 'Cuenta no encontrada', code: 'ACCOUNT_NOT_FOUND' } };
       }
 
       return { status: 200, body: acc };
     } catch (e) {
-      return genericTsRestErrorResponse(e, { genericMsg: 'Error getting account' });
+      return genericTsRestErrorResponse(e, { genericMsg: 'Error al obtener la cuenta' });
     }
   },
 
@@ -45,7 +45,7 @@ export const account = tsr.router(contract.account, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -57,7 +57,7 @@ export const account = tsr.router(contract.account, {
       if (!acc) {
         throwHttpError({
           status: 404,
-          message: 'Account not found',
+          message: 'Cuenta no encontrada',
           code: 'ACCOUNT_NOT_FOUND',
         });
       }
@@ -87,14 +87,14 @@ export const account = tsr.router(contract.account, {
         try {
           await deleteObject(oldLogoKey);
         } catch {
-          console.error(`Failed to delete old logo: ${oldLogoKey}`);
+          console.error(`No se pudo eliminar el logo anterior: ${oldLogoKey}`);
         }
       }
       if (shouldDeleteOldImageAd) {
         try {
           await deleteObject(oldImageAdKey);
         } catch {
-          console.error(`Failed to delete old imageAd: ${oldImageAdKey}`);
+          console.error(`No se pudo eliminar la imagen anterior (imageAd): ${oldImageAdKey}`);
         }
       }
 
@@ -117,7 +117,7 @@ export const account = tsr.router(contract.account, {
       });
       return { status: 200, body: updated };
     } catch (e) {
-      const error = genericTsRestErrorResponse(e, { genericMsg: 'Error updating account' });
+      const error = genericTsRestErrorResponse(e, { genericMsg: 'Error al actualizar la cuenta' });
       await logAudit(session, {
         resourceKey: appRoute.metadata.permissionKey.resourceKey,
         actionKey: appRoute.metadata.permissionKey.actionKey,

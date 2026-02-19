@@ -95,7 +95,7 @@ export function useDeleteUser() {
 export function useSetUserPassword() {
   return api.user.setPassword.useMutation({
     onSuccess: () => {
-      toast.success('Password actualizado');
+      toast.success('Contrasena actualizada');
     },
     onError: (error) => {
       toast.error(getTsRestErrorMessage(error));

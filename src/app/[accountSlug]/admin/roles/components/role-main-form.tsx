@@ -32,7 +32,7 @@ export function RoleMainForm() {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Name</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Nombre</FieldLabel>
             <Input {...field} aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -54,7 +54,7 @@ export function RoleMainForm() {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Descripcion</FieldLabel>
             <Textarea {...field} aria-invalid={fieldState.invalid} />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -65,10 +65,10 @@ export function RoleMainForm() {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Application</FieldLabel>
+            <FieldLabel htmlFor={field.name}>Aplicacion</FieldLabel>
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="">
-                <SelectValue placeholder="Application" />
+                <SelectValue placeholder="Aplicacion" />
               </SelectTrigger>
               <SelectContent>
                 {appOptions.map((opt) => (

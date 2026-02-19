@@ -34,12 +34,12 @@ const statusConfig: Record<
   }
 > = {
   success: {
-    label: 'Success',
+    label: 'Exito',
     variant: 'default',
     icon: CheckCircle,
   },
   failure: {
-    label: 'Failure',
+    label: 'Fallo',
     variant: 'destructive',
     icon: XCircle,
   },
@@ -71,7 +71,9 @@ function ActorBadge({ actorType, name }: { actorType: ActorType; name: string | 
       ) : (
         <Bot className="text-muted-foreground h-4 w-4" />
       )}
-      <span className="truncate">{name || (isUser ? 'Unknown User' : 'Unknown Client')}</span>
+      <span className="truncate">
+        {name || (isUser ? 'Usuario desconocido' : 'Cliente desconocido')}
+      </span>
     </div>
   );
 }
@@ -89,37 +91,37 @@ const actionConfig: Record<
   }
 > = {
   create: {
-    label: 'Create',
+    label: 'Crear',
     variant: 'default',
     icon: Plus,
   },
   update: {
-    label: 'Update',
+    label: 'Actualizar',
     variant: 'secondary',
     icon: Pencil,
   },
   delete: {
-    label: 'Delete',
+    label: 'Eliminar',
     variant: 'destructive',
     icon: Trash2,
   },
   read: {
-    label: 'Read',
+    label: 'Leer',
     variant: 'outline',
     icon: Eye,
   },
   login: {
-    label: 'Login',
+    label: 'Inicio de sesion',
     variant: 'default',
     icon: LogIn,
   },
   logout: {
-    label: 'Logout',
+    label: 'Cierre de sesion',
     variant: 'secondary',
     icon: LogOut,
   },
   other: {
-    label: 'Other',
+    label: 'Otro',
     variant: 'outline',
     icon: MoreHorizontal,
   },
@@ -145,7 +147,7 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
   // Created At Column
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Date" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Fecha" />,
     cell: ({ row }) => {
       const date = row.original.createdAt;
       return (
@@ -174,14 +176,14 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
   // Action Column
   {
     accessorKey: 'action',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Action" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Accion" />,
     cell: ({ row }) => <ActionBadge action={row.getValue('action')} />,
   },
 
   // Resource Column
   {
     accessorKey: 'resource',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Resource" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Recurso" />,
     cell: ({ row }) => {
       const { resourceKey, resourceLabel, resourceId } = row.original;
       return (
@@ -205,7 +207,7 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
   // Application Column
   {
     accessorKey: 'applicationName',
-    header: 'Application',
+    header: 'Aplicacion',
     cell: ({ row }) => {
       const appName = row.original.applicationName;
       return appName ? (
@@ -220,14 +222,14 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
   // Status Column
   {
     accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
     cell: ({ row }) => <StatusBadge status={row.getValue('status')} />,
   },
 
   // IP Address Column (hidden by default)
   {
     accessorKey: 'ipAddress',
-    header: 'IP Address',
+    header: 'Direccion IP',
     cell: ({ row }) => {
       const ip = row.original.ipAddress;
       return ip ? (
@@ -247,7 +249,7 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
       return (
         <Button variant="ghost" size="sm" onClick={() => meta?.onRowView?.(row.original)}>
           <Eye className="h-4 w-4" />
-          <span className="sr-only">View details</span>
+          <span className="sr-only">Ver detalles</span>
         </Button>
       );
     },

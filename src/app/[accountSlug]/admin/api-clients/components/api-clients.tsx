@@ -187,8 +187,8 @@ export function ApiClients() {
   return (
     <>
       <PageHeader
-        title="API Clients"
-        description="Manage API clients for machine-to-machine authentication."
+        title="Clientes API"
+        description="Administra clientes API para autenticacion machine-to-machine."
       />
       <PageContent>
         <DataTable
@@ -222,7 +222,7 @@ export function ApiClients() {
               isRefreshing={isFetching && !isLoading}
             />
           }
-          emptyMessage="No API clients found. Try adjusting your filters."
+          emptyMessage="No se encontraron clientes API. Intenta ajustar los filtros."
           meta={tableMeta}
         />
       </PageContent>
@@ -246,19 +246,19 @@ export function ApiClients() {
       <AlertDialog open={openedDeleteDialog} onOpenChange={setOpenedDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Estas seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the API client and
-              invalidate all tokens issued to it.
+              Esta accion no se puede deshacer. Se eliminara el cliente API y se invalidaran todos
+              sus tokens.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedDeleteDialog(false)}>
-              Cancel
+              Cancelar
             </AlertDialogCancel>
             <AlertDialogAction disabled={isDeleting} onClick={handleDelete}>
               {isDeleting && <Spinner />}
-              Delete
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -267,19 +267,18 @@ export function ApiClients() {
       <AlertDialog open={openedSuspendDialog} onOpenChange={setOpenedSuspendDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Suspend API Client?</AlertDialogTitle>
+            <AlertDialogTitle>Suspender cliente API?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will suspend the API client. It will no longer be able to obtain tokens until
-              reactivated.
+              El cliente API quedara suspendido. No podra obtener tokens hasta ser reactivado.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedSuspendDialog(false)}>
-              Cancel
+              Cancelar
             </AlertDialogCancel>
             <AlertDialogAction disabled={isSuspending} onClick={handleSuspend}>
               {isSuspending && <Spinner />}
-              Suspend
+              Suspender
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -288,18 +287,18 @@ export function ApiClients() {
       <AlertDialog open={openedActivateDialog} onOpenChange={setOpenedActivateDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Activate API Client?</AlertDialogTitle>
+            <AlertDialogTitle>Activar cliente API?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will reactivate the API client and allow it to obtain tokens again.
+              Esto reactivara el cliente API y le permitira obtener tokens nuevamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedActivateDialog(false)}>
-              Cancel
+              Cancelar
             </AlertDialogCancel>
             <AlertDialogAction disabled={isActivating} onClick={handleActivate}>
               {isActivating && <Spinner />}
-              Activate
+              Activar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -120,7 +120,7 @@ export function Applications() {
 
   return (
     <>
-      <PageHeader title="Applications" description="Manage applications and their permissions." />
+      <PageHeader title="Aplicaciones" description="Administra aplicaciones y sus permisos." />
       <PageContent>
         <DataTable
           columns={applicationColumns}
@@ -143,6 +143,7 @@ export function Applications() {
               isRefreshing={isFetching && !isLoading}
             />
           }
+          emptyMessage="No se encontraron aplicaciones."
           meta={tableMeta}
         />
       </PageContent>
@@ -161,17 +162,17 @@ export function Applications() {
       <AlertDialog open={openedDeleteDialog} onOpenChange={setOpenedDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete application</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar aplicacion</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. Are you sure you want to delete{' '}
+              Esta accion no se puede deshacer. Estas seguro de eliminar{' '}
               <strong>{application?.name}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
               {isDeleting && <Spinner className="mr-2 h-4 w-4" />}
-              Delete
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

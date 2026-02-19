@@ -23,10 +23,10 @@ export function ApiClientCredentials({
     try {
       await navigator.clipboard.writeText(text);
       setCopiedField(field);
-      toast.success('Copied to clipboard');
+      toast.success('Copiado al portapapeles');
       setTimeout(() => setCopiedField(null), 2000);
     } catch {
-      toast.error('Failed to copy to clipboard');
+      toast.error('No se pudo copiar al portapapeles');
     }
   };
 
@@ -36,10 +36,10 @@ export function ApiClientCredentials({
         <div className="flex gap-3">
           <AlertTriangle className="text-warning h-5 w-5 shrink-0" />
           <div>
-            <h4 className="text-sm font-semibold">Save your credentials</h4>
+            <h4 className="text-sm font-semibold">Guarda tus credenciales</h4>
             <p className="text-muted-foreground mt-1 text-sm">
-              This is the only time the client secret will be shown. Make sure to save it securely.
-              It cannot be retrieved later - you will need to regenerate a new secret if lost.
+              Esta es la unica vez que se mostrara el client secret. Guardalo de forma segura.
+              No se podra recuperar despues, tendras que regenerarlo si lo pierdes.
             </p>
           </div>
         </div>
@@ -47,7 +47,7 @@ export function ApiClientCredentials({
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Client ID</label>
+          <label className="text-sm font-medium">ID de cliente</label>
           <div className="flex gap-2">
             <code className="bg-muted flex-1 overflow-auto rounded-md p-3 font-mono text-sm">
               {clientId}
@@ -67,7 +67,7 @@ export function ApiClientCredentials({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Client Secret</label>
+          <label className="text-sm font-medium">Secreto del cliente</label>
           <div className="flex gap-2">
             <code className="bg-muted flex-1 overflow-auto rounded-md p-3 font-mono text-sm">
               {clientSecret}
@@ -88,7 +88,7 @@ export function ApiClientCredentials({
       </div>
 
       <div className="bg-muted/50 rounded-lg border p-4">
-        <h4 className="text-sm font-medium">Example Usage</h4>
+        <h4 className="text-sm font-medium">Ejemplo de uso</h4>
         <pre className="text-muted-foreground mt-2 overflow-auto text-xs">
           {`curl -X POST /api/v1/auth/token \\
   -H "Content-Type: application/json" \\
@@ -102,7 +102,7 @@ export function ApiClientCredentials({
       </div>
 
       <SheetFooter>
-        <Button onClick={onClose}>I have saved the credentials</Button>
+        <Button onClick={onClose}>Ya guarde las credenciales</Button>
       </SheetFooter>
     </div>
   );

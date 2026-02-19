@@ -15,8 +15,8 @@ import { z } from 'zod';
 // ============================================
 
 export const apiClientStatusOptions = [
-  { label: 'Active', value: 'active' },
-  { label: 'Suspended', value: 'suspended' },
+  { label: 'Activo', value: 'active' },
+  { label: 'Suspendido', value: 'suspended' },
 ] as const;
 
 const API_CLIENT_STATUS = ['active', 'suspended'] as const;

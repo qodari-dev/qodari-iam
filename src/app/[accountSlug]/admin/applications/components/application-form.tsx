@@ -118,17 +118,17 @@ export function ApplicationForm({
     <Sheet open={opened} onOpenChange={onOpened}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>{application ? 'Edit Application' : 'New Application'}</SheetTitle>
+          <SheetTitle>{application ? 'Editar aplicacion' : 'Nueva aplicacion'}</SheetTitle>
           <SheetDescription>
-            Define how this application identifies, authenticates y qué permisos ofrece.
+            Define como esta aplicacion se identifica, autentica y que permisos ofrece.
           </SheetDescription>
         </SheetHeader>
         <FormProvider {...form}>
           <form id={formId} onSubmit={form.handleSubmit(onSubmit, onSubmitError)} className="px-4">
             <Tabs defaultValue="main" className="w-full">
               <TabsList className="mb-4 w-full">
-                <TabsTrigger value="main">Main</TabsTrigger>
-                <TabsTrigger value="permissions">Permissions</TabsTrigger>
+                <TabsTrigger value="main">General</TabsTrigger>
+                <TabsTrigger value="permissions">Permisos</TabsTrigger>
               </TabsList>
               <TabsContent value="main" className="space-y-4 pt-2">
                 <ApplicationMainForm
@@ -147,10 +147,10 @@ export function ApplicationForm({
         <SheetFooter>
           <Button type="submit" form={formId} disabled={isLoading}>
             {isLoading && <Spinner />}
-            Save
+            Guardar
           </Button>
           <SheetClose asChild>
-            <Button variant="outline">Close</Button>
+            <Button variant="outline">Cerrar</Button>
           </SheetClose>
         </SheetFooter>
       </SheetContent>

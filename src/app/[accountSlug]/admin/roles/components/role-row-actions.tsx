@@ -20,19 +20,19 @@ export function RoleRowActions({ row, table }: RoleRowActionsProps) {
 
   const actions: RowAction<Role>[] = [
     {
-      label: 'View Details',
+      label: 'Ver detalles',
       icon: Eye,
       onClick: meta?.onRowView,
       hidden: !canReadRoles,
     },
     {
-      label: 'Edit Role',
+      label: 'Editar rol',
       icon: Pencil,
       onClick: meta?.onRowEdit,
       hidden: !canUpdateRoles,
     },
     {
-      label: 'Delete Role',
+      label: 'Eliminar rol',
       icon: Trash,
       variant: 'destructive',
       onClick: meta?.onRowDelete,

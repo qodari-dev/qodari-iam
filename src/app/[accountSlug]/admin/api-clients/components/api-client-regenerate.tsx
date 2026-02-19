@@ -37,10 +37,10 @@ export function ApiClientInfoCrendentials({ apiClient, opened, onOpened }: ApiCl
     try {
       await navigator.clipboard.writeText(text);
       setCopiedClientId(true);
-      toast.success('Copied to clipboard');
+      toast.success('Copiado al portapapeles');
       setTimeout(() => setCopiedClientId(false), 2000);
     } catch {
-      toast.error('Failed to copy');
+      toast.error('No se pudo copiar');
     }
   };
 
@@ -60,15 +60,15 @@ export function ApiClientInfoCrendentials({ apiClient, opened, onOpened }: ApiCl
       <Sheet open={opened} onOpenChange={onOpened}>
         <SheetContent className="overflow-y-scroll sm:max-w-2xl">
           <SheetHeader>
-            <SheetTitle>API Client Tokens</SheetTitle>
+            <SheetTitle>Tokens del cliente API</SheetTitle>
           </SheetHeader>
 
           <div className="flex flex-col gap-6 px-4 py-6">
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold">Credentials</h4>
+              <h4 className="text-sm font-semibold">Credenciales</h4>
 
               <div>
-                <label className="text-muted-foreground text-sm">Client ID</label>
+                <label className="text-muted-foreground text-sm">ID de cliente</label>
                 <div className="flex items-center gap-2">
                   <code className="bg-muted flex-1 overflow-auto rounded px-2 py-1 font-mono text-sm">
                     {apiClient.clientId}
@@ -89,12 +89,12 @@ export function ApiClientInfoCrendentials({ apiClient, opened, onOpened }: ApiCl
                   <div className="flex gap-3">
                     <AlertTriangle className="text-warning h-5 w-5 shrink-0" />
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">New Secret Generated</p>
+                      <p className="text-sm font-medium">Nuevo secreto generado</p>
                       <code className="bg-muted block overflow-auto rounded px-2 py-1 font-mono text-xs">
                         {newSecret}
                       </code>
                       <p className="text-muted-foreground text-xs">
-                        Save this secret now. It will not be shown again.
+                        Guarda este secreto ahora. No se volvera a mostrar.
                       </p>
                       <Button
                         variant="outline"
@@ -102,14 +102,14 @@ export function ApiClientInfoCrendentials({ apiClient, opened, onOpened }: ApiCl
                         onClick={() => copyToClipboard(newSecret)}
                       >
                         <Copy className="mr-2 h-4 w-4" />
-                        Copy Secret
+                        Copiar secreto
                       </Button>
                     </div>
                   </div>
                 </div>
               ) : (
                 <div>
-                  <label className="text-muted-foreground text-sm">Client Secret</label>
+                  <label className="text-muted-foreground text-sm">Secreto del cliente</label>
                   <div className="flex items-center gap-2">
                     <code className="bg-muted flex-1 rounded px-2 py-1 font-mono text-sm">
                       ••••••••••••••••••••
@@ -120,7 +120,7 @@ export function ApiClientInfoCrendentials({ apiClient, opened, onOpened }: ApiCl
                       onClick={() => setShowRegenerateDialog(true)}
                     >
                       <RefreshCw className="mr-2 h-4 w-4" />
-                      Regenerate
+                      Regenerar
                     </Button>
                   </div>
                 </div>
@@ -133,17 +133,17 @@ export function ApiClientInfoCrendentials({ apiClient, opened, onOpened }: ApiCl
       <AlertDialog open={showRegenerateDialog} onOpenChange={setShowRegenerateDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Regenerate Client Secret?</AlertDialogTitle>
+            <AlertDialogTitle>Regenerar secreto del cliente?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will invalidate the current secret immediately. Any systems using the current
-              secret will need to be updated with the new one.
+              Esto invalidara el secreto actual inmediatamente. Cualquier sistema que lo use debera
+              actualizarse con el nuevo secreto.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction disabled={isRegenerating} onClick={handleRegenerate}>
               {isRegenerating && <Spinner className="mr-2" />}
-              Regenerate
+              Regenerar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

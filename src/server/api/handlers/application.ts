@@ -57,7 +57,7 @@ export const application = tsr.router(contract.application, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -106,7 +106,7 @@ export const application = tsr.router(contract.application, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -117,7 +117,7 @@ export const application = tsr.router(contract.application, {
       });
 
       if (!app) {
-        return { status: 404, body: { message: 'Application not found', code: 'APP_NOT_FOUND' } };
+        return { status: 404, body: { message: 'Aplicacion no encontrada', code: 'APP_NOT_FOUND' } };
       }
 
       return { status: 200, body: app };
@@ -137,7 +137,7 @@ export const application = tsr.router(contract.application, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -224,7 +224,7 @@ export const application = tsr.router(contract.application, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -236,7 +236,7 @@ export const application = tsr.router(contract.application, {
       if (!app) {
         throwHttpError({
           status: 404,
-          message: 'Application not found',
+          message: 'Aplicacion no encontrada',
           code: 'APP_NOT_FOUND',
         });
       }
@@ -336,7 +336,7 @@ export const application = tsr.router(contract.application, {
           try {
             await deleteObject(key);
           } catch {
-            console.error(`Failed to delete old image: ${key}`);
+            console.error(`No se pudo eliminar la imagen anterior: ${key}`);
           }
         })
       );
@@ -392,7 +392,7 @@ export const application = tsr.router(contract.application, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -404,7 +404,7 @@ export const application = tsr.router(contract.application, {
       if (!app) {
         throwHttpError({
           status: 404,
-          message: 'Application not found',
+          message: 'Aplicacion no encontrada',
           code: 'APP_NOT_FOUND',
         });
       }
@@ -429,7 +429,7 @@ export const application = tsr.router(contract.application, {
           try {
             await deleteObject(key);
           } catch {
-            console.error(`Failed to delete image: ${key}`);
+            console.error(`No se pudo eliminar la imagen: ${key}`);
           }
         })
       );
@@ -480,7 +480,7 @@ export const application = tsr.router(contract.application, {
       if (!ctx) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -520,7 +520,7 @@ export const application = tsr.router(contract.application, {
       };
     } catch (e) {
       return genericTsRestErrorResponse(e, {
-        genericMsg: 'Error exporting audit logs',
+        genericMsg: 'Error al exportar registros de auditoria',
       });
     }
   },

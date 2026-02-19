@@ -11,7 +11,7 @@ import { truncateText } from '@/utils/truncate-text';
 export const roleColumns: ColumnDef<Role>[] = [
   {
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Nombre" />,
     cell: ({ row }) => (
       <div className="flex flex-col">
         <span className="font-medium">{row.original.name}</span>
@@ -21,14 +21,14 @@ export const roleColumns: ColumnDef<Role>[] = [
   },
   {
     accessorKey: 'application',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Application" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Aplicacion" />,
     cell: ({ row }) => (
       <span className="text-muted-foreground text-sm">{row.original.application?.name ?? '—'}</span>
     ),
   },
   {
     accessorKey: 'description',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Descripcion" />,
     cell: ({ row }) => {
       const description = row.original.description ?? '-';
 
@@ -41,19 +41,19 @@ export const roleColumns: ColumnDef<Role>[] = [
   },
   {
     id: 'permissionsCount',
-    header: 'Permissions',
+    header: 'Permisos',
     cell: ({ row }) => {
       const perms = row.original?.rolePermissions ?? [];
       return (
         <Badge variant="outline" className="text-xs">
-          {perms.length} perm
+          {perms.length} permisos
         </Badge>
       );
     },
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Creado" />,
     cell: ({ row }) => {
       return (
         <div className="flex flex-col">

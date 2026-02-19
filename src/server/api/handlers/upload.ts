@@ -34,7 +34,7 @@ export const upload = tsr.router(contract.upload, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -54,7 +54,7 @@ export const upload = tsr.router(contract.upload, {
         },
       };
     } catch (e) {
-      return genericTsRestErrorResponse(e, { genericMsg: 'Error generating presigned URL' });
+      return genericTsRestErrorResponse(e, { genericMsg: 'Error al generar URL prefirmada' });
     }
   },
 
@@ -64,7 +64,7 @@ export const upload = tsr.router(contract.upload, {
       if (!session) {
         throwHttpError({
           status: 401,
-          message: 'Not authenticated',
+          message: 'No autenticado',
           code: 'UNAUTHENTICATED',
         });
       }
@@ -76,7 +76,7 @@ export const upload = tsr.router(contract.upload, {
       if (keyAccountId !== session.accountId) {
         throwHttpError({
           status: 403,
-          message: 'You can only delete your own uploads',
+          message: 'Solo puedes eliminar tus propias cargas',
           code: 'FORBIDDEN',
         });
       }
@@ -88,7 +88,7 @@ export const upload = tsr.router(contract.upload, {
         body: { success: true },
       };
     } catch (e) {
-      return genericTsRestErrorResponse(e, { genericMsg: 'Error deleting upload' });
+      return genericTsRestErrorResponse(e, { genericMsg: 'Error al eliminar la carga' });
     }
   },
 });

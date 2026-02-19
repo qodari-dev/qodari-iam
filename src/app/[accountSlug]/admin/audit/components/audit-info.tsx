@@ -15,11 +15,7 @@ import { User, Bot, CheckCircle, XCircle } from 'lucide-react';
 
 function JsonViewer({ data, label }: { data: Record<string, unknown> | null; label: string }) {
   if (!data) {
-    return (
-      <div className="text-muted-foreground py-4 text-center text-sm">
-        No {label.toLowerCase()} data
-      </div>
-    );
+    return <div className="text-muted-foreground py-4 text-center text-sm">No hay datos de {label.toLowerCase()}</div>;
   }
 
   return (
@@ -42,7 +38,9 @@ function ChangesDiff({
 }) {
   if (!beforeValue && !afterValue) {
     return (
-      <div className="text-muted-foreground py-4 text-center text-sm">No change data available</div>
+      <div className="text-muted-foreground py-4 text-center text-sm">
+        No hay datos de cambios disponibles
+      </div>
     );
   }
 
@@ -59,7 +57,7 @@ function ChangesDiff({
 
   if (changedKeys.length === 0 && beforeValue && afterValue) {
     return (
-      <div className="text-muted-foreground py-4 text-center text-sm">No changes detected</div>
+      <div className="text-muted-foreground py-4 text-center text-sm">No se detectaron cambios</div>
     );
   }
 
@@ -67,9 +65,9 @@ function ChangesDiff({
     <div className="space-y-4">
       <Tabs defaultValue="diff" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="diff">Changes</TabsTrigger>
-          <TabsTrigger value="before">Before</TabsTrigger>
-          <TabsTrigger value="after">After</TabsTrigger>
+          <TabsTrigger value="diff">Cambios</TabsTrigger>
+          <TabsTrigger value="before">Antes</TabsTrigger>
+          <TabsTrigger value="after">Despues</TabsTrigger>
         </TabsList>
         <TabsContent value="diff" className="mt-4">
           {changedKeys.length > 0 ? (
@@ -79,13 +77,13 @@ function ChangesDiff({
                   <div className="mb-2 text-sm font-medium">{key}</div>
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div>
-                      <span className="text-muted-foreground">Before:</span>
+                      <span className="text-muted-foreground">Antes:</span>
                       <pre className="mt-1 rounded bg-red-50 p-2 wrap-break-word whitespace-pre-wrap text-red-600 dark:bg-red-950/20 dark:text-red-400">
                         {JSON.stringify(beforeValue?.[key] ?? null, null, 2)}
                       </pre>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">After:</span>
+                      <span className="text-muted-foreground">Despues:</span>
                       <pre className="mt-1 rounded bg-green-50 p-2 wrap-break-word whitespace-pre-wrap text-green-600 dark:bg-green-950/20 dark:text-green-400">
                         {JSON.stringify(afterValue?.[key] ?? null, null, 2)}
                       </pre>
@@ -95,14 +93,14 @@ function ChangesDiff({
               ))}
             </div>
           ) : (
-            <JsonViewer data={afterValue || beforeValue} label="Data" />
+            <JsonViewer data={afterValue || beforeValue} label="datos" />
           )}
         </TabsContent>
         <TabsContent value="before" className="mt-4">
-          <JsonViewer data={beforeValue} label="Before" />
+          <JsonViewer data={beforeValue} label="antes" />
         </TabsContent>
         <TabsContent value="after" className="mt-4">
-          <JsonViewer data={afterValue} label="After" />
+          <JsonViewer data={afterValue} label="despues" />
         </TabsContent>
       </Tabs>
     </div>
@@ -133,14 +131,23 @@ export function AuditInfo({
       ? String(auditLog.apiClientName)
       : null;
   const isSuccess = auditLog.status === 'success';
+  const actionLabels: Record<string, string> = {
+    create: 'Crear',
+    update: 'Actualizar',
+    delete: 'Eliminar',
+    read: 'Leer',
+    login: 'Inicio de sesion',
+    logout: 'Cierre de sesion',
+    other: 'Otro',
+  };
 
   const sections: DescriptionSection[] = [
     {
-      title: 'Basic Information',
+      title: 'Informacion basica',
       columns: 2,
       items: [
         {
-          label: 'Date & Time',
+          label: 'Fecha y hora',
           value: (
             <div>
               <div>{formatDate(auditLog.createdAt)}</div>
@@ -151,24 +158,28 @@ export function AuditInfo({
           ),
         },
         {
-          label: 'Status',
+          label: 'Estado',
           value: (
             <Badge variant={isSuccess ? 'default' : 'destructive'} className="gap-1">
               {isSuccess ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-              {isSuccess ? 'Success' : 'Failure'}
+              {isSuccess ? 'Exito' : 'Fallo'}
             </Badge>
           ),
         },
         {
-          label: 'Action',
-          value: <Badge variant="secondary">{String(auditLog.action)}</Badge>,
+          label: 'Accion',
+          value: (
+            <Badge variant="secondary">
+              {actionLabels[String(auditLog.action)] ?? String(auditLog.action)}
+            </Badge>
+          ),
         },
         {
-          label: 'ResourceKey',
+          label: 'Clave de recurso',
           value: String(auditLog.resourceKey),
         },
         {
-          label: 'ActionKey',
+          label: 'Clave de accion',
           value: String(auditLog.actionKey),
         },
       ],
@@ -178,53 +189,53 @@ export function AuditInfo({
       columns: 2,
       items: [
         {
-          label: 'Type',
+          label: 'Tipo',
           value: (
             <div className="flex items-center gap-2">
               {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-              <span>{isUser ? 'User' : 'API Client'}</span>
+              <span>{isUser ? 'Usuario' : 'Cliente API'}</span>
             </div>
           ),
         },
         {
-          label: isUser ? 'User Name' : 'Client Name',
+          label: isUser ? 'Nombre de usuario' : 'Nombre del cliente',
           value: actorName || '-',
         },
         {
-          label: isUser ? 'User ID' : 'Client ID',
+          label: isUser ? 'ID de usuario' : 'ID de cliente',
           value: ((isUser ? auditLog.userId : auditLog.apiClientId) as string | null) || '-',
           hidden: !(isUser ? auditLog.userId : auditLog.apiClientId),
         },
       ],
     },
     {
-      title: 'Resource Details',
+      title: 'Detalles del recurso',
       columns: 2,
       items: [
         {
-          label: 'Resource',
+          label: 'Recurso',
           value: String(auditLog.resourceKey),
         },
         {
-          label: 'Resource ID',
+          label: 'ID de recurso',
           value: auditLog.resourceId ? String(auditLog.resourceId) : '-',
         },
         {
-          label: 'Resource Label',
+          label: 'Etiqueta del recurso',
           value: auditLog.resourceLabel ? String(auditLog.resourceLabel) : '-',
         },
         {
-          label: 'Application',
+          label: 'Aplicacion',
           value: auditLog.applicationName ? String(auditLog.applicationName) : '-',
         },
       ],
     },
     {
-      title: 'Request Information',
+      title: 'Informacion de la solicitud',
       columns: 2,
       items: [
         {
-          label: 'IP Address',
+          label: 'Direccion IP',
           value: auditLog.ipAddress ? (
             <span className="font-mono text-sm">{String(auditLog.ipAddress)}</span>
           ) : (
@@ -232,7 +243,7 @@ export function AuditInfo({
           ),
         },
         {
-          label: 'User Agent',
+          label: 'Agente de usuario',
           value: auditLog.userAgent ? (
             <span
               className="block max-w-[300px] truncate text-xs"
@@ -254,7 +265,7 @@ export function AuditInfo({
       title: 'Error',
       items: [
         {
-          label: 'Error Message',
+          label: 'Mensaje de error',
           value: (
             <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/20 dark:text-red-400">
               {String(auditLog.errorMessage)}
@@ -274,7 +285,7 @@ export function AuditInfo({
     <Sheet open={opened} onOpenChange={(open) => onOpened(open)}>
       <SheetContent className="flex flex-col p-0 sm:max-w-2xl">
         <SheetHeader className="border-b px-6 py-4">
-          <SheetTitle>Audit Log Details</SheetTitle>
+          <SheetTitle>Detalles del registro de auditoria</SheetTitle>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto">
           <div className="px-6 py-4">
@@ -282,15 +293,15 @@ export function AuditInfo({
 
             {/* Changes Section */}
             <div className="mt-6">
-              <h3 className="mb-4 text-sm font-medium">Changes</h3>
+              <h3 className="mb-4 text-sm font-medium">Cambios</h3>
               <ChangesDiff beforeValue={auditLog.beforeValue} afterValue={auditLog.afterValue} />
             </div>
 
             {/* Metadata Section */}
             {hasMetadata && (
               <div className="mt-6">
-                <h3 className="mb-4 text-sm font-medium">Additional Metadata</h3>
-                <JsonViewer data={auditLog.metadata as Record<string, unknown>} label="Metadata" />
+                <h3 className="mb-4 text-sm font-medium">Metadatos adicionales</h3>
+                <JsonViewer data={auditLog.metadata as Record<string, unknown>} label="metadatos" />
               </div>
             )}
           </div>

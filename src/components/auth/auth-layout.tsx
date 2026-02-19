@@ -84,7 +84,7 @@ export function AuthLayout({ accountSlug, appSlug, children, variant = 'split' }
       <div className="bg-muted relative hidden lg:block">
         <Image
           src={imageAdUrl ?? PICSUM_URL}
-          alt="Image"
+          alt="Imagen"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
           width={1000}
           height={1000}

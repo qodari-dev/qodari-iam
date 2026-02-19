@@ -24,6 +24,10 @@ interface UsersToolbarProps {
   isAdminFilter?: string;
   onIsAdminFilterChange: (value: string | undefined) => void;
 
+  // Lock filter (single-select)
+  lockFilter?: string;
+  onLockFilterChange: (value: string | undefined) => void;
+
   // Actions
   onReset: () => void;
   onRefresh?: () => void;
@@ -44,17 +48,20 @@ export function UsersToolbar({
   onStatusFilterChange,
   isAdminFilter,
   onIsAdminFilterChange,
+  lockFilter,
+  onLockFilterChange,
   onReset,
   onRefresh,
   onCreate,
   isRefreshing = false,
 }: UsersToolbarProps) {
-  const isFiltered = searchValue || statusFilter.length > 0 || isAdminFilter;
+  const isFiltered = searchValue || statusFilter.length > 0 || isAdminFilter || lockFilter;
   const canCreateUsers = useHasPermission('users:create');
   const adminOptions = [
     { label: 'Si', value: 'true' },
     { label: 'No', value: 'false' },
   ] as const;
+  const lockOptions = [{ label: 'Bloqueados', value: 'locked' }] as const;
 
   return (
     <div className="flex flex-col-reverse gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -81,6 +88,14 @@ export function UsersToolbar({
           options={[...adminOptions]}
           value={isAdminFilter}
           onValueChange={onIsAdminFilterChange}
+        />
+
+        {/* Lock Filter (Single-select) */}
+        <SimpleSelectFilter
+          title="Bloqueo"
+          options={[...lockOptions]}
+          value={lockFilter}
+          onValueChange={onLockFilterChange}
         />
 
         {/* Reset Button */}

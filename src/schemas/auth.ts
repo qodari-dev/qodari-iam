@@ -42,8 +42,8 @@ export const zApplication: z.ZodType<PublicApplication> = z.object({
 export const LoginBodySchema = z.object({
   accountSlug: z.string(),
   appSlug: z.string(),
-  email: z.string().email(),
-  password: z.string().min(8),
+  email: z.string().email('Correo electronico invalido'),
+  password: z.string().min(8, 'La contrasena debe tener al menos 8 caracteres'),
 });
 
 export const LoginResponseSchema = z.union([
@@ -105,7 +105,7 @@ export type OauthTokenResponse = z.infer<typeof OauthTokenResponseSchema>;
 // ---------- Forgot / Reset password ----------
 export const ForgotPasswordBodySchema = z.object({
   accountSlug: z.string(),
-  email: z.string().email(),
+  email: z.string().email('Correo electronico invalido'),
 });
 
 export type ForgotPasswordBody = z.infer<typeof ForgotPasswordBodySchema>;
@@ -118,8 +118,8 @@ export type ForgotPasswordResponse = z.infer<typeof ForgotPasswordResponseSchema
 
 export const ResetPasswordBodySchema = z.object({
   accountSlug: z.string(),
-  token: z.string().min(10), // el token UUID/base64 suele ser largo
-  password: z.string().min(8),
+  token: z.string().min(10, 'Token invalido'), // el token UUID/base64 suele ser largo
+  password: z.string().min(8, 'La contrasena debe tener al menos 8 caracteres'),
 });
 
 export type ResetPasswordBody = z.infer<typeof ResetPasswordBodySchema>;
@@ -142,12 +142,12 @@ export type RevokeTokenBody = z.infer<typeof RevokeTokenBodySchema>;
 // ------- Change Password -------
 export const ChangePasswordBodySchema = z
   .object({
-    currentPassword: z.string().min(8),
-    newPassword: z.string().min(8),
-    confirmPassword: z.string().min(8),
+    currentPassword: z.string().min(8, 'La contrasena debe tener al menos 8 caracteres'),
+    newPassword: z.string().min(8, 'La contrasena debe tener al menos 8 caracteres'),
+    confirmPassword: z.string().min(8, 'La contrasena debe tener al menos 8 caracteres'),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
+    message: 'Las contrasenas no coinciden',
     path: ['confirmPassword'],
   });
 

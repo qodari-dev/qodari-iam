@@ -11,7 +11,7 @@ export function Portal() {
   const auth = useAuth();
 
   if (!auth) {
-    return <div className="p-4">No authenticated user</div>;
+    return <div className="p-4">No hay usuario autenticado</div>;
   }
 
   return (
@@ -19,7 +19,7 @@ export function Portal() {
       <header className="container mx-auto mb-12 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold lg:text-3xl">
-            Welcome, <br className="lg:hidden" /> {auth.user.firstName} {auth.user.lastName}
+            Bienvenido, <br className="lg:hidden" /> {auth.user.firstName} {auth.user.lastName}
           </h1>
         </div>
         <div>
@@ -53,7 +53,7 @@ export function Portal() {
                       className="absolute inset-0 flex items-end p-4 opacity-0 group-hover:opacity-100"
                     >
                       <div className="w-full rounded-md bg-white/75 px-4 py-2 text-center text-sm font-medium text-gray-900 backdrop-blur backdrop-filter">
-                        Go to App
+                        Ir a la aplicacion
                       </div>
                     </div>
                   </div>

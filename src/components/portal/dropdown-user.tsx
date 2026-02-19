@@ -22,7 +22,7 @@ import { Spinner } from '../ui/spinner';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { ChangePasswordDialog } from './change-password-dialog';
 
-export const title = 'Profile Dropdown with Avatar';
+export const title = 'Menu de perfil con avatar';
 
 export function DropdownUser() {
   const router = useRouter();
@@ -72,17 +72,17 @@ export function DropdownUser() {
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setShowChangePasswordDialog(true)}>
             <LockKeyholeOpen />
-            Change Password
+            Cambiar contrasena
           </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onClick={handleLogout}>
             <LogOut />
             {isPending ? (
               <span className="flex items-center gap-2">
                 <Spinner className="h-4 w-4" />
-                Logging Out
+                Cerrando sesion...
               </span>
             ) : (
-              'Log out'
+              'Cerrar sesion'
             )}
           </DropdownMenuItem>
         </DropdownMenuContent>

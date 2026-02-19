@@ -42,7 +42,7 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
       toast.error('Error', { description: getTsRestErrorMessage(error) });
     },
     onSuccess() {
-      toast.success('Contraseña actualizada');
+      toast.success('Contrasena actualizada');
       form.reset();
       onOpened(false);
     },
@@ -62,8 +62,8 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
           <DialogHeader>
-            <DialogTitle>Change Password</DialogTitle>
-            <DialogDescription>Provide a info</DialogDescription>
+            <DialogTitle>Cambiar contrasena</DialogTitle>
+            <DialogDescription>Ingresa la informacion para actualizar tu contrasena.</DialogDescription>
           </DialogHeader>
           <FieldGroup>
             <Controller
@@ -71,7 +71,7 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="current-password">Current Password</FieldLabel>
+                  <FieldLabel htmlFor="current-password">Contrasena actual</FieldLabel>
                   <Input
                     {...field}
                     id="current-password"
@@ -90,7 +90,7 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="new-password">New Password</FieldLabel>
+                  <FieldLabel htmlFor="new-password">Nueva contrasena</FieldLabel>
                   <Input
                     {...field}
                     id="new-password"
@@ -110,7 +110,7 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
+                  <FieldLabel htmlFor="confirm-password">Confirmar contrasena</FieldLabel>
                   <Input
                     {...field}
                     id="confirm-password"
@@ -126,16 +126,16 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline">Cancelar</Button>
             </DialogClose>
             <Button type="submit">
               {isPending ? (
                 <span className="flex items-center gap-2">
                   <Spinner className="h-4 w-4" />
-                  Updating
+                  Actualizando...
                 </span>
               ) : (
-                'Change Password'
+                'Cambiar contrasena'
               )}
             </Button>
           </DialogFooter>

@@ -21,7 +21,7 @@ export default async function PortalLayout({ params, children }: Props) {
   }
 
   if (result.status !== 200) {
-    throw new Error('Failed to load auth context');
+    throw new Error('No se pudo cargar el contexto de autenticacion');
   }
 
   const auth = result.body;

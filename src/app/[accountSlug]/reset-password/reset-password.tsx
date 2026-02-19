@@ -49,7 +49,7 @@ export default function ResetPassword({ accountSlug, appSlug }: ResetPasswordPro
       toast.error('Error', { description: getTsRestErrorMessage(error) });
     },
     onSuccess(data) {
-      toast.success('Contraseña actualizada', {
+      toast.success('Contrasena actualizada', {
         description: data.body.message,
       });
       router.push(loginUrl);
@@ -89,9 +89,9 @@ export default function ResetPassword({ accountSlug, appSlug }: ResetPasswordPro
     <AuthLayout accountSlug={accountSlug} appSlug={appSlug}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Reset your password</h1>
+          <h1 className="text-2xl font-bold">Restablece tu contrasena</h1>
           <p className="text-muted-foreground text-sm text-balance">
-            Enter your new password below
+            Ingresa tu nueva contrasena
           </p>
         </div>
         <FieldGroup>
@@ -100,7 +100,7 @@ export default function ResetPassword({ accountSlug, appSlug }: ResetPasswordPro
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="reset-password">New password</FieldLabel>
+                <FieldLabel htmlFor="reset-password">Nueva contrasena</FieldLabel>
                 <Input
                   {...field}
                   id="reset-password"
@@ -118,15 +118,15 @@ export default function ResetPassword({ accountSlug, appSlug }: ResetPasswordPro
           {isPending ? (
             <div className="flex items-center justify-center gap-2">
               <Spinner className="h-4 w-4" />
-              <span>Saving...</span>
+              <span>Guardando...</span>
             </div>
           ) : (
-            'Save New Password'
+            'Guardar nueva contrasena'
           )}
         </Button>
 
         <Button variant="link" className="w-full" asChild>
-          <Link href={loginUrl}>Back to Login</Link>
+          <Link href={loginUrl}>Volver al inicio de sesion</Link>
         </Button>
       </form>
     </AuthLayout>

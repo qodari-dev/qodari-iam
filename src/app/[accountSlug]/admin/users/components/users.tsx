@@ -88,6 +88,12 @@ export function Users() {
     return undefined;
   }, [filters.isAdmin]);
 
+  const lockFilter = React.useMemo(() => {
+    const lockedUntil = filters.lockedUntil as { gt?: Date } | undefined;
+    if (lockedUntil?.gt) return 'locked';
+    return undefined;
+  }, [filters.lockedUntil]);
+
   const [openedInfoSheet, setOpenedInfoSheet] = React.useState(false);
   const handleInfoSheetChange = React.useCallback(
     (open: boolean) => {
@@ -217,6 +223,14 @@ export function Users() {
                   handleFilterChange('isAdmin', undefined);
                 } else {
                   handleFilterChange('isAdmin', value === 'true');
+                }
+              }}
+              lockFilter={lockFilter}
+              onLockFilterChange={(value) => {
+                if (value === 'locked') {
+                  handleFilterChange('lockedUntil', { gt: new Date() });
+                } else {
+                  handleFilterChange('lockedUntil', undefined);
                 }
               }}
               onReset={resetFilters}

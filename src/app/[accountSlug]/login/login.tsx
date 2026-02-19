@@ -79,9 +79,9 @@ export default function Login({ accountSlug, appSlug, redirect }: LoginProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <FieldGroup>
           <div className="flex flex-col items-center gap-1 text-center">
-            <h1 className="text-2xl font-bold">Login to your account</h1>
+            <h1 className="text-2xl font-bold">Inicia sesion en tu cuenta</h1>
             <p className="text-muted-foreground text-sm text-balance">
-              Enter your email below to login to your account
+              Ingresa tu correo para acceder a tu cuenta
             </p>
           </div>
           <FieldGroup>
@@ -90,7 +90,7 @@ export default function Login({ accountSlug, appSlug, redirect }: LoginProps) {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="login-email">Email</FieldLabel>
+                  <FieldLabel htmlFor="login-email">Correo electronico</FieldLabel>
                   <Input
                     {...field}
                     type="email"
@@ -108,7 +108,7 @@ export default function Login({ accountSlug, appSlug, redirect }: LoginProps) {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="login-password">Password</FieldLabel>
+                  <FieldLabel htmlFor="login-password">Contrasena</FieldLabel>
                   <Input
                     {...field}
                     type="password"
@@ -126,15 +126,15 @@ export default function Login({ accountSlug, appSlug, redirect }: LoginProps) {
             {isPending ? (
               <div className="flex items-center justify-center gap-2">
                 <Spinner className="h-4 w-4" />
-                <span>Login...</span>
+                <span>Iniciando sesion...</span>
               </div>
             ) : (
-              'Login'
+              'Iniciar sesion'
             )}
           </Button>
 
           <Button variant="link" className="w-full" asChild>
-            <Link href={forgotPasswordUrl}>Forgot your password?</Link>
+            <Link href={forgotPasswordUrl}>Olvidaste tu contrasena?</Link>
           </Button>
         </FieldGroup>
       </form>

@@ -48,7 +48,7 @@ export default function MfaVerify({
 
   const { mutateAsync: resendMfa, isPending: isResending } = api.auth.mfaResend.useMutation({
     onSuccess(data) {
-      toast.success('Code sent', { description: data.body.message });
+      toast.success('Codigo enviado', { description: data.body.message });
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
     },
     onError(error) {
@@ -109,9 +109,9 @@ export default function MfaVerify({
         <div className="bg-muted flex size-12 items-center justify-center rounded-full">
           <Mail className="text-muted-foreground size-6" />
         </div>
-        <h1 className="text-2xl font-bold">Check your email</h1>
+        <h1 className="text-2xl font-bold">Revisa tu correo</h1>
         <p className="text-muted-foreground text-sm text-balance">
-          We sent a verification code to <span className="font-medium">{maskedEmail}</span>
+          Enviamos un codigo de verificacion a <span className="font-medium">{maskedEmail}</span>
         </p>
       </div>
 
@@ -134,16 +134,16 @@ export default function MfaVerify({
           {isVerifying ? (
             <div className="flex items-center justify-center gap-2">
               <Spinner className="h-4 w-4" />
-              <span>Verifying...</span>
+              <span>Verificando...</span>
             </div>
           ) : (
-            'Verify'
+            'Verificar'
           )}
         </Button>
 
         <div className="text-muted-foreground flex flex-col items-center gap-2 text-sm">
           <span>
-            {"Didn't receive the code? "}
+            {'No recibiste el codigo? '}
             <button
               type="button"
               onClick={handleResend}
@@ -151,16 +151,16 @@ export default function MfaVerify({
               className="text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isResending
-                ? 'Sending...'
+                ? 'Enviando...'
                 : resendCooldown > 0
-                  ? `Resend in ${resendCooldown}s`
-                  : 'Resend code'}
+                  ? `Reenviar en ${resendCooldown}s`
+                  : 'Reenviar codigo'}
             </button>
           </span>
         </div>
 
         <Button variant="link" asChild>
-          <Link href={loginUrl}>Back to login</Link>
+          <Link href={loginUrl}>Volver al inicio de sesion</Link>
         </Button>
       </div>
     </AuthLayout>

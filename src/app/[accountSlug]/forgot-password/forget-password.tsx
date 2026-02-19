@@ -60,9 +60,9 @@ export default function ForgetPassword({ accountSlug, appSlug }: ForgetPasswordP
     <AuthLayout accountSlug={accountSlug} appSlug={appSlug}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Forgot your password?</h1>
+          <h1 className="text-2xl font-bold">Olvidaste tu contrasena?</h1>
           <p className="text-muted-foreground text-sm text-balance">
-            Enter your email to get a reset link
+            Ingresa tu correo para recibir un enlace de restablecimiento
           </p>
         </div>
         <FieldGroup>
@@ -71,7 +71,7 @@ export default function ForgetPassword({ accountSlug, appSlug }: ForgetPasswordP
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="login-email">Email</FieldLabel>
+                <FieldLabel htmlFor="login-email">Correo electronico</FieldLabel>
                 <Input
                   {...field}
                   type="email"
@@ -89,15 +89,15 @@ export default function ForgetPassword({ accountSlug, appSlug }: ForgetPasswordP
           {isPending ? (
             <div className="flex items-center justify-center gap-2">
               <Spinner className="h-4 w-4" />
-              <span>Sending...</span>
+              <span>Enviando...</span>
             </div>
           ) : (
-            'Send Reset Link'
+            'Enviar enlace de restablecimiento'
           )}
         </Button>
 
         <Button variant="link" className="w-full" asChild>
-          <Link href={loginUrl}>Back to Login</Link>
+          <Link href={loginUrl}>Volver al inicio de sesion</Link>
         </Button>
       </form>
     </AuthLayout>

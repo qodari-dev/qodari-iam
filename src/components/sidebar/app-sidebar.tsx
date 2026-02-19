@@ -1,6 +1,6 @@
 'use client';
 
-import { AppWindowMacIcon, Download, Key, ScrollText, Settings, ShieldCheck, Users } from 'lucide-react';
+import { AppWindowMacIcon, Key, ScrollText, Settings, ShieldCheck, Users } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
@@ -115,25 +115,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               : []),
           ],
         },
-        {
-          title: 'Reportes',
-          items: [
-            {
-              title: 'Reports',
-              icon: Download,
-              isActive: pathname.startsWith(`/${accountSlug}/admin/reports`),
-              items: [
-                {
-                  title: 'Permisos por aplicación',
-                  url: `/${accountSlug}/admin/reports/permissions-by-application`,
-                },
-              ],
-            },
-          ],
-        },
       ],
     };
-  }, [user, pathname, accountSlug, canSeeUsers, canSeeApplications, canSeeRoles, canSeeApiClients, canSeeAuditLogs]);
+  }, [
+    user,
+    pathname,
+    accountSlug,
+    canSeeUsers,
+    canSeeApplications,
+    canSeeRoles,
+    canSeeApiClients,
+    canSeeAuditLogs,
+  ]);
 
   return (
     <Sidebar collapsible="icon" {...props}>

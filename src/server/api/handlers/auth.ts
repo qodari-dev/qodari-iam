@@ -52,6 +52,8 @@ import { getApiClientRolesAndPermissions } from '@/server/utils/get-api-client-r
 import { getUserRolesAndPermissions } from '@/server/utils/get-user-roles-and-permissions';
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
+const MAX_FAILED_LOGIN_ATTEMPTS = 5;
+const LOGIN_LOCK_DURATION_MS = 60 * 60 * 1000; // 1 hora
 
 function validateClientAuth(app: Application, clientSecret?: string) {
   if (app.clientType === 'public') return true;
@@ -149,8 +151,53 @@ export const auth = tsr.router(contract.auth, {
         };
       }
 
+      const now = new Date();
+      if (user.lockedUntil && user.lockedUntil > now) {
+        return {
+          status: 401,
+          body: {
+            message: 'Account locked due to failed login attempts. Contact your system administrator.',
+            code: 'ACCOUNT_LOCKED',
+          },
+        };
+      }
+
+      let failedAttempts = user.failedLoginAttempts;
+      if (user.lockedUntil && user.lockedUntil <= now) {
+        await db
+          .update(users)
+          .set({
+            failedLoginAttempts: 0,
+            lockedUntil: null,
+          })
+          .where(eq(users.id, user.id));
+        failedAttempts = 0;
+      }
+
       const ok = await verifyPassword(password, user.passwordHash);
       if (!ok) {
+        const nextFailedAttempts = failedAttempts + 1;
+        const lockUser = nextFailedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS;
+
+        await db
+          .update(users)
+          .set({
+            failedLoginAttempts: nextFailedAttempts,
+            lockedUntil: lockUser ? new Date(Date.now() + LOGIN_LOCK_DURATION_MS) : null,
+          })
+          .where(eq(users.id, user.id));
+
+        if (lockUser) {
+          return {
+            status: 401,
+            body: {
+              message:
+                'Account locked due to failed login attempts. Contact your system administrator.',
+              code: 'ACCOUNT_LOCKED',
+            },
+          };
+        }
+
         return {
           status: 401,
           body: { message: `Invalid credentials` },
@@ -158,6 +205,16 @@ export const auth = tsr.router(contract.auth, {
       }
 
       const currentAccountId = user.accountId;
+
+      if (user.failedLoginAttempts > 0 || user.lockedUntil) {
+        await db
+          .update(users)
+          .set({
+            failedLoginAttempts: 0,
+            lockedUntil: null,
+          })
+          .where(eq(users.id, user.id));
+      }
 
       // Check if MFA is enabled for this application
       if (application.mfaEnabled) {
@@ -219,6 +276,14 @@ export const auth = tsr.router(contract.auth, {
         accountId: currentAccountId,
         req: request,
       });
+
+      await db
+        .update(users)
+        .set({
+          lastLoginAt: new Date(),
+          lastLoginIp: ip,
+        })
+        .where(eq(users.id, user.id));
 
       logAudit(
         {
@@ -1233,6 +1298,14 @@ export const auth = tsr.router(contract.auth, {
         accountId: mfaRecord.accountId,
         req: request,
       });
+
+      await db
+        .update(users)
+        .set({
+          lastLoginAt: new Date(),
+          lastLoginIp: ip,
+        })
+        .where(eq(users.id, user.id));
 
       const response: MfaVerifyResponse = {
         user: {

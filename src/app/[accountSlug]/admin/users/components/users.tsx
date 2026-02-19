@@ -20,6 +20,7 @@ import {
   useActivateUser,
   useDeleteUser,
   useSuspendUser,
+  useUnlockUser,
   useUsers,
 } from '@/hooks/queries/use-user-queries';
 import { User, UserInclude, UserSortField } from '@/schemas/user';
@@ -35,6 +36,7 @@ declare module '@tanstack/table-core' {
     onRowDelete?: (row: TData) => void;
     onRowSuspend?: (row: TData) => void;
     onRowActivate?: (row: TData) => void;
+    onRowUnlock?: (row: TData) => void;
   }
 }
 
@@ -64,6 +66,7 @@ export function Users() {
   const { mutateAsync: deleteUser, isPending: isDeleting } = useDeleteUser();
   const { mutateAsync: activateUser, isPending: isActivating } = useActivateUser();
   const { mutateAsync: suspendUser, isPending: isSuspending } = useSuspendUser();
+  const { mutateAsync: unlockUser, isPending: isUnlocking } = useUnlockUser();
 
   // ---- Handlers ----
 
@@ -131,6 +134,14 @@ export function Users() {
     setOpenedActivateDialog(false);
   }, [user, setUser, setOpenedActivateDialog, activateUser]);
 
+  const [openedUnlockDialog, setOpenedUnlockDialog] = React.useState(false);
+  const handleUnlock = React.useCallback(async () => {
+    if (!user?.id) return;
+    await unlockUser({ params: { id: user.id } });
+    setUser(undefined);
+    setOpenedUnlockDialog(false);
+  }, [user, setUser, setOpenedUnlockDialog, unlockUser]);
+
   const handleCreate = () => {
     handleFormSheetChange(true);
   };
@@ -154,6 +165,10 @@ export function Users() {
     setUser(row);
     setOpenedActivateDialog(true);
   }, []);
+  const handleRowUnlock = React.useCallback((row: User) => {
+    setUser(row);
+    setOpenedUnlockDialog(true);
+  }, []);
 
   const tableMeta = React.useMemo<TableMeta<User>>(
     () => ({
@@ -162,8 +177,9 @@ export function Users() {
       onRowEdit: handleRowEdit,
       onRowSuspend: handleRowSuspend,
       onRowActivate: handleRowActivate,
+      onRowUnlock: handleRowUnlock,
     }),
-    [handleRowOpen, handleRowDelete, handleRowEdit, handleRowSuspend, handleRowActivate]
+    [handleRowOpen, handleRowDelete, handleRowEdit, handleRowSuspend, handleRowActivate, handleRowUnlock]
   );
 
   return (
@@ -251,7 +267,7 @@ export function Users() {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction disabled={isSuspending} onClick={handleSuspend}>
-              {isDeleting && <Spinner />}
+              {isSuspending && <Spinner />}
               Suspend
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -273,6 +289,26 @@ export function Users() {
             <AlertDialogAction disabled={isActivating} onClick={handleActivate}>
               {isActivating && <Spinner />}
               Activate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={openedUnlockDialog} onOpenChange={setOpenedUnlockDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unlock this user?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will clear failed login attempts and allow the user to sign in again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setOpenedUnlockDialog(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction disabled={isUnlocking} onClick={handleUnlock}>
+              {isUnlocking && <Spinner />}
+              Unlock
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

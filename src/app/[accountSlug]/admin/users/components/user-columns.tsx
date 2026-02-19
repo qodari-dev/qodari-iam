@@ -6,7 +6,7 @@ import { User, UserStatus } from '@/schemas/user';
 import { formatDate } from '@/utils/formatters';
 import type { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { CheckCircle, ShieldCheck, User as UserIcon, XCircle } from 'lucide-react';
+import { CheckCircle, Lock, ShieldCheck, User as UserIcon, XCircle } from 'lucide-react';
 import { UserRowActions } from './user-row-actions';
 
 // ============================================================================
@@ -132,7 +132,20 @@ export const userColumns: ColumnDef<User>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-    cell: ({ row }) => <StatusBadge status={row.getValue('status')} />,
+    cell: ({ row }) => {
+      const isLocked = Boolean(row.original.lockedUntil);
+
+      if (isLocked) {
+        return (
+          <Badge variant="secondary" className="gap-1">
+            <Lock className="h-3 w-3" />
+            Locked
+          </Badge>
+        );
+      }
+
+      return <StatusBadge status={row.getValue('status')} />;
+    },
     filterFn: (row, id, value: string[]) => {
       return value.includes(row.getValue(id));
     },

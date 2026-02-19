@@ -4,7 +4,7 @@ import { DataTableRowActions, type RowAction, type RowActionGroup } from '@/comp
 import { User } from '@/schemas/user';
 import { useHasPermission } from '@/stores/auth-store-provider';
 import { Row, Table } from '@tanstack/react-table';
-import { Ban, Copy, Eye, Pencil, Trash, UserCheck } from 'lucide-react';
+import { Ban, Copy, Eye, LockOpen, Pencil, Trash, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 // ============================================================================
@@ -25,6 +25,7 @@ export function UserRowActions({ row, table }: UserRowActionsProps) {
   const meta = table.options.meta;
   const canUpdateUsers = useHasPermission('users:update');
   const canDeleteUsers = useHasPermission('users:delete');
+  const isLocked = Boolean(user.lockedUntil);
 
   // ---- Action Handlers ----
 
@@ -70,6 +71,12 @@ export function UserRowActions({ row, table }: UserRowActionsProps) {
           onClick: meta?.onRowSuspend,
           variant: 'destructive',
           hidden: !canUpdateUsers || user.status === 'suspended',
+        },
+        {
+          label: 'Unlock',
+          icon: LockOpen,
+          onClick: meta?.onRowUnlock,
+          hidden: !canUpdateUsers || !isLocked,
         },
         {
           label: 'Delete User',

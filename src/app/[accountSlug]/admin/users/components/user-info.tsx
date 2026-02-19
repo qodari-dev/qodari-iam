@@ -15,6 +15,8 @@ export function UserInfo({
   onOpened(opened: boolean): void;
 }) {
   if (!user) return null;
+  const lockedUntil = user.lockedUntil ? new Date(user.lockedUntil) : null;
+  const isLocked = Boolean(user.lockedUntil);
 
   const sections: DescriptionSection[] = [
     {
@@ -46,6 +48,22 @@ export function UserInfo({
               {user.isAdmin ? 'Yes' : 'No'}
             </Badge>
           ),
+        },
+        {
+          label: 'Locked',
+          value: (
+            <Badge variant={isLocked ? 'destructive' : 'secondary'}>
+              {isLocked ? 'Yes' : 'No'}
+            </Badge>
+          ),
+        },
+        {
+          label: 'Failed Attempts',
+          value: user.failedLoginAttempts,
+        },
+        {
+          label: 'Locked Until',
+          value: lockedUntil ? format(lockedUntil, 'PPP p') : null,
         },
       ],
     },

@@ -80,6 +80,24 @@ export function UserMainForm({ isEdit }: { isEdit?: boolean }) {
         )}
       />
       <Controller
+        name="isEmployee"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor="isEmployee">Es empleado?</FieldLabel>
+            <div>
+              <Switch
+                id="isEmployee"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                aria-invalid={fieldState.invalid}
+              />
+            </div>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+      <Controller
         name="password"
         control={form.control}
         render={({ field, fieldState }) => (

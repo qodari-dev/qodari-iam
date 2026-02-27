@@ -45,6 +45,7 @@ export function UserForm({
       phone: '',
       status: 'active',
       isAdmin: false,
+      isEmployee: false,
       roles: [],
       password: '',
     },
@@ -59,6 +60,7 @@ export function UserForm({
         phone: user?.phone ?? '',
         status: user?.status ?? 'active',
         isAdmin: user?.isAdmin ?? false,
+        isEmployee: user?.isEmployee ?? false,
         roles: user?.userRoles?.map(({ roleId }) => ({ roleId })) ?? [],
         password: '',
       });

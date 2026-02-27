@@ -88,6 +88,13 @@ export function Users() {
     return undefined;
   }, [filters.isAdmin]);
 
+  const isEmployeeFilter = React.useMemo(() => {
+    const isEmployee = filters.isEmployee;
+    if (isEmployee === true) return 'true';
+    if (isEmployee === false) return 'false';
+    return undefined;
+  }, [filters.isEmployee]);
+
   const lockFilter = React.useMemo(() => {
     const lockedUntil = filters.lockedUntil as { gt?: Date } | undefined;
     if (lockedUntil?.gt) return 'locked';
@@ -223,6 +230,14 @@ export function Users() {
                   handleFilterChange('isAdmin', undefined);
                 } else {
                   handleFilterChange('isAdmin', value === 'true');
+                }
+              }}
+              isEmployeeFilter={isEmployeeFilter}
+              onIsEmployeeFilterChange={(value) => {
+                if (value === undefined) {
+                  handleFilterChange('isEmployee', undefined);
+                } else {
+                  handleFilterChange('isEmployee', value === 'true');
                 }
               }}
               lockFilter={lockFilter}

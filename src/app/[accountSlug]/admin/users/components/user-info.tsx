@@ -51,6 +51,14 @@ export function UserInfo({
           ),
         },
         {
+          label: 'Empleado',
+          value: (
+            <Badge variant={user.isEmployee ? 'default' : 'outline'}>
+              {user.isEmployee ? 'Si' : 'No'}
+            </Badge>
+          ),
+        },
+        {
           label: 'Bloqueado',
           value: (
             <Badge variant={isLocked ? 'destructive' : 'secondary'}>

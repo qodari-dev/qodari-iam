@@ -67,6 +67,18 @@ function AdminBadge({ isAdmin }: { isAdmin: boolean }) {
   );
 }
 
+function EmployeeBadge({ isEmployee }: { isEmployee: boolean }) {
+  if (isEmployee) {
+    return <Badge className="gap-1">Empleado</Badge>;
+  }
+
+  return (
+    <Badge variant="outline" className="text-muted-foreground gap-1">
+      Externo
+    </Badge>
+  );
+}
+
 // ============================================================================
 // Roles Display
 // ============================================================================
@@ -156,6 +168,15 @@ export const userColumns: ColumnDef<User>[] = [
     accessorKey: 'isAdmin',
     header: ({ column }) => <DataTableColumnHeader column={column} title="Rol" />,
     cell: ({ row }) => <AdminBadge isAdmin={row.getValue('isAdmin')} />,
+    filterFn: (row, id, value: boolean) => {
+      return row.getValue(id) === value;
+    },
+  },
+
+  {
+    accessorKey: 'isEmployee',
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Tipo" />,
+    cell: ({ row }) => <EmployeeBadge isEmployee={row.getValue('isEmployee')} />,
     filterFn: (row, id, value: boolean) => {
       return row.getValue(id) === value;
     },

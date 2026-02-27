@@ -40,6 +40,7 @@ const UserWhereFieldsSchema = z
     lastName: z.union([z.string().min(1), StringOperatorsSchema]).optional(),
     status: z.union([UserStatusEnum, EnumOperatorsSchema(USER_STATUS)]).optional(),
     isAdmin: z.union([z.boolean(), BooleanOperatorsSchema]).optional(),
+    isEmployee: z.union([z.boolean(), BooleanOperatorsSchema]).optional(),
     lockedUntil: z.union([z.coerce.date(), DateOperatorsSchema]).optional(),
     createdAt: z.union([z.coerce.date(), DateOperatorsSchema]).optional(),
     updatedAt: z.union([z.coerce.date(), DateOperatorsSchema]).optional(),
@@ -58,6 +59,7 @@ const USER_SORT_FIELDS = [
   'lastName',
   'status',
   'isAdmin',
+  'isEmployee',
   'lockedUntil',
   'createdAt',
   'updatedAt',
@@ -99,6 +101,7 @@ export const CreateUserBodySchema = z.object({
   password: z.string().min(8),
   phone: z.string().max(45).optional(),
   isAdmin: z.boolean(),
+  isEmployee: z.boolean(),
   status: UserStatusEnum,
   roles: z.object({ roleId: z.string() }).array().optional(),
 });

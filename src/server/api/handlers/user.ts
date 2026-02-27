@@ -41,6 +41,7 @@ const USER_FIELDS: FieldMap = {
   lastName: users.lastName,
   status: users.status,
   isAdmin: users.isAdmin,
+  isEmployee: users.isEmployee,
   lockedUntil: users.lockedUntil,
   createdAt: users.createdAt,
   updatedAt: users.updatedAt,

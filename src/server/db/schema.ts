@@ -191,6 +191,7 @@ export const users = pgTable(
     failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
     lockedUntil: timestamp('locked_until', { withTimezone: true }),
     isAdmin: boolean('is_admin').notNull().default(false),
+    isEmployee: boolean('is_employee').notNull().default(false),
     emailVerificationToken: varchar('email_verification_token', { length: 255 }),
     emailVerificationExpires: timestamp('email_verification_expires', {
       withTimezone: true,

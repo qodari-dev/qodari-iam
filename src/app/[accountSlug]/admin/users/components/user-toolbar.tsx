@@ -24,6 +24,10 @@ interface UsersToolbarProps {
   isAdminFilter?: string;
   onIsAdminFilterChange: (value: string | undefined) => void;
 
+  // Is Employee filter (single-select)
+  isEmployeeFilter?: string;
+  onIsEmployeeFilterChange: (value: string | undefined) => void;
+
   // Lock filter (single-select)
   lockFilter?: string;
   onLockFilterChange: (value: string | undefined) => void;
@@ -48,6 +52,8 @@ export function UsersToolbar({
   onStatusFilterChange,
   isAdminFilter,
   onIsAdminFilterChange,
+  isEmployeeFilter,
+  onIsEmployeeFilterChange,
   lockFilter,
   onLockFilterChange,
   onReset,
@@ -55,9 +61,14 @@ export function UsersToolbar({
   onCreate,
   isRefreshing = false,
 }: UsersToolbarProps) {
-  const isFiltered = searchValue || statusFilter.length > 0 || isAdminFilter || lockFilter;
+  const isFiltered =
+    searchValue || statusFilter.length > 0 || isAdminFilter || isEmployeeFilter || lockFilter;
   const canCreateUsers = useHasPermission('users:create');
   const adminOptions = [
+    { label: 'Si', value: 'true' },
+    { label: 'No', value: 'false' },
+  ] as const;
+  const employeeOptions = [
     { label: 'Si', value: 'true' },
     { label: 'No', value: 'false' },
   ] as const;
@@ -88,6 +99,14 @@ export function UsersToolbar({
           options={[...adminOptions]}
           value={isAdminFilter}
           onValueChange={onIsAdminFilterChange}
+        />
+
+        {/* Is Employee Filter (Single-select) */}
+        <SimpleSelectFilter
+          title="Empleado"
+          options={[...employeeOptions]}
+          value={isEmployeeFilter}
+          onValueChange={onIsEmployeeFilterChange}
         />
 
         {/* Lock Filter (Single-select) */}

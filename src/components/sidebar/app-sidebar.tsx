@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { useAuthUser, useHasPermission } from '@/stores/auth-store-provider';
-import companyLogo from '../../../public/company-logo.png';
+import companyLogo from '../../../public/iam-logo.png';
 
 function AppLogo({ className }: { className?: string }) {
   return (

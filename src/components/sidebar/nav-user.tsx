@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronsUpDown, LogOut } from 'lucide-react';
+import { ChevronsUpDown, LogOut, PanelLeft } from 'lucide-react';
 
 import { api } from '@/clients/api';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -53,6 +53,10 @@ export function NavUser({
     await logout({});
   }
 
+  function handleGoToPortal() {
+    router.push(`/${accountSlug}/portal`);
+  }
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -90,6 +94,10 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleGoToPortal}>
+              <PanelLeft />
+              Portal
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout} disabled={isPending}>
               <LogOut />
               Log out

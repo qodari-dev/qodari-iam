@@ -43,6 +43,7 @@ export function ApplicationInfo({
   const authUrl = getStorageUrl(application.imageAd);
   const statusLabel = application.status === 'active' ? 'Activo' : 'Suspendido';
   const clientTypeLabel = application.clientType === 'public' ? 'Publico' : 'Confidencial';
+  const mfaLabel = application.mfaEnabled ? 'Activado' : 'Desactivado';
 
   const sections: DescriptionSection[] = [
     {
@@ -52,6 +53,12 @@ export function ApplicationInfo({
         { label: 'Nombre', value: application.name },
         { label: 'Slug', value: application.slug },
         { label: 'Tipo de cliente', value: clientTypeLabel },
+        {
+          label: 'MFA',
+          value: (
+            <Badge variant={application.mfaEnabled ? 'default' : 'secondary'}>{mfaLabel}</Badge>
+          ),
+        },
         {
           label: 'Estado',
           value: (

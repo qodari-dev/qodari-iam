@@ -61,6 +61,7 @@ export function ApplicationForm({
       logoutUrl: [],
       callbackUrls: [],
       permissions: [],
+      mfaEnabled: false,
     },
   });
 
@@ -84,6 +85,7 @@ export function ApplicationForm({
         homeUrl: application?.homeUrl ?? '',
         logoutUrl: application?.logoutUrl ?? [],
         callbackUrls: application?.callbackUrls ?? [],
+        mfaEnabled: application?.mfaEnabled ?? false,
         permissions:
           application?.permissions?.map((p) => ({
             name: p.name,

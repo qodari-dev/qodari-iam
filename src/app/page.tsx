@@ -2,6 +2,8 @@ import { redirect, notFound } from 'next/navigation';
 import { api } from '@/clients/api';
 import { env } from '@/env';
 
+export const dynamic = 'force-dynamic';
+
 export default async function RootPage() {
   const defaultAccountSlug = env.IAM_DEFAULT_ACCOUNT_SLUG;
 

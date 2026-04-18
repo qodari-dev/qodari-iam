@@ -1,6 +1,7 @@
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 
 import { env } from '@/env';
+import { detectLocale } from '@/i18n/detect-locale';
 import {
   BrandingResponse,
   ForgotPasswordResponse,
@@ -245,6 +246,10 @@ export const auth = tsr.router(contract.auth, {
           name: `${user.firstName} ${user.lastName}`,
           code: mfaCode,
           expiresInMinutes: MFA_CONFIG.EXPIRY_MINUTES,
+          locale: detectLocale(nextRequest?.headers.get('accept-language')),
+          accountName: account.name,
+          accountLogo: account.logo,
+          applicationName: application.name,
         });
 
         const response: LoginResponse = {
@@ -930,6 +935,9 @@ export const auth = tsr.router(contract.auth, {
         to: user.email,
         name: `${user.firstName} ${user.lastName}`,
         resetUrl: resetUrl.toString(),
+        locale: detectLocale(nextRequest?.headers.get('accept-language')),
+        accountName: account.name,
+        accountLogo: account.logo,
       });
 
       return {
@@ -1423,6 +1431,10 @@ export const auth = tsr.router(contract.auth, {
         name: `${user.firstName} ${user.lastName}`,
         code: mfaCode,
         expiresInMinutes: MFA_CONFIG.EXPIRY_MINUTES,
+        locale: detectLocale(nextRequest?.headers.get('accept-language')),
+        accountName: mfaRecord.account?.name ?? env.IAM_APP_SLUG,
+        accountLogo: mfaRecord.account?.logo ?? null,
+        applicationName: mfaRecord.application?.name ?? null,
       });
 
       const response: MfaResendResponse = {

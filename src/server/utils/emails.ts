@@ -1,55 +1,119 @@
 import { env } from '@/env';
+import type { Locale } from '@/i18n/config';
+import type * as React from 'react';
 import { Resend } from 'resend';
+import {
+  renderMfaCodeEmailTemplate,
+  renderPasswordResetEmailTemplate,
+} from './email-template';
 
 type PasswordResetEmailArgs = {
-  to: string;
+  to: string | string[];
   name?: string;
   resetUrl: string;
+  locale: Locale;
+  accountName: string;
+  accountLogo?: string | null;
 };
 
-export async function sendPasswordResetEmail({ to, name, resetUrl }: PasswordResetEmailArgs) {
-  const resend = new Resend(env.RESEND_API_KEY);
-  await resend.emails.send({
-    from: env.RESEND_MAIL_FROM,
-    to,
-    subject: 'Restablecer tu contraseña - Qodari IAM',
-    html: `
-      <p>Hola ${name ?? ''},</p>
-      <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en Qodari IAM.</p>
-      <p>Haz clic en el siguiente enlace para establecer una nueva contraseña:</p>
-      <p><a href="${resetUrl}">${resetUrl}</a></p>
-      <p>Si tú no solicitaste este cambio, puedes ignorar este correo.</p>
-      <p>Este enlace expirará en 1 hora.</p>
-    `,
-  });
-  return;
-}
-
 type MfaCodeEmailArgs = {
-  to: string;
+  to: string | string[];
   name?: string;
   code: string;
   expiresInMinutes: number;
+  locale: Locale;
+  accountName: string;
+  accountLogo?: string | null;
+  applicationName?: string | null;
 };
+
+type SendEmailMessageArgs = {
+  to: string | string[];
+  subject: string;
+} & (
+  | {
+      react: React.ReactNode;
+      html?: never;
+      text?: never;
+    }
+  | {
+      react?: never;
+      html: string;
+      text?: string;
+    }
+);
+
+export async function sendEmailMessage({ to, subject, react, html, text }: SendEmailMessageArgs) {
+  const resend = new Resend(env.RESEND_API_KEY);
+  if (react) {
+    await resend.emails.send({
+      from: env.RESEND_MAIL_FROM,
+      to,
+      subject,
+      react,
+    });
+    return;
+  }
+
+  if (!html) {
+    throw new Error('HTML email content is required when no React template is provided');
+  }
+
+  await resend.emails.send({
+    from: env.RESEND_MAIL_FROM,
+    to,
+    subject,
+    html,
+    text,
+  });
+}
+
+export async function sendPasswordResetEmail({
+  to,
+  name,
+  resetUrl,
+  locale,
+  accountName,
+  accountLogo,
+}: PasswordResetEmailArgs) {
+  const rendered = await renderPasswordResetEmailTemplate({
+    locale,
+    name,
+    resetUrl,
+    accountName,
+    accountLogo,
+  });
+
+  await sendEmailMessage({
+    to,
+    subject: rendered.subject,
+    react: rendered.react,
+  });
+}
 
 export async function sendMfaCodeEmail({
   to,
   name,
   code,
   expiresInMinutes,
+  locale,
+  accountName,
+  accountLogo,
+  applicationName,
 }: MfaCodeEmailArgs) {
-  const resend = new Resend(env.RESEND_API_KEY);
-  await resend.emails.send({
-    from: env.RESEND_MAIL_FROM,
-    to,
-    subject: 'Tu código de verificación - Qodari IAM',
-    html: `
-      <p>Hola ${name ?? ''},</p>
-      <p>Tu código de verificación es:</p>
-      <p style="font-size: 32px; font-weight: bold; letter-spacing: 4px; text-align: center; padding: 20px; background-color: #f5f5f5; border-radius: 8px;">${code}</p>
-      <p>Este código expirará en ${expiresInMinutes} minutos.</p>
-      <p>Si tú no solicitaste este código, puedes ignorar este correo.</p>
-    `,
+  const rendered = await renderMfaCodeEmailTemplate({
+    locale,
+    name,
+    code,
+    expiresInMinutes,
+    accountName,
+    accountLogo,
+    applicationName,
   });
-  return;
+
+  await sendEmailMessage({
+    to,
+    subject: rendered.subject,
+    react: rendered.react,
+  });
 }

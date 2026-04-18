@@ -11,8 +11,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useI18n } from '@/i18n/provider';
 import * as React from 'react';
-import { apiClientColumns } from './api-client-columns';
+import { useApiClientColumns } from './api-client-columns';
 
 import { PageContent, PageHeader } from '@/components/layout';
 import { Spinner } from '@/components/ui/spinner';
@@ -41,7 +42,9 @@ declare module '@tanstack/table-core' {
 }
 
 export function ApiClients() {
+  const { messages } = useI18n();
   const [apiClient, setApiClient] = React.useState<ApiClientItem>();
+  const apiClientColumns = useApiClientColumns();
 
   const {
     pageIndex,
@@ -187,8 +190,8 @@ export function ApiClients() {
   return (
     <>
       <PageHeader
-        title="Clientes API"
-        description="Administra clientes API para autenticacion machine-to-machine."
+        title={messages.admin.apiClients.title}
+        description={messages.admin.apiClients.description}
       />
       <PageContent>
         <DataTable
@@ -222,7 +225,7 @@ export function ApiClients() {
               isRefreshing={isFetching && !isLoading}
             />
           }
-          emptyMessage="No se encontraron clientes API. Intenta ajustar los filtros."
+          emptyMessage={messages.admin.apiClients.empty}
           meta={tableMeta}
         />
       </PageContent>
@@ -246,19 +249,18 @@ export function ApiClients() {
       <AlertDialog open={openedDeleteDialog} onOpenChange={setOpenedDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Estas seguro?</AlertDialogTitle>
+            <AlertDialogTitle>{messages.admin.apiClients.dialogs.delete.title}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta accion no se puede deshacer. Se eliminara el cliente API y se invalidaran todos
-              sus tokens.
+              {messages.admin.apiClients.dialogs.delete.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedDeleteDialog(false)}>
-              Cancelar
+              {messages.admin.apiClients.form.actions.cancel}
             </AlertDialogCancel>
             <AlertDialogAction disabled={isDeleting} onClick={handleDelete}>
               {isDeleting && <Spinner />}
-              Eliminar
+              {messages.admin.apiClients.dialogs.delete.confirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -267,18 +269,18 @@ export function ApiClients() {
       <AlertDialog open={openedSuspendDialog} onOpenChange={setOpenedSuspendDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Suspender cliente API?</AlertDialogTitle>
+            <AlertDialogTitle>{messages.admin.apiClients.dialogs.suspend.title}</AlertDialogTitle>
             <AlertDialogDescription>
-              El cliente API quedara suspendido. No podra obtener tokens hasta ser reactivado.
+              {messages.admin.apiClients.dialogs.suspend.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedSuspendDialog(false)}>
-              Cancelar
+              {messages.admin.apiClients.form.actions.cancel}
             </AlertDialogCancel>
             <AlertDialogAction disabled={isSuspending} onClick={handleSuspend}>
               {isSuspending && <Spinner />}
-              Suspender
+              {messages.admin.apiClients.dialogs.suspend.confirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -287,18 +289,18 @@ export function ApiClients() {
       <AlertDialog open={openedActivateDialog} onOpenChange={setOpenedActivateDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Activar cliente API?</AlertDialogTitle>
+            <AlertDialogTitle>{messages.admin.apiClients.dialogs.activate.title}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esto reactivara el cliente API y le permitira obtener tokens nuevamente.
+              {messages.admin.apiClients.dialogs.activate.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedActivateDialog(false)}>
-              Cancelar
+              {messages.admin.apiClients.form.actions.cancel}
             </AlertDialogCancel>
             <AlertDialogAction disabled={isActivating} onClick={handleActivate}>
               {isActivating && <Spinner />}
-              Activar
+              {messages.admin.apiClients.dialogs.activate.confirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

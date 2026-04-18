@@ -13,6 +13,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Spinner } from '@/components/ui/spinner';
 import { useCreateApiClient, useUpdateApiClient } from '@/hooks/queries/use-api-client-queries';
+import { useI18n } from '@/i18n/provider';
 import { ApiClientItem, CreateApiClientBodySchema } from '@/schemas/api-client';
 import { onSubmitError } from '@/utils/on-submit-error';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,6 +35,7 @@ export function ApiClientForm({
   opened: boolean;
   onOpened(opened: boolean): void;
 }) {
+  const { locale, messages } = useI18n();
   const formId = useId();
   const [createdCredentials, setCreatedCredentials] = useState<{
     clientId: string;
@@ -90,15 +92,29 @@ export function ApiClientForm({
     onOpened(false);
   }, [onOpened]);
 
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setCreatedCredentials(null);
+      }
+      onOpened(open);
+    },
+    [onOpened]
+  );
+
   return (
-    <Sheet open={opened} onOpenChange={onOpened}>
+    <Sheet open={opened} onOpenChange={handleOpenChange}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>{apiClient ? 'Editar cliente API' : 'Nuevo cliente API'}</SheetTitle>
+          <SheetTitle>
+            {apiClient
+              ? messages.admin.apiClients.form.editTitle
+              : messages.admin.apiClients.form.createTitle}
+          </SheetTitle>
           <SheetDescription>
             {apiClient
-              ? 'Actualiza la configuracion del cliente API.'
-              : 'Crea un nuevo cliente API para autenticacion machine-to-machine.'}
+              ? messages.admin.apiClients.form.editDescription
+              : messages.admin.apiClients.form.createDescription}
           </SheetDescription>
         </SheetHeader>
 
@@ -113,13 +129,15 @@ export function ApiClientForm({
             <FormProvider {...form}>
               <form
                 id={formId}
-                onSubmit={form.handleSubmit(onSubmit, onSubmitError)}
+                onSubmit={form.handleSubmit(onSubmit, (errors) =>
+                  onSubmitError(errors, undefined, locale)
+                )}
                 className="px-4"
               >
                 <Tabs defaultValue="main" className="w-full">
                   <TabsList className="mb-4 w-full">
-                    <TabsTrigger value="main">Configuracion</TabsTrigger>
-                    <TabsTrigger value="roles">Roles</TabsTrigger>
+                    <TabsTrigger value="main">{messages.admin.apiClients.form.tabs.general}</TabsTrigger>
+                    <TabsTrigger value="roles">{messages.admin.apiClients.form.tabs.roles}</TabsTrigger>
                   </TabsList>
                   <TabsContent value="main">
                     <ApiClientMainForm isEditing={!!apiClient} />
@@ -134,10 +152,12 @@ export function ApiClientForm({
             <SheetFooter>
               <Button type="submit" form={formId} disabled={isLoading}>
                 {isLoading && <Spinner />}
-                {apiClient ? 'Guardar cambios' : 'Crear'}
+                {apiClient
+                  ? messages.admin.apiClients.form.actions.save
+                  : messages.admin.apiClients.form.actions.create}
               </Button>
               <SheetClose asChild>
-                <Button variant="outline">Cancelar</Button>
+                <Button variant="outline">{messages.admin.apiClients.form.actions.cancel}</Button>
               </SheetClose>
             </SheetFooter>
           </>

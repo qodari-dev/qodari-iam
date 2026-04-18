@@ -2,10 +2,9 @@
 
 import { DataTableColumnHeader } from '@/components/data-table';
 import { Badge } from '@/components/ui/badge';
+import { useI18n } from '@/i18n/provider';
 import { User, UserStatus } from '@/schemas/user';
-import { formatDate } from '@/utils/formatters';
 import type { ColumnDef } from '@tanstack/react-table';
-import { format } from 'date-fns';
 import { CheckCircle, Lock, ShieldCheck, User as UserIcon, XCircle } from 'lucide-react';
 import { UserRowActions } from './user-row-actions';
 
@@ -13,27 +12,27 @@ import { UserRowActions } from './user-row-actions';
 // Status Badge Component
 // ============================================================================
 
-const statusConfig: Record<
-  UserStatus,
-  {
-    label: string;
-    variant: 'default' | 'secondary' | 'outline' | 'destructive';
-    icon: typeof CheckCircle;
-  }
-> = {
-  active: {
-    label: 'Activo',
-    variant: 'default',
-    icon: CheckCircle,
-  },
-  suspended: {
-    label: 'Suspendido',
-    variant: 'destructive',
-    icon: XCircle,
-  },
-};
-
 function StatusBadge({ status }: { status: UserStatus }) {
+  const { messages } = useI18n();
+  const statusConfig: Record<
+    UserStatus,
+    {
+      label: string;
+      variant: 'default' | 'secondary' | 'outline' | 'destructive';
+      icon: typeof CheckCircle;
+    }
+  > = {
+    active: {
+      label: messages.admin.users.labels.status.active,
+      variant: 'default',
+      icon: CheckCircle,
+    },
+    suspended: {
+      label: messages.admin.users.labels.status.suspended,
+      variant: 'destructive',
+      icon: XCircle,
+    },
+  };
   const config = statusConfig[status];
   const Icon = config.icon;
 
@@ -50,11 +49,12 @@ function StatusBadge({ status }: { status: UserStatus }) {
 // ============================================================================
 
 function AdminBadge({ isAdmin }: { isAdmin: boolean }) {
+  const { messages } = useI18n();
   if (isAdmin) {
     return (
       <Badge variant="default" className="gap-1 bg-amber-600 hover:bg-amber-700">
         <ShieldCheck className="h-3 w-3" />
-        Administrador
+        {messages.admin.users.columns.administrator}
       </Badge>
     );
   }
@@ -62,19 +62,20 @@ function AdminBadge({ isAdmin }: { isAdmin: boolean }) {
   return (
     <Badge variant="outline" className="text-muted-foreground gap-1">
       <UserIcon className="h-3 w-3" />
-      Usuario
+      {messages.admin.users.columns.user}
     </Badge>
   );
 }
 
 function EmployeeBadge({ isEmployee }: { isEmployee: boolean }) {
+  const { messages } = useI18n();
   if (isEmployee) {
-    return <Badge className="gap-1">Empleado</Badge>;
+    return <Badge className="gap-1">{messages.admin.users.columns.employee}</Badge>;
   }
 
   return (
     <Badge variant="outline" className="text-muted-foreground gap-1">
-      Externo
+      {messages.admin.users.columns.external}
     </Badge>
   );
 }
@@ -84,8 +85,9 @@ function EmployeeBadge({ isEmployee }: { isEmployee: boolean }) {
 // ============================================================================
 
 function RolesBadges({ roles }: { roles?: User['userRoles'] }) {
+  const { messages } = useI18n();
   if (!roles || roles.length === 0) {
-    return <span className="text-muted-foreground text-sm">Sin roles</span>;
+    return <span className="text-muted-foreground text-sm">{messages.admin.users.columns.noRoles}</span>;
   }
 
   const displayRoles = roles.slice(0, 2);
@@ -100,7 +102,7 @@ function RolesBadges({ roles }: { roles?: User['userRoles'] }) {
       ))}
       {remaining > 0 && (
         <Badge variant="outline" className="text-xs">
-          +{remaining}
+          {messages.admin.users.columns.moreRoles(remaining)}
         </Badge>
       )}
     </div>
@@ -111,119 +113,142 @@ function RolesBadges({ roles }: { roles?: User['userRoles'] }) {
 // Column Definitions
 // ============================================================================
 
-export const userColumns: ColumnDef<User>[] = [
-  {
-    accessorKey: 'email',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Correo" />,
-    cell: ({ row }) => {
-      return (
-        <div className="flex flex-col">
-          <span className="font-medium">{row.original.email}</span>
-        </div>
-      );
-    },
-  },
+function formatShortDate(value: Date | string | null | undefined, locale: 'en' | 'es') {
+  if (!value) return '—';
+  const date = new Date(value);
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}
 
-  // First Name Column (hideable)
-  {
-    accessorKey: 'firstName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Nombre" />,
-    cell: ({ row }) => row.getValue('firstName') ?? '—',
-    enableHiding: true,
-  },
+function formatShortTime(value: Date | string, locale: 'en' | 'es') {
+  const date = new Date(value);
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-ES', {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
+}
 
-  // Last Name Column (hideable)
-  {
-    accessorKey: 'lastName',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Apellido" />,
-    cell: ({ row }) => row.getValue('lastName') ?? '—',
-    enableHiding: true,
-  },
+export function useUserColumns(): ColumnDef<User>[] {
+  const { locale, messages } = useI18n();
 
-  // Status Column
-  {
-    accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
-    cell: ({ row }) => {
-      const isLocked = Boolean(row.original.lockedUntil);
-
-      if (isLocked) {
+  return [
+    {
+      accessorKey: 'email',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={messages.admin.users.columns.email} />
+      ),
+      cell: ({ row }) => {
         return (
-          <Badge variant="secondary" className="gap-1">
-            <Lock className="h-3 w-3" />
-            Bloqueado
-          </Badge>
+          <div className="flex flex-col">
+            <span className="font-medium">{row.original.email}</span>
+          </div>
         );
-      }
-
-      return <StatusBadge status={row.getValue('status')} />;
+      },
     },
-    filterFn: (row, id, value: string[]) => {
-      return value.includes(row.getValue(id));
+    {
+      accessorKey: 'firstName',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={messages.admin.users.columns.firstName} />
+      ),
+      cell: ({ row }) => row.getValue('firstName') ?? '—',
+      enableHiding: true,
     },
-  },
-
-  // Is Admin Column
-  {
-    accessorKey: 'isAdmin',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Rol" />,
-    cell: ({ row }) => <AdminBadge isAdmin={row.getValue('isAdmin')} />,
-    filterFn: (row, id, value: boolean) => {
-      return row.getValue(id) === value;
+    {
+      accessorKey: 'lastName',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={messages.admin.users.columns.lastName} />
+      ),
+      cell: ({ row }) => row.getValue('lastName') ?? '—',
+      enableHiding: true,
     },
-  },
+    {
+      accessorKey: 'status',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={messages.admin.users.columns.status} />
+      ),
+      cell: ({ row }) => {
+        const isLocked = Boolean(row.original.lockedUntil);
 
-  {
-    accessorKey: 'isEmployee',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Tipo" />,
-    cell: ({ row }) => <EmployeeBadge isEmployee={row.getValue('isEmployee')} />,
-    filterFn: (row, id, value: boolean) => {
-      return row.getValue(id) === value;
+        if (isLocked) {
+          return (
+            <Badge variant="secondary" className="gap-1">
+              <Lock className="h-3 w-3" />
+              {messages.admin.users.columns.locked}
+            </Badge>
+          );
+        }
+
+        return <StatusBadge status={row.getValue('status')} />;
+      },
+      filterFn: (row, id, value: string[]) => {
+        return value.includes(row.getValue(id));
+      },
     },
-  },
-
-  // Roles Column (from include)
-  {
-    id: 'roles',
-    header: 'Roles asignados',
-    cell: ({ row }) => <RolesBadges roles={row.original.userRoles} />,
-    enableSorting: false,
-  },
-
-  // Created At Column
-  {
-    accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Creado" />,
-    cell: ({ row }) => {
-      return (
-        <div className="flex flex-col">
-          <span>{formatDate(row.original.createdAt)}</span>
-        </div>
-      );
+    {
+      accessorKey: 'isAdmin',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={messages.admin.users.columns.role} />
+      ),
+      cell: ({ row }) => <AdminBadge isAdmin={row.getValue('isAdmin')} />,
+      filterFn: (row, id, value: boolean) => {
+        return row.getValue(id) === value;
+      },
     },
-  },
-
-  // Last Login Column
-  {
-    accessorKey: 'lastLoginAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Ultimo acceso" />,
-    cell: ({ row }) => {
-      const date = row.original.lastLoginAt;
-      if (!date) {
-        return <span className="text-muted-foreground">Nunca</span>;
-      }
-      return (
-        <div className="flex flex-col">
-          <span>{formatDate(date)}</span>
-          <span className="text-muted-foreground text-xs">{format(new Date(date), 'h:mm a')}</span>
-        </div>
-      );
+    {
+      accessorKey: 'isEmployee',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={messages.admin.users.columns.type} />
+      ),
+      cell: ({ row }) => <EmployeeBadge isEmployee={row.getValue('isEmployee')} />,
+      filterFn: (row, id, value: boolean) => {
+        return row.getValue(id) === value;
+      },
     },
-  },
-
-  // Actions Column
-  {
-    id: 'actions',
-    cell: ({ table, row }) => <UserRowActions row={row} table={table} />,
-  },
-];
+    {
+      id: 'roles',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={messages.admin.users.columns.assignedRoles} />
+      ),
+      cell: ({ row }) => <RolesBadges roles={row.original.userRoles} />,
+      enableSorting: false,
+    },
+    {
+      accessorKey: 'createdAt',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={messages.admin.users.columns.created} />
+      ),
+      cell: ({ row }) => {
+        return (
+          <div className="flex flex-col">
+            <span>{formatShortDate(row.original.createdAt, locale)}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'lastLoginAt',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={messages.admin.users.columns.lastLogin} />
+      ),
+      cell: ({ row }) => {
+        const date = row.original.lastLoginAt;
+        if (!date) {
+          return <span className="text-muted-foreground">{messages.admin.users.columns.never}</span>;
+        }
+        return (
+          <div className="flex flex-col">
+            <span>{formatShortDate(date, locale)}</span>
+            <span className="text-muted-foreground text-xs">{formatShortTime(date, locale)}</span>
+          </div>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      cell: ({ table, row }) => <UserRowActions row={row} table={table} />,
+    },
+  ];
+}

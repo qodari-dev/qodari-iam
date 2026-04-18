@@ -11,8 +11,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useI18n } from '@/i18n/provider';
 import * as React from 'react';
-import { userColumns } from './user-columns';
+import { useUserColumns } from './user-columns';
 
 import { PageContent, PageHeader } from '@/components/layout';
 import { Spinner } from '@/components/ui/spinner';
@@ -41,7 +42,9 @@ declare module '@tanstack/table-core' {
 }
 
 export function Users() {
+  const { messages } = useI18n();
   const [user, setUser] = React.useState<User>();
+  const userColumns = useUserColumns();
 
   const {
     pageIndex,
@@ -197,7 +200,10 @@ export function Users() {
 
   return (
     <>
-      <PageHeader title="Usuarios" description="Administra los usuarios." />
+      <PageHeader
+        title={messages.admin.users.title}
+        description={messages.admin.users.description}
+      />
       <PageContent>
         <DataTable
           columns={userColumns}
@@ -254,7 +260,7 @@ export function Users() {
               isRefreshing={isFetching && !isLoading}
             />
           }
-          emptyMessage="No se encontraron usuarios. Intenta ajustar los filtros."
+          emptyMessage={messages.admin.users.empty}
           meta={tableMeta}
         />
       </PageContent>
@@ -265,18 +271,18 @@ export function Users() {
       <AlertDialog open={openedDeleteDialog} onOpenChange={setOpenedDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Estas seguro?</AlertDialogTitle>
+            <AlertDialogTitle>{messages.admin.users.dialogs.delete.title}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta accion no se puede deshacer. Se eliminara el usuario y sus datos asociados.
+              {messages.admin.users.dialogs.delete.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedDeleteDialog(false)}>
-              Cancelar
+              {messages.common.cancel}
             </AlertDialogCancel>
             <AlertDialogAction disabled={isDeleting} onClick={handleDelete}>
               {isDeleting && <Spinner />}
-              Eliminar
+              {messages.admin.users.dialogs.delete.confirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -285,18 +291,18 @@ export function Users() {
       <AlertDialog open={openedSuspendDialog} onOpenChange={setOpenedSuspendDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Estas seguro?</AlertDialogTitle>
+            <AlertDialogTitle>{messages.admin.users.dialogs.suspend.title}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta accion no se puede deshacer. El usuario quedara suspendido.
+              {messages.admin.users.dialogs.suspend.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedSuspendDialog(false)}>
-              Cancelar
+              {messages.common.cancel}
             </AlertDialogCancel>
             <AlertDialogAction disabled={isSuspending} onClick={handleSuspend}>
               {isSuspending && <Spinner />}
-              Suspender
+              {messages.admin.users.dialogs.suspend.confirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -305,18 +311,18 @@ export function Users() {
       <AlertDialog open={openedActivateDialog} onOpenChange={setOpenedActivateDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Estas seguro?</AlertDialogTitle>
+            <AlertDialogTitle>{messages.admin.users.dialogs.activate.title}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta accion no se puede deshacer. El usuario quedara activo nuevamente.
+              {messages.admin.users.dialogs.activate.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedActivateDialog(false)}>
-              Cancelar
+              {messages.common.cancel}
             </AlertDialogCancel>
             <AlertDialogAction disabled={isActivating} onClick={handleActivate}>
               {isActivating && <Spinner />}
-              Activar
+              {messages.admin.users.dialogs.activate.confirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -325,18 +331,18 @@ export function Users() {
       <AlertDialog open={openedUnlockDialog} onOpenChange={setOpenedUnlockDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Desbloquear usuario?</AlertDialogTitle>
+            <AlertDialogTitle>{messages.admin.users.dialogs.unlock.title}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esto limpiara los intentos fallidos y permitira iniciar sesion nuevamente.
+              {messages.admin.users.dialogs.unlock.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOpenedUnlockDialog(false)}>
-              Cancelar
+              {messages.common.cancel}
             </AlertDialogCancel>
             <AlertDialogAction disabled={isUnlocking} onClick={handleUnlock}>
               {isUnlocking && <Spinner />}
-              Desbloquear
+              {messages.admin.users.dialogs.unlock.confirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -4,7 +4,7 @@ import { Plus, RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTableFacetedFilter, SimpleSelectFilter } from '@/components/data-table';
-import { userStatusOptions } from '@/schemas/user';
+import { useI18n } from '@/i18n/provider';
 import { useHasPermission } from '@/stores/auth-store-provider';
 
 // ============================================================================
@@ -61,25 +61,30 @@ export function UsersToolbar({
   onCreate,
   isRefreshing = false,
 }: UsersToolbarProps) {
+  const { messages } = useI18n();
   const isFiltered =
     searchValue || statusFilter.length > 0 || isAdminFilter || isEmployeeFilter || lockFilter;
   const canCreateUsers = useHasPermission('users:create');
   const adminOptions = [
-    { label: 'Si', value: 'true' },
-    { label: 'No', value: 'false' },
+    { label: messages.admin.users.toolbar.options.yes, value: 'true' },
+    { label: messages.admin.users.toolbar.options.no, value: 'false' },
   ] as const;
   const employeeOptions = [
-    { label: 'Si', value: 'true' },
-    { label: 'No', value: 'false' },
+    { label: messages.admin.users.toolbar.options.yes, value: 'true' },
+    { label: messages.admin.users.toolbar.options.no, value: 'false' },
   ] as const;
-  const lockOptions = [{ label: 'Bloqueados', value: 'locked' }] as const;
+  const lockOptions = [{ label: messages.admin.users.toolbar.options.locked, value: 'locked' }] as const;
+  const statusOptions = [
+    { label: messages.admin.users.labels.status.active, value: 'active' },
+    { label: messages.admin.users.labels.status.suspended, value: 'suspended' },
+  ] as const;
 
   return (
     <div className="flex flex-col-reverse gap-3 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-1 flex-col-reverse items-start gap-2 space-x-2 lg:flex-row lg:items-center">
         {/* Search Input */}
         <Input
-          placeholder="Buscar por correo, nombre o apellido..."
+          placeholder={messages.admin.users.toolbar.searchPlaceholder}
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
           className="md:max-w-xs"
@@ -87,15 +92,15 @@ export function UsersToolbar({
 
         {/* Status Filter (Multi-select) */}
         <DataTableFacetedFilter
-          title="Estado"
-          options={[...userStatusOptions]}
+          title={messages.admin.users.toolbar.filters.status}
+          options={[...statusOptions]}
           value={statusFilter}
           onValueChange={onStatusFilterChange}
         />
 
         {/* Is Admin Filter (Single-select) */}
         <SimpleSelectFilter
-          title="Administrador"
+          title={messages.admin.users.toolbar.filters.administrator}
           options={[...adminOptions]}
           value={isAdminFilter}
           onValueChange={onIsAdminFilterChange}
@@ -103,7 +108,7 @@ export function UsersToolbar({
 
         {/* Is Employee Filter (Single-select) */}
         <SimpleSelectFilter
-          title="Empleado"
+          title={messages.admin.users.toolbar.filters.employee}
           options={[...employeeOptions]}
           value={isEmployeeFilter}
           onValueChange={onIsEmployeeFilterChange}
@@ -111,7 +116,7 @@ export function UsersToolbar({
 
         {/* Lock Filter (Single-select) */}
         <SimpleSelectFilter
-          title="Bloqueo"
+          title={messages.admin.users.toolbar.filters.lock}
           options={[...lockOptions]}
           value={lockFilter}
           onValueChange={onLockFilterChange}
@@ -120,7 +125,7 @@ export function UsersToolbar({
         {/* Reset Button */}
         {isFiltered && (
           <Button variant="ghost" onClick={onReset} className="h-9 px-2 lg:px-3">
-            Limpiar
+            {messages.admin.users.toolbar.reset}
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}
@@ -136,7 +141,7 @@ export function UsersToolbar({
             className="h-9"
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Actualizar
+            {messages.admin.users.toolbar.refresh}
           </Button>
         )}
 
@@ -144,7 +149,7 @@ export function UsersToolbar({
         {onCreate && canCreateUsers && (
           <Button type="button" size="sm" onClick={onCreate} className="h-9">
             <Plus className="mr-2 h-4 w-4" />
-            Agregar usuario
+            {messages.admin.users.toolbar.create}
           </Button>
         )}
       </div>

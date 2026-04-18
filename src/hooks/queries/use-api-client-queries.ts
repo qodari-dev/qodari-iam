@@ -1,4 +1,5 @@
 import { api } from '@/clients/api';
+import { useI18n } from '@/i18n/provider';
 import type { ListApiClientsQuery } from '@/schemas/api-client';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { useQueryClient } from '@tanstack/react-query';
@@ -47,20 +48,22 @@ export function useApiClient(
 }
 
 export function useCreateApiClient() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.apiClient.create.useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.lists() });
-      toast.success('Cliente API creado exitosamente');
+      toast.success(messages.admin.apiClients.toast.created);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useUpdateApiClient() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.apiClient.update.useMutation({
@@ -68,15 +71,16 @@ export function useUpdateApiClient() {
       const clientId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.lists() });
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.detail(clientId) });
-      toast.success('Cliente API actualizado');
+      toast.success(messages.admin.apiClients.toast.updated);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useDeleteApiClient() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.apiClient.delete.useMutation({
@@ -84,26 +88,28 @@ export function useDeleteApiClient() {
       const clientId = variables.params.id;
       queryClient.removeQueries({ queryKey: apiClientsKeys.detail(clientId) });
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.lists() });
-      toast.success('Cliente API eliminado');
+      toast.success(messages.admin.apiClients.toast.deleted);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useRegenerateApiClientSecret() {
+  const { locale, messages } = useI18n();
   return api.apiClient.regenerateSecret.useMutation({
     onSuccess: () => {
-      toast.success('Secreto regenerado');
+      toast.success(messages.admin.apiClients.toast.secretRegenerated);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useSuspendApiClient() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.apiClient.suspend.useMutation({
@@ -111,15 +117,16 @@ export function useSuspendApiClient() {
       const clientId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.lists() });
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.detail(clientId) });
-      toast.success('Cliente API suspendido');
+      toast.success(messages.admin.apiClients.toast.suspended);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useActivateApiClient() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.apiClient.activate.useMutation({
@@ -127,10 +134,10 @@ export function useActivateApiClient() {
       const clientId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.lists() });
       queryClient.invalidateQueries({ queryKey: apiClientsKeys.detail(clientId) });
-      toast.success('Cliente API activado');
+      toast.success(messages.admin.apiClients.toast.activated);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }

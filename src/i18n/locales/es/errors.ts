@@ -25,6 +25,19 @@ export const errors: LocaleShape<ErrorMessages> = {
     APPLICATION_PERMISSION_ACTION_TOO_LONG: 'La acción del permiso debe tener como máximo 45 caracteres',
     APPLICATION_PERMISSION_DESCRIPTION_TOO_LONG:
       'La descripción del permiso debe tener como máximo 500 caracteres',
+    API_CLIENT_NAME_REQUIRED: 'El nombre del cliente API es obligatorio',
+    API_CLIENT_NAME_TOO_LONG: 'El nombre del cliente API debe tener como máximo 255 caracteres',
+    API_CLIENT_ACCESS_TOKEN_EXP_MIN:
+      'La expiración del access token debe ser de al menos 60 segundos',
+    API_CLIENT_ACCESS_TOKEN_EXP_MAX:
+      'La expiración del access token debe ser de máximo 3600 segundos',
+    USER_EMAIL_INVALID: 'Correo electrónico inválido',
+    USER_FIRST_NAME_REQUIRED: 'El nombre es obligatorio',
+    USER_FIRST_NAME_TOO_LONG: 'El nombre debe tener como máximo 45 caracteres',
+    USER_LAST_NAME_REQUIRED: 'El apellido es obligatorio',
+    USER_LAST_NAME_TOO_LONG: 'El apellido debe tener como máximo 45 caracteres',
+    USER_PASSWORD_MIN: 'La contraseña debe tener al menos 8 caracteres',
+    USER_PHONE_TOO_LONG: 'El teléfono debe tener como máximo 45 caracteres',
     ROLE_NAME_REQUIRED: 'El nombre del rol es obligatorio',
     ROLE_SLUG_REQUIRED: 'El slug del rol es obligatorio',
     ROLE_APPLICATION_REQUIRED: 'La aplicación es obligatoria',

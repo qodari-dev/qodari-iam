@@ -82,19 +82,27 @@ export const GetApiClientQuerySchema = z.object({
 // ============================================
 
 export const CreateApiClientBodySchema = z.object({
-  name: z.string().min(1).max(255),
+  name: z.string().min(1, 'API_CLIENT_NAME_REQUIRED').max(255, 'API_CLIENT_NAME_TOO_LONG'),
   description: z.string().optional(),
-  accessTokenExp: z.number().min(60).max(3600).optional(), // 1 min - 1 hour
+  accessTokenExp: z
+    .number()
+    .min(60, 'API_CLIENT_ACCESS_TOKEN_EXP_MIN')
+    .max(3600, 'API_CLIENT_ACCESS_TOKEN_EXP_MAX')
+    .optional(), // 1 min - 1 hour
   roleIds: z.array(z.string().uuid()).optional(),
 });
 
 export type CreateApiClientBody = z.infer<typeof CreateApiClientBodySchema>;
 
 export const UpdateApiClientBodySchema = z.object({
-  name: z.string().min(1).max(255).optional(),
+  name: z.string().min(1, 'API_CLIENT_NAME_REQUIRED').max(255, 'API_CLIENT_NAME_TOO_LONG').optional(),
   description: z.string().nullable().optional(),
   status: ApiClientStatusEnum.optional(),
-  accessTokenExp: z.number().min(60).max(3600).optional(),
+  accessTokenExp: z
+    .number()
+    .min(60, 'API_CLIENT_ACCESS_TOKEN_EXP_MIN')
+    .max(3600, 'API_CLIENT_ACCESS_TOKEN_EXP_MAX')
+    .optional(),
   roleIds: z.array(z.string().uuid()).optional(),
 });
 

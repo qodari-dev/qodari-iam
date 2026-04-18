@@ -95,11 +95,11 @@ export const GetUserQuerySchema = z.object({
 // ============================================
 
 export const CreateUserBodySchema = z.object({
-  email: z.string().email(),
-  firstName: z.string().min(1).max(45),
-  lastName: z.string().min(1).max(45),
-  password: z.string().min(8),
-  phone: z.string().max(45).optional(),
+  email: z.string().email('USER_EMAIL_INVALID'),
+  firstName: z.string().min(1, 'USER_FIRST_NAME_REQUIRED').max(45, 'USER_FIRST_NAME_TOO_LONG'),
+  lastName: z.string().min(1, 'USER_LAST_NAME_REQUIRED').max(45, 'USER_LAST_NAME_TOO_LONG'),
+  password: z.string().min(8, 'USER_PASSWORD_MIN'),
+  phone: z.string().max(45, 'USER_PHONE_TOO_LONG').optional(),
   isAdmin: z.boolean(),
   isEmployee: z.boolean(),
   status: UserStatusEnum,
@@ -110,11 +110,11 @@ export const UpdateUserBodySchema = CreateUserBodySchema.omit({
   email: true,
   password: true,
 }).extend({
-  password: z.string().min(8).optional().or(z.literal('')),
+  password: z.string().min(8, 'USER_PASSWORD_MIN').optional().or(z.literal('')),
 }).partial();
 
 export const SetUserPasswordBodySchema = z.object({
-  password: z.string().min(8),
+  password: z.string().min(8, 'USER_PASSWORD_MIN'),
 });
 
 // ============================================

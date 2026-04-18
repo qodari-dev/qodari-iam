@@ -11,6 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Spinner } from '@/components/ui/spinner';
 import { useCreateUser, useUpdateUser } from '@/hooks/queries/use-user-queries';
+import { useI18n } from '@/i18n/provider';
 import { CreateUserBodySchema, UpdateUserBodySchema, User } from '@/schemas/user';
 import { onSubmitError } from '@/utils/on-submit-error';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,6 +32,7 @@ export function UserForm({
   opened: boolean;
   onOpened(opened: boolean): void;
 }) {
+  const { locale, messages } = useI18n();
   const formId = useId();
 
   const schema = useMemo(() => (user ? UpdateUserBodySchema : CreateUserBodySchema), [user]);
@@ -88,17 +90,23 @@ export function UserForm({
     <Sheet open={opened} onOpenChange={onOpened}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>Usuario</SheetTitle>
-          <SheetDescription>
-            Realiza los cambios del usuario y guarda cuando termines.
-          </SheetDescription>
+          <SheetTitle>
+            {user ? messages.admin.users.form.editTitle : messages.admin.users.form.createTitle}
+          </SheetTitle>
+          <SheetDescription>{messages.admin.users.form.description}</SheetDescription>
         </SheetHeader>
         <FormProvider {...form}>
-          <form id={formId} onSubmit={form.handleSubmit(onSubmit, onSubmitError)} className="px-4">
+          <form
+            id={formId}
+            onSubmit={form.handleSubmit(onSubmit, (errors) =>
+              onSubmitError(errors, undefined, locale)
+            )}
+            className="px-4"
+          >
             <Tabs defaultValue="main" className="w-full">
               <TabsList className="mb-4 w-full">
-                <TabsTrigger value="main">General</TabsTrigger>
-                <TabsTrigger value="roles">Roles</TabsTrigger>
+                <TabsTrigger value="main">{messages.admin.users.form.tabs.general}</TabsTrigger>
+                <TabsTrigger value="roles">{messages.admin.users.form.tabs.roles}</TabsTrigger>
               </TabsList>
               <TabsContent value="main">
                 <UserMainForm isEdit={!!user} />
@@ -113,10 +121,10 @@ export function UserForm({
         <SheetFooter>
           <Button type="submit" form={formId} disabled={isLoading}>
             {isLoading && <Spinner />}
-            Guardar
+            {messages.admin.users.form.actions.save}
           </Button>
           <SheetClose asChild>
-            <Button variant="outline">Cerrar</Button>
+            <Button variant="outline">{messages.admin.users.form.actions.close}</Button>
           </SheetClose>
         </SheetFooter>
       </SheetContent>

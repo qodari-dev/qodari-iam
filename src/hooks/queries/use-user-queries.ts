@@ -1,4 +1,5 @@
 import { api } from '@/clients/api';
+import { useI18n } from '@/i18n/provider';
 import type { ListUsersQuery } from '@/schemas/user';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { useQueryClient } from '@tanstack/react-query';
@@ -47,20 +48,22 @@ export function useUser(
 }
 
 export function useCreateUser() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.user.create.useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
-      toast.success('Usuario creado exitosamente');
+      toast.success(messages.admin.users.toast.created);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useUpdateUser() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.user.update.useMutation({
@@ -68,15 +71,16 @@ export function useUpdateUser() {
       const userId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
       queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
-      toast.success('Usuario actualizado');
+      toast.success(messages.admin.users.toast.updated);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useDeleteUser() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.user.delete.useMutation({
@@ -84,26 +88,28 @@ export function useDeleteUser() {
       const userId = variables.params.id;
       queryClient.removeQueries({ queryKey: usersKeys.detail(userId) });
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
-      toast.success('Usuario eliminado');
+      toast.success(messages.admin.users.toast.deleted);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useSetUserPassword() {
+  const { locale, messages } = useI18n();
   return api.user.setPassword.useMutation({
     onSuccess: () => {
-      toast.success('Contrasena actualizada');
+      toast.success(messages.admin.users.toast.passwordUpdated);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useSuspendUser() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.user.suspend.useMutation({
@@ -111,15 +117,16 @@ export function useSuspendUser() {
       const userId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
       queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
-      toast.success('Usuario suspendido');
+      toast.success(messages.admin.users.toast.suspended);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useActivateUser() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.user.activate.useMutation({
@@ -127,15 +134,16 @@ export function useActivateUser() {
       const userId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
       queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
-      toast.success('Usuario activado');
+      toast.success(messages.admin.users.toast.activated);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useUnlockUser() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.user.unlock.useMutation({
@@ -143,10 +151,10 @@ export function useUnlockUser() {
       const userId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: usersKeys.lists() });
       queryClient.invalidateQueries({ queryKey: usersKeys.detail(userId) });
-      toast.success('Usuario desbloqueado');
+      toast.success(messages.admin.users.toast.unlocked);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }

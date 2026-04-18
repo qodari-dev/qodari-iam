@@ -19,6 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CreateUserBodySchema } from '@/schemas/user';
+import { useI18n } from '@/i18n/provider';
 import { cn } from '@/lib/utils';
 import { Pencil, Plus, Trash2, Check, ChevronsUpDown } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
@@ -40,6 +41,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 type FormValues = z.infer<typeof CreateUserBodySchema>;
 
 export function UserRolesForm() {
+  const { messages } = useI18n();
   const form = useFormContext<FormValues>();
 
   const { fields, append, update, remove } = useFieldArray({
@@ -94,13 +96,13 @@ export function UserRolesForm() {
   const handleSave = () => {
     const value = selectedRoleId?.trim();
     if (!value) {
-      setError('Selecciona un rol');
+      setError(messages.admin.users.form.roles.selectError);
       return;
     }
 
     const duplicateIndex = fields.findIndex((f, idx) => f.roleId === value && idx !== editingIndex);
     if (duplicateIndex !== -1) {
-      setError('El rol ya fue agregado');
+      setError(messages.admin.users.form.roles.duplicateError);
       return;
     }
 
@@ -134,27 +136,31 @@ export function UserRolesForm() {
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="text-sm font-medium">Roles asignados</p>
+          <p className="text-sm font-medium">{messages.admin.users.form.roles.title}</p>
           <p className="text-muted-foreground text-sm">
-            Agrega o edita los roles del usuario. Busca por nombre/slug y evita duplicados.
+            {messages.admin.users.form.roles.description}
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button type="button" size="sm" onClick={handleAddClick}>
               <Plus className="h-4 w-4" />
-              Agregar rol
+              {messages.admin.users.form.roles.add}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingIndex !== null ? 'Editar rol' : 'Agregar rol'}</DialogTitle>
+              <DialogTitle>
+                {editingIndex !== null
+                  ? messages.admin.users.form.roles.editTitle
+                  : messages.admin.users.form.roles.addTitle}
+              </DialogTitle>
               <DialogDescription>
-                Busca y selecciona el rol que deseas asignar al usuario.
+                {messages.admin.users.form.roles.addDescription}
               </DialogDescription>
             </DialogHeader>
             <Field data-invalid={!!error} className="gap-2">
-              <FieldLabel htmlFor="roleId">Seleccionar rol</FieldLabel>
+              <FieldLabel htmlFor="roleId">{messages.admin.users.form.roles.selectRole}</FieldLabel>
               <Popover open={isComboboxOpen} onOpenChange={setIsComboboxOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -167,7 +173,9 @@ export function UserRolesForm() {
                     {selectedRoleId ? (
                       <span className="truncate text-left">{getRoleDisplay(selectedRoleId)}</span>
                     ) : (
-                      <span className="text-muted-foreground">Selecciona un rol</span>
+                      <span className="text-muted-foreground">
+                        {messages.admin.users.form.roles.selectRolePlaceholder}
+                      </span>
                     )}
 
                     <ChevronsUpDown className="opacity-50" />
@@ -175,12 +183,14 @@ export function UserRolesForm() {
                 </PopoverTrigger>
                 <PopoverContent className="w-[380px] p-0">
                   <Command>
-                    <CommandInput placeholder="Buscar por nombre o slug..." />
+                    <CommandInput placeholder={messages.admin.users.form.roles.searchPlaceholder} />
                     <CommandList>
                       <CommandEmpty>
-                        {isLoadingRoles ? 'Cargando roles...' : 'No se encontraron roles'}
+                        {isLoadingRoles
+                          ? messages.admin.users.form.roles.loading
+                          : messages.admin.users.form.roles.empty}
                       </CommandEmpty>
-                      <CommandGroup heading="Roles">
+                      <CommandGroup heading={messages.admin.users.form.tabs.roles}>
                         {availableRoles.map((role) => {
                           const isCurrent =
                             editingIndex !== null && fields[editingIndex]?.roleId === role.id;
@@ -202,7 +212,7 @@ export function UserRolesForm() {
                               </div>
                               {isDisabled && (
                                 <Badge variant="outline" className="ml-auto text-[10px]">
-                                  Seleccionado
+                                  {messages.admin.users.form.roles.selected}
                                 </Badge>
                               )}
                               {isSelected && !isDisabled && (
@@ -221,11 +231,13 @@ export function UserRolesForm() {
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline">
-                  Cancelar
+                  {messages.common.cancel}
                 </Button>
               </DialogClose>
               <Button type="button" onClick={handleSave}>
-                {editingIndex !== null ? 'Guardar cambios' : 'Agregar rol'}
+                {editingIndex !== null
+                  ? messages.admin.users.form.roles.saveEdit
+                  : messages.admin.users.form.roles.saveAdd}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -236,8 +248,10 @@ export function UserRolesForm() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-full">Rol</TableHead>
-              <TableHead className="w-[120px] text-right">Acciones</TableHead>
+              <TableHead className="w-full">{messages.admin.users.form.roles.table.role}</TableHead>
+              <TableHead className="w-[120px] text-right">
+                {messages.admin.users.form.roles.table.actions}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -260,7 +274,7 @@ export function UserRolesForm() {
                     onClick={() => handleEditClick(index)}
                   >
                     <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Editar rol</span>
+                    <span className="sr-only">{messages.admin.users.form.roles.table.edit}</span>
                   </Button>
                   <Button
                     type="button"
@@ -270,7 +284,7 @@ export function UserRolesForm() {
                     onClick={() => remove(index)}
                   >
                     <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Eliminar rol</span>
+                    <span className="sr-only">{messages.admin.users.form.roles.table.delete}</span>
                   </Button>
                 </TableCell>
               </TableRow>
@@ -279,7 +293,7 @@ export function UserRolesForm() {
         </Table>
       ) : (
         <div className={cn('text-muted-foreground rounded-md border border-dashed p-4 text-sm')}>
-          No hay roles agregados.
+          {messages.admin.users.form.roles.noRoles}
         </div>
       )}
     </div>

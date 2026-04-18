@@ -1,6 +1,7 @@
 'use client';
 
 import { DataTableRowActions, type RowAction, type RowActionGroup } from '@/components/data-table';
+import { useI18n } from '@/i18n/provider';
 import { User } from '@/schemas/user';
 import { useHasPermission } from '@/stores/auth-store-provider';
 import { Row, Table } from '@tanstack/react-table';
@@ -21,6 +22,7 @@ interface UserRowActionsProps {
 // ============================================================================
 
 export function UserRowActions({ row, table }: UserRowActionsProps) {
+  const { messages } = useI18n();
   const user = row.original;
   const meta = table.options.meta;
   const canUpdateUsers = useHasPermission('users:update');
@@ -29,9 +31,13 @@ export function UserRowActions({ row, table }: UserRowActionsProps) {
 
   // ---- Action Handlers ----
 
-  const handleCopyEmail = () => {
-    navigator.clipboard.writeText(user.email);
-    toast.success('Correo copiado al portapapeles');
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(user.email);
+      toast.success(messages.admin.users.toast.emailCopied);
+    } catch {
+      toast.error(messages.common.copyToClipboardFailed);
+    }
   };
 
   // ---- Build Actions ----
@@ -39,17 +45,17 @@ export function UserRowActions({ row, table }: UserRowActionsProps) {
   const actions: (RowAction<User> | RowActionGroup<User>)[] = [
     // Copy Actions
     {
-      label: 'Copiar correo',
+      label: messages.admin.users.actions.copyEmail,
       icon: Copy,
       onClick: handleCopyEmail,
     },
     {
-      label: 'Ver detalles',
+      label: messages.admin.users.actions.viewDetails,
       icon: Eye,
       onClick: meta?.onRowView,
     },
     {
-      label: 'Editar usuario',
+      label: messages.admin.users.actions.edit,
       icon: Pencil,
       onClick: meta?.onRowEdit,
       hidden: !canUpdateUsers,
@@ -57,29 +63,29 @@ export function UserRowActions({ row, table }: UserRowActionsProps) {
 
     // Status Group
     {
-      label: 'Estado',
+      label: messages.admin.users.actions.status,
       actions: [
         {
-          label: 'Activar',
+          label: messages.admin.users.actions.activate,
           icon: UserCheck,
           onClick: meta?.onRowActivate,
           hidden: !canUpdateUsers || user.status === 'active',
         },
         {
-          label: 'Suspender',
+          label: messages.admin.users.actions.suspend,
           icon: Ban,
           onClick: meta?.onRowSuspend,
           variant: 'destructive',
           hidden: !canUpdateUsers || user.status === 'suspended',
         },
         {
-          label: 'Desbloquear',
+          label: messages.admin.users.actions.unlock,
           icon: LockOpen,
           onClick: meta?.onRowUnlock,
           hidden: !canUpdateUsers || !isLocked,
         },
         {
-          label: 'Eliminar usuario',
+          label: messages.admin.users.actions.delete,
           icon: Trash,
           onClick: meta?.onRowDelete,
           variant: 'destructive',

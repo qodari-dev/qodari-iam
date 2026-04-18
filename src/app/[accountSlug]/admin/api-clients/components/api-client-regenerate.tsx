@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
 import { useRegenerateApiClientSecret } from '@/hooks/queries/use-api-client-queries';
+import { useI18n } from '@/i18n/provider';
 import { ApiClientItem } from '@/schemas/api-client';
 import { AlertTriangle, Check, Copy, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
@@ -26,21 +27,22 @@ interface ApiClientInfoProps {
 }
 
 export function ApiClientInfoCrendentials({ apiClient, opened, onOpened }: ApiClientInfoProps) {
-  const [copiedClientId, setCopiedClientId] = useState(false);
+  const { messages } = useI18n();
+  const [copiedField, setCopiedField] = useState<'clientId' | 'secret' | null>(null);
   const [newSecret, setNewSecret] = useState<string | null>(null);
   const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
 
   const { mutateAsync: regenerateSecret, isPending: isRegenerating } =
     useRegenerateApiClientSecret();
 
-  const copyToClipboard = async (text: string) => {
+  const copyToClipboard = async (text: string, field: 'clientId' | 'secret') => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedClientId(true);
-      toast.success('Copiado al portapapeles');
-      setTimeout(() => setCopiedClientId(false), 2000);
+      setCopiedField(field);
+      toast.success(messages.common.copiedToClipboard);
+      setTimeout(() => setCopiedField(null), 2000);
     } catch {
-      toast.error('No se pudo copiar');
+      toast.error(messages.common.copyToClipboardFailed);
     }
   };
 
@@ -60,15 +62,19 @@ export function ApiClientInfoCrendentials({ apiClient, opened, onOpened }: ApiCl
       <Sheet open={opened} onOpenChange={onOpened}>
         <SheetContent className="overflow-y-scroll sm:max-w-2xl">
           <SheetHeader>
-            <SheetTitle>Tokens del cliente API</SheetTitle>
+            <SheetTitle>{messages.admin.apiClients.secretSheet.title}</SheetTitle>
           </SheetHeader>
 
           <div className="flex flex-col gap-6 px-4 py-6">
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold">Credenciales</h4>
+              <h4 className="text-sm font-semibold">
+                {messages.admin.apiClients.secretSheet.sectionTitle}
+              </h4>
 
               <div>
-                <label className="text-muted-foreground text-sm">ID de cliente</label>
+                <label className="text-muted-foreground text-sm">
+                  {messages.admin.apiClients.secretSheet.clientId}
+                </label>
                 <div className="flex items-center gap-2">
                   <code className="bg-muted flex-1 overflow-auto rounded px-2 py-1 font-mono text-sm">
                     {apiClient.clientId}
@@ -77,9 +83,13 @@ export function ApiClientInfoCrendentials({ apiClient, opened, onOpened }: ApiCl
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => copyToClipboard(apiClient.clientId)}
+                    onClick={() => copyToClipboard(apiClient.clientId, 'clientId')}
                   >
-                    {copiedClientId ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copiedField === 'clientId' ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -89,30 +99,34 @@ export function ApiClientInfoCrendentials({ apiClient, opened, onOpened }: ApiCl
                   <div className="flex gap-3">
                     <AlertTriangle className="text-warning h-5 w-5 shrink-0" />
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">Nuevo secreto generado</p>
+                      <p className="text-sm font-medium">
+                        {messages.admin.apiClients.secretSheet.newSecretTitle}
+                      </p>
                       <code className="bg-muted block overflow-auto rounded px-2 py-1 font-mono text-xs">
                         {newSecret}
                       </code>
                       <p className="text-muted-foreground text-xs">
-                        Guarda este secreto ahora. No se volvera a mostrar.
+                        {messages.admin.apiClients.secretSheet.newSecretDescription}
                       </p>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => copyToClipboard(newSecret)}
+                        onClick={() => copyToClipboard(newSecret, 'secret')}
                       >
                         <Copy className="mr-2 h-4 w-4" />
-                        Copiar secreto
+                        {messages.admin.apiClients.secretSheet.copySecret}
                       </Button>
                     </div>
                   </div>
                 </div>
               ) : (
                 <div>
-                  <label className="text-muted-foreground text-sm">Secreto del cliente</label>
+                  <label className="text-muted-foreground text-sm">
+                    {messages.admin.apiClients.secretSheet.clientSecret}
+                  </label>
                   <div className="flex items-center gap-2">
                     <code className="bg-muted flex-1 rounded px-2 py-1 font-mono text-sm">
-                      ••••••••••••••••••••
+                      {messages.admin.apiClients.secretSheet.maskedSecret}
                     </code>
                     <Button
                       variant="outline"
@@ -120,7 +134,7 @@ export function ApiClientInfoCrendentials({ apiClient, opened, onOpened }: ApiCl
                       onClick={() => setShowRegenerateDialog(true)}
                     >
                       <RefreshCw className="mr-2 h-4 w-4" />
-                      Regenerar
+                      {messages.admin.apiClients.secretSheet.regenerate}
                     </Button>
                   </div>
                 </div>
@@ -133,17 +147,16 @@ export function ApiClientInfoCrendentials({ apiClient, opened, onOpened }: ApiCl
       <AlertDialog open={showRegenerateDialog} onOpenChange={setShowRegenerateDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Regenerar secreto del cliente?</AlertDialogTitle>
+            <AlertDialogTitle>{messages.admin.apiClients.dialogs.regenerate.title}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esto invalidara el secreto actual inmediatamente. Cualquier sistema que lo use debera
-              actualizarse con el nuevo secreto.
+              {messages.admin.apiClients.dialogs.regenerate.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{messages.admin.apiClients.form.actions.cancel}</AlertDialogCancel>
             <AlertDialogAction disabled={isRegenerating} onClick={handleRegenerate}>
               {isRegenerating && <Spinner className="mr-2" />}
-              Regenerar
+              {messages.admin.apiClients.dialogs.regenerate.confirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

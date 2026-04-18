@@ -21,6 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CreateApiClientBodySchema } from '@/schemas/api-client';
+import { useI18n } from '@/i18n/provider';
 import { cn } from '@/lib/utils';
 import { Plus, Trash2, Check, ChevronsUpDown } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
@@ -42,11 +43,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 type FormValues = z.infer<typeof CreateApiClientBodySchema>;
 
 export function ApiClientRolesForm() {
+  const { messages } = useI18n();
   const form = useFormContext<FormValues>();
-
-  const roleIds = useMemo(() => {
-    return form.getValues('roleIds') ?? [];
-  }, [form]);
+  const watchedRoleIds = form.watch('roleIds');
+  const roleIds = useMemo(() => watchedRoleIds ?? [], [watchedRoleIds]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
@@ -91,24 +91,26 @@ export function ApiClientRolesForm() {
     const grouped: Record<string, { appName: string; roles: Role[] }> = {};
     for (const role of availableRoles) {
       const appId = role.applicationId;
-      const appName = (role.application as { name: string } | undefined)?.name ?? 'App desconocida';
+      const appName =
+        (role.application as { name: string } | undefined)?.name ??
+        messages.admin.apiClients.form.roles.unknownApp;
       if (!grouped[appId]) {
         grouped[appId] = { appName, roles: [] };
       }
       grouped[appId].roles.push(role);
     }
     return Object.values(grouped);
-  }, [availableRoles]);
+  }, [availableRoles, messages.admin.apiClients.form.roles.unknownApp]);
 
   const handleSave = () => {
     const value = selectedRoleId?.trim();
     if (!value) {
-      setError('Selecciona un rol');
+      setError(messages.admin.apiClients.form.roles.selectError);
       return;
     }
 
     if (selectedRoleIdsSet.has(value)) {
-      setError('El rol ya fue agregado');
+      setError(messages.admin.apiClients.form.roles.duplicateError);
       return;
     }
 
@@ -150,29 +152,27 @@ export function ApiClientRolesForm() {
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="text-sm font-medium">Roles asignados</p>
+          <p className="text-sm font-medium">{messages.admin.apiClients.form.roles.title}</p>
           <p className="text-muted-foreground text-sm">
-            Asigna roles para dar acceso a aplicaciones especificas. El cliente solo podra obtener
-            tokens para aplicaciones donde tenga al menos un rol asignado.
+            {messages.admin.apiClients.form.roles.description}
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button type="button" size="sm" onClick={handleAddClick}>
               <Plus className="h-4 w-4" />
-              Agregar rol
+              {messages.admin.apiClients.form.roles.add}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Agregar rol</DialogTitle>
+              <DialogTitle>{messages.admin.apiClients.form.roles.addTitle}</DialogTitle>
               <DialogDescription>
-                Selecciona un rol para este cliente API. El rol define los permisos del cliente
-                cuando accede a una aplicacion.
+                {messages.admin.apiClients.form.roles.addDescription}
               </DialogDescription>
             </DialogHeader>
             <Field data-invalid={!!error} className="gap-2">
-              <FieldLabel htmlFor="roleId">Seleccionar rol</FieldLabel>
+              <FieldLabel htmlFor="roleId">{messages.admin.apiClients.form.roles.selectRole}</FieldLabel>
               <Popover open={isComboboxOpen} onOpenChange={setIsComboboxOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -187,7 +187,9 @@ export function ApiClientRolesForm() {
                         {getRoleDisplay(selectedRoleId)} ({getRoleApp(selectedRoleId)})
                       </span>
                     ) : (
-                      <span className="text-muted-foreground">Selecciona un rol</span>
+                      <span className="text-muted-foreground">
+                        {messages.admin.apiClients.form.roles.selectRolePlaceholder}
+                      </span>
                     )}
 
                     <ChevronsUpDown className="opacity-50" />
@@ -195,10 +197,12 @@ export function ApiClientRolesForm() {
                 </PopoverTrigger>
                 <PopoverContent className="w-[380px] p-0">
                   <Command>
-                    <CommandInput placeholder="Buscar por nombre..." />
+                    <CommandInput placeholder={messages.admin.apiClients.form.roles.searchPlaceholder} />
                     <CommandList>
                       <CommandEmpty>
-                        {isLoadingRoles ? 'Cargando roles...' : 'No se encontraron roles'}
+                        {isLoadingRoles
+                          ? messages.admin.apiClients.form.roles.loading
+                          : messages.admin.apiClients.form.roles.empty}
                       </CommandEmpty>
                       {rolesByApp.map(({ appName, roles }) => (
                         <CommandGroup key={appName} heading={appName}>
@@ -221,7 +225,7 @@ export function ApiClientRolesForm() {
                                 </div>
                                 {isDisabled && (
                                   <Badge variant="outline" className="ml-auto text-[10px]">
-                                    Agregado
+                                    {messages.admin.apiClients.form.roles.selected}
                                   </Badge>
                                 )}
                                 {isSelected && !isDisabled && (
@@ -241,11 +245,11 @@ export function ApiClientRolesForm() {
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline">
-                  Cancelar
+                  {messages.admin.apiClients.form.actions.cancel}
                 </Button>
               </DialogClose>
               <Button type="button" onClick={handleSave}>
-                Agregar rol
+                {messages.admin.apiClients.form.roles.save}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -256,9 +260,11 @@ export function ApiClientRolesForm() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Rol</TableHead>
-              <TableHead>Aplicacion</TableHead>
-              <TableHead className="w-20 text-right">Acciones</TableHead>
+              <TableHead>{messages.admin.apiClients.form.roles.table.role}</TableHead>
+              <TableHead>{messages.admin.apiClients.form.roles.table.application}</TableHead>
+              <TableHead className="w-20 text-right">
+                {messages.admin.apiClients.form.roles.table.actions}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -284,7 +290,7 @@ export function ApiClientRolesForm() {
                     onClick={() => handleRemove(roleId)}
                   >
                     <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Quitar rol</span>
+                    <span className="sr-only">{messages.admin.apiClients.form.roles.table.remove}</span>
                   </Button>
                 </TableCell>
               </TableRow>
@@ -293,7 +299,7 @@ export function ApiClientRolesForm() {
         </Table>
       ) : (
         <div className={cn('text-muted-foreground rounded-md border border-dashed p-4 text-sm')}>
-          Sin roles asignados. Agrega roles para permitir acceso a aplicaciones.
+          {messages.admin.apiClients.form.roles.noRoles}
         </div>
       )}
     </div>

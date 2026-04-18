@@ -12,7 +12,7 @@ export const env = createEnv({
     IAM_JWT_SECRET: z.string(),
     IAM_ISSUER: z.string(),
     IAM_APP_SLUG: z.string(),
-    IAM_DEFAULT_ACCOUNT_SLUG: z.string().optional(),
+    IAM_DEFAULT_ACCOUNT_SLUG: z.string(),
     RESEND_API_KEY: z.string(),
     RESEND_MAIL_FROM: z.string(),
     PAUSE_SCHEDULER: z
@@ -20,10 +20,10 @@ export const env = createEnv({
       .optional(),
     // DigitalOcean Spaces
     DO_SPACES_ENDPOINT: z.string().url(),
-    DO_SPACES_BUCKET: z.string(),
-    DO_SPACES_KEY: z.string(),
-    DO_SPACES_SECRET: z.string(),
-    DO_SPACES_REGION: z.string().default('nyc3'),
+    DO_SPACES_REGION: z.string().min(1),
+    DO_SPACES_BUCKET: z.string().min(1),
+    DO_SPACES_KEY: z.string().min(1),
+    DO_SPACES_SECRET: z.string().min(1),
   },
   /*
    * Environment variables available on the client (and server).
@@ -56,10 +56,10 @@ export const env = createEnv({
     PAUSE_SCHEDULER: process.env.PAUSE_SCHEDULER,
     // DigitalOcean Spaces
     DO_SPACES_ENDPOINT: process.env.DO_SPACES_ENDPOINT,
+    DO_SPACES_REGION: process.env.DO_SPACES_REGION,
     DO_SPACES_BUCKET: process.env.DO_SPACES_BUCKET,
     DO_SPACES_KEY: process.env.DO_SPACES_KEY,
     DO_SPACES_SECRET: process.env.DO_SPACES_SECRET,
-    DO_SPACES_REGION: process.env.DO_SPACES_REGION,
     NEXT_PUBLIC_STORAGE_URL: process.env.NEXT_PUBLIC_STORAGE_URL,
   },
   // experimental__runtimeEnv: {

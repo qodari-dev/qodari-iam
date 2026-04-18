@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UPLOAD_TYPE_VALUES } from '@/lib/upload';
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'] as const;
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -17,7 +18,7 @@ export const PresignUploadBodySchema = z.object({
     .max(MAX_FILE_SIZE, {
       message: `File size must be less than ${MAX_FILE_SIZE / 1024 / 1024}MB`,
     }),
-  folder: z.enum(['public/temp/logos']).default('public/temp/logos'),
+  uploadType: z.enum(UPLOAD_TYPE_VALUES).default(UPLOAD_TYPE_VALUES[0]),
 });
 
 export const PresignUploadResponseSchema = z.object({
@@ -26,10 +27,7 @@ export const PresignUploadResponseSchema = z.object({
 });
 
 export const DeleteUploadBodySchema = z.object({
-  key: z.string().min(1).refine(
-    (key) => key.startsWith('public/temp/logos/'),
-    { message: 'Only temporary uploads can be deleted' }
-  ),
+  key: z.string().min(1),
 });
 
 export type PresignUploadBody = z.infer<typeof PresignUploadBodySchema>;

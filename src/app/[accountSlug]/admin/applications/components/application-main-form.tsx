@@ -5,6 +5,11 @@ import { Button } from '@/components/ui/button';
 import { z } from 'zod';
 import { CreateApplicationBodySchema } from '@/schemas/application';
 import { useI18n } from '@/i18n/provider';
+import {
+  APPLICATION_IMAGE_AD_UPLOAD_TYPE,
+  APPLICATION_IMAGE_UPLOAD_TYPE,
+  APPLICATION_LOGO_UPLOAD_TYPE,
+} from '@/lib/upload';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import {
   Select,
@@ -224,6 +229,7 @@ export function ApplicationMainForm({
             <ImageUpload
               value={field.value}
               onChange={field.onChange}
+              uploadType={APPLICATION_LOGO_UPLOAD_TYPE}
               onUploadComplete={onUploadComplete}
               onRemoveUnsaved={onRemoveUnsaved}
             />
@@ -251,6 +257,7 @@ export function ApplicationMainForm({
             <ImageUpload
               value={field.value}
               onChange={field.onChange}
+              uploadType={APPLICATION_IMAGE_UPLOAD_TYPE}
               onUploadComplete={onUploadComplete}
               onRemoveUnsaved={onRemoveUnsaved}
             />
@@ -278,6 +285,7 @@ export function ApplicationMainForm({
             <ImageUpload
               value={field.value}
               onChange={field.onChange}
+              uploadType={APPLICATION_IMAGE_AD_UPLOAD_TYPE}
               onUploadComplete={onUploadComplete}
               onRemoveUnsaved={onRemoveUnsaved}
             />

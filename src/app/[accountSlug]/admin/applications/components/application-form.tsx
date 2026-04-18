@@ -109,12 +109,12 @@ export function ApplicationForm({
       ...values,
       slug: values.slug.trim().toLowerCase(),
     };
-    markAsSaved([values.logo, values.image, values.imageAd]);
     if (application) {
       await update({ params: { id: application.id }, body: payload });
     } else {
       await create({ body: payload });
     }
+    markAsSaved([values.logo, values.image, values.imageAd]);
     onOpened(false);
   };
 

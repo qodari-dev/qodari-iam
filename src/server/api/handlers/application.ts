@@ -1,5 +1,12 @@
 import { db } from '@/server/db';
-import { applications, permissions } from '@/server/db/schema';
+import {
+  apiClientRoles,
+  applications,
+  permissions,
+  rolePermissions,
+  roles,
+  userRoles,
+} from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
 import {
   buildTypedIncludes,
@@ -18,7 +25,7 @@ import { logAudit } from '@/server/utils/audit-logger';
 import { getClientIp } from '@/server/utils/get-client-ip';
 import { UnifiedAuthContext } from '@/server/utils/auth-context';
 import { tsr } from '@ts-rest/serverless/next';
-import { and, eq, notInArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { contract } from '../contracts';
 import { escapeCSV } from '@/utils/escape-css';
 import { formatDate } from '@/utils/formatters';
@@ -279,6 +286,18 @@ export const application = tsr.router(contract.application, {
           .returning();
 
         if (body.permissions) {
+          const currentPermissions = await tx
+            .select({
+              id: permissions.id,
+              name: permissions.name,
+              resource: permissions.resource,
+              action: permissions.action,
+            })
+            .from(permissions)
+            .where(
+              and(eq(permissions.accountId, session!.accountId), eq(permissions.applicationId, id))
+            );
+
           if (body.permissions.length) {
             await tx
               .insert(permissions)
@@ -300,25 +319,39 @@ export const application = tsr.router(contract.application, {
               });
           }
 
-          const permissionsIds = [];
-          for (const perm of body.permissions) {
-            const [p] = await tx
-              .select({ id: permissions.id })
-              .from(permissions)
-              .where(
-                and(
-                  eq(permissions.accountId, session!.accountId),
-                  eq(permissions.applicationId, id),
-                  eq(permissions.resource, perm.resource),
-                  eq(permissions.action, perm.action)
-                )
-              );
-            if (!p) {
-              continue;
+          const desiredPermissionKeys = new Set(
+            body.permissions.map((perm) => `${perm.resource}:${perm.action}`)
+          );
+          const permissionsToDelete = currentPermissions.filter(
+            (perm) => !desiredPermissionKeys.has(`${perm.resource}:${perm.action}`)
+          );
+
+          if (permissionsToDelete.length) {
+            const permissionIdsToDelete = permissionsToDelete.map((perm) => perm.id);
+            const linkedRoles = await tx
+              .select({
+                permissionId: rolePermissions.permissionId,
+              })
+              .from(rolePermissions)
+              .where(inArray(rolePermissions.permissionId, permissionIdsToDelete))
+              .limit(1);
+
+            if (linkedRoles.length) {
+              throwHttpError({
+                status: 409,
+                message: 'APPLICATION_PERMISSIONS_IN_USE',
+                code: 'APPLICATION_PERMISSIONS_IN_USE',
+              });
             }
-            permissionsIds.push(p.id);
+
+            await tx.delete(permissions).where(
+              and(
+                eq(permissions.accountId, session!.accountId),
+                eq(permissions.applicationId, id),
+                inArray(permissions.id, permissionIdsToDelete)
+              )
+            );
           }
-          await tx.delete(permissions).where(notInArray(permissions.id, permissionsIds));
         }
 
         return [appUpdated];
@@ -413,6 +446,35 @@ export const application = tsr.router(contract.application, {
       const existingPermissions = await db.query.permissions.findMany({
         where: eq(permissions.applicationId, id),
       });
+
+      const appRoles = await db
+        .select({ id: roles.id })
+        .from(roles)
+        .where(and(eq(roles.accountId, session.accountId), eq(roles.applicationId, id)));
+
+      if (appRoles.length) {
+        const roleIds = appRoles.map((role) => role.id);
+        const [assignedUsers, assignedApiClients] = await Promise.all([
+          db
+            .select({ roleId: userRoles.roleId })
+            .from(userRoles)
+            .where(inArray(userRoles.roleId, roleIds))
+            .limit(1),
+          db
+            .select({ roleId: apiClientRoles.roleId })
+            .from(apiClientRoles)
+            .where(inArray(apiClientRoles.roleId, roleIds))
+            .limit(1),
+        ]);
+
+        if (assignedUsers.length || assignedApiClients.length) {
+          throwHttpError({
+            status: 409,
+            message: 'APPLICATION_IN_USE',
+            code: 'APPLICATION_IN_USE',
+          });
+        }
+      }
 
       const imagesToDelete = [app.logo, app.image, app.imageAd].filter(
         (key): key is string => Boolean(key) && isStorageKey(key)

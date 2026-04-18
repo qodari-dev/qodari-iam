@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { useImageUploadWithCleanup } from '@/hooks/use-image-upload-with-cleanup';
 import { useI18n } from '@/i18n/provider';
+import { ACCOUNT_IMAGE_AD_UPLOAD_TYPE, ACCOUNT_LOGO_UPLOAD_TYPE } from '@/lib/upload';
 import { UpdateAccountBodySchema } from '@/schemas/account';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -123,6 +124,7 @@ export function AccountSettings() {
                     <ImageUpload
                       value={field.value}
                       onChange={field.onChange}
+                      uploadType={ACCOUNT_LOGO_UPLOAD_TYPE}
                       onUploadComplete={onUploadComplete}
                       onRemoveUnsaved={onRemoveUnsaved}
                     />
@@ -156,6 +158,7 @@ export function AccountSettings() {
                     <ImageUpload
                       value={field.value}
                       onChange={field.onChange}
+                      uploadType={ACCOUNT_IMAGE_AD_UPLOAD_TYPE}
                       onUploadComplete={onUploadComplete}
                       onRemoveUnsaved={onRemoveUnsaved}
                     />

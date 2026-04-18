@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { api } from '@/clients/api';
 import { toast } from 'sonner';
+import { isStorageKey } from '@/utils/storage';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 
 export function useImageDelete() {
@@ -13,7 +14,7 @@ export function useImageDelete() {
   const deleteUpload = useCallback(
     async (key: string): Promise<boolean> => {
       try {
-        if (!key.startsWith('public/temp/logos/')) {
+        if (!isStorageKey(key)) {
           return false;
         }
 

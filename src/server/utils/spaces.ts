@@ -7,6 +7,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '@/env';
+import { isManagedStorageKey } from './storage-paths';
 
 const s3Client = new S3Client({
   endpoint: env.DO_SPACES_ENDPOINT,
@@ -43,8 +44,7 @@ export async function deleteObject(key: string): Promise<void> {
 }
 
 export function isStorageKey(value: string | null | undefined): boolean {
-  if (!value) return false;
-  return value.includes('logos/') && !value.includes('http');
+  return isManagedStorageKey(value);
 }
 
 export type S3Object = {
@@ -55,7 +55,7 @@ export type S3Object = {
 
 /**
  * Lists all objects in a given prefix.
- * @param prefix - The prefix to list objects from (e.g., 'public/temp/logos/')
+ * @param prefix - The prefix to list objects from (e.g., 'dev/qodari-iam/')
  * @returns Array of objects with key, lastModified, and size
  */
 export async function listObjects(prefix: string): Promise<S3Object[]> {

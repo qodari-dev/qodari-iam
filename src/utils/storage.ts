@@ -3,7 +3,7 @@ import { env } from '@/env';
 /**
  * Builds the full URL for a storage key.
  * If the value is already a URL (legacy), returns it as-is.
- * If the value is a key (e.g., 'logos/acc_123/abc.webp'), builds the full URL.
+ * If the value is a key (e.g., 'dev/qodari-iam/acc_123/account-logo/abc.webp'), builds the full URL.
  */
 export function getStorageUrl(keyOrUrl: string | null | undefined): string | null {
   if (!keyOrUrl) return null;
@@ -22,5 +22,5 @@ export function getStorageUrl(keyOrUrl: string | null | undefined): string | nul
  */
 export function isStorageKey(value: string | null | undefined): boolean {
   if (!value) return false;
-  return value.startsWith('logos/') && !value.includes('http');
+  return !value.startsWith('http://') && !value.startsWith('https://');
 }

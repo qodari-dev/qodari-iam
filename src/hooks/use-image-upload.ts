@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import imageCompression from 'browser-image-compression';
 import { api } from '@/clients/api';
+import { ACCOUNT_LOGO_UPLOAD_TYPE, type UploadType } from '@/lib/upload';
 
 type UploadState = {
   isUploading: boolean;
@@ -9,13 +10,13 @@ type UploadState = {
 };
 
 type UploadOptions = {
-  folder?: 'public/temp/logos';
+  uploadType?: UploadType;
   maxSizeMB?: number;
   maxWidthOrHeight?: number;
 };
 
 const DEFAULT_OPTIONS: Required<UploadOptions> = {
-  folder: 'public/temp/logos',
+  uploadType: ACCOUNT_LOGO_UPLOAD_TYPE,
   maxSizeMB: 0.1, // 100KB
   maxWidthOrHeight: 512,
 };
@@ -72,7 +73,7 @@ export function useImageUpload(options?: UploadOptions) {
               | 'image/webp'
               | 'image/svg+xml',
             fileSize: compressedFile.size,
-            folder: opts.folder,
+            uploadType: opts.uploadType,
           },
         });
 
@@ -105,7 +106,7 @@ export function useImageUpload(options?: UploadOptions) {
         return null;
       }
     },
-    [compressImage, presignMutation, opts.folder]
+    [compressImage, opts.uploadType, presignMutation]
   );
 
   const reset = useCallback(() => {

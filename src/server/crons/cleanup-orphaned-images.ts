@@ -1,8 +1,8 @@
 import { db } from '../db';
 import { accounts, applications } from '../db/schema';
+import { getManagedStoragePrefix } from '../utils/storage-paths';
 import { deleteObject, listObjects, type S3Object } from '../utils/spaces';
 
-const TEMP_LOGOS_PREFIX = 'public/temp/logos/';
 const ORPHAN_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 /**
@@ -55,7 +55,7 @@ function findOrphanedImages(
 /**
  * Cleans up orphaned images from DO Spaces.
  * This function:
- * 1. Lists all objects in the temp logos folder
+ * 1. Lists all objects in the current app storage namespace
  * 2. Gets all referenced image keys from the database
  * 3. Deletes any images older than 24 hours that are not referenced
  *
@@ -70,7 +70,7 @@ export async function cleanupOrphanedImages(): Promise<{
 
   try {
     const [objects, referencedKeys] = await Promise.all([
-      listObjects(TEMP_LOGOS_PREFIX),
+      listObjects(`${getManagedStoragePrefix()}/`),
       getReferencedImageKeys(),
     ]);
 

@@ -1,6 +1,11 @@
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
 import { requireAdminPermission } from '@/server/utils/require-permission';
 import { generatePresignedUploadUrl, deleteObject } from '@/server/utils/spaces';
+import {
+  buildManagedUploadKey,
+  extractAccountIdFromManagedStorageKey,
+  isManagedStorageKey,
+} from '@/server/utils/storage-paths';
 import { tsr } from '@ts-rest/serverless/next';
 import { contract } from '../contracts';
 
@@ -12,19 +17,6 @@ function getExtensionFromMimeType(mimeType: string): string {
     'image/svg+xml': 'svg',
   };
   return map[mimeType] ?? 'bin';
-}
-
-/**
- * Extracts accountId from a storage key.
- * Key format: public/temp/logos/{accountId}/{uuid}.{ext}
- */
-function extractAccountIdFromKey(key: string): string | null {
-  const parts = key.split('/');
-  // Expected: ['public', 'temp', 'logos', accountId, 'filename.ext']
-  if (parts.length >= 4 && parts[0] === 'public' && parts[1] === 'temp' && parts[2] === 'logos') {
-    return parts[3];
-  }
-  return null;
 }
 
 export const upload = tsr.router(contract.upload, {
@@ -39,10 +31,11 @@ export const upload = tsr.router(contract.upload, {
         });
       }
 
-      const { fileType, folder } = body;
+      const { fileType, uploadType } = body;
       const ext = getExtensionFromMimeType(fileType);
       const uuid = crypto.randomUUID();
-      const key = `${folder}/${session.accountId}/${uuid}.${ext}`;
+
+      const key = buildManagedUploadKey(session.accountId, uploadType, `${uuid}.${ext}`);
 
       const uploadUrl = await generatePresignedUploadUrl(key, fileType);
 
@@ -71,8 +64,16 @@ export const upload = tsr.router(contract.upload, {
 
       const { key } = body;
 
+      if (!isManagedStorageKey(key)) {
+        throwHttpError({
+          status: 400,
+          message: 'Clave de almacenamiento no valida',
+          code: 'INVALID_UPLOAD_KEY',
+        });
+      }
+
       // Security: Verify the key belongs to the user's account
-      const keyAccountId = extractAccountIdFromKey(key);
+      const keyAccountId = extractAccountIdFromManagedStorageKey(key);
       if (keyAccountId !== session.accountId) {
         throwHttpError({
           status: 403,

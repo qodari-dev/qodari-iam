@@ -17,6 +17,8 @@ export const errors: LocaleShape<ErrorMessages> = {
     APPLICATION_LOGOUT_URL_INVALID: 'La URL de logout no es válida',
     APPLICATION_CALLBACK_URL_REQUIRED: 'Debes agregar al menos una URL de callback',
     APPLICATION_CALLBACK_URL_INVALID: 'La URL de callback no es válida',
+    APPLICATION_IN_USE:
+      'No puedes eliminar una aplicación mientras uno de sus roles siga asignado a usuarios o clientes API',
     APPLICATION_PERMISSION_NAME_REQUIRED: 'El nombre del permiso es obligatorio',
     APPLICATION_PERMISSION_NAME_TOO_LONG: 'El nombre del permiso debe tener como máximo 45 caracteres',
     APPLICATION_PERMISSION_RESOURCE_REQUIRED: 'El recurso del permiso es obligatorio',
@@ -25,12 +27,16 @@ export const errors: LocaleShape<ErrorMessages> = {
     APPLICATION_PERMISSION_ACTION_TOO_LONG: 'La acción del permiso debe tener como máximo 45 caracteres',
     APPLICATION_PERMISSION_DESCRIPTION_TOO_LONG:
       'La descripción del permiso debe tener como máximo 500 caracteres',
+    APPLICATION_PERMISSIONS_IN_USE:
+      'No puedes eliminar un permiso mientras siga asignado a uno o más roles',
     API_CLIENT_NAME_REQUIRED: 'El nombre del cliente API es obligatorio',
     API_CLIENT_NAME_TOO_LONG: 'El nombre del cliente API debe tener como máximo 255 caracteres',
     API_CLIENT_ACCESS_TOKEN_EXP_MIN:
       'La expiración del access token debe ser de al menos 60 segundos',
     API_CLIENT_ACCESS_TOKEN_EXP_MAX:
       'La expiración del access token debe ser de máximo 3600 segundos',
+    API_CLIENT_ROLES_INVALID:
+      'Uno o más roles seleccionados no son válidos para esta cuenta',
     USER_EMAIL_INVALID: 'Correo electrónico inválido',
     USER_FIRST_NAME_REQUIRED: 'El nombre es obligatorio',
     USER_FIRST_NAME_TOO_LONG: 'El nombre debe tener como máximo 45 caracteres',
@@ -38,12 +44,17 @@ export const errors: LocaleShape<ErrorMessages> = {
     USER_LAST_NAME_TOO_LONG: 'El apellido debe tener como máximo 45 caracteres',
     USER_PASSWORD_MIN: 'La contraseña debe tener al menos 8 caracteres',
     USER_PHONE_TOO_LONG: 'El teléfono debe tener como máximo 45 caracteres',
+    USER_ROLES_INVALID: 'Uno o más roles seleccionados no son válidos para esta cuenta',
     ROLE_NAME_REQUIRED: 'El nombre del rol es obligatorio',
     ROLE_SLUG_REQUIRED: 'El slug del rol es obligatorio',
     ROLE_APPLICATION_REQUIRED: 'La aplicación es obligatoria',
     ROLE_APPLICATION_INVALID: 'La aplicación no es válida',
     ROLE_DESCRIPTION_TOO_LONG: 'La descripción debe tener como máximo 500 caracteres',
     ROLE_PERMISSION_ID_INVALID: 'El permiso no es válido',
+    ROLE_IN_USE:
+      'No puedes eliminar un rol mientras siga asignado a usuarios o clientes API',
+    ROLE_APPLICATION_CHANGE_REQUIRES_PERMISSIONS:
+      'Cambiar la aplicación de un rol requiere reenviar también sus permisos',
     ACCOUNT_NAME_REQUIRED: 'El nombre de la cuenta es obligatorio',
     ACCOUNT_NAME_TOO_LONG: 'El nombre de la cuenta debe tener como máximo 255 caracteres',
     'Correo electronico invalido': 'Correo electrónico inválido',

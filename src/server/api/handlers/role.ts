@@ -1,5 +1,12 @@
 import { db } from '@/server/db';
-import { applications, permissions, rolePermissions, roles } from '@/server/db/schema';
+import {
+  apiClientRoles,
+  applications,
+  permissions,
+  rolePermissions,
+  roles,
+  userRoles,
+} from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
 import { requireAdminPermission } from '@/server/utils/require-permission';
 import { tsr } from '@ts-rest/serverless/next';
@@ -313,6 +320,19 @@ export const role = tsr.router(contract.role, {
         where: eq(rolePermissions.roleId, id),
       });
 
+      if (
+        body.applicationId &&
+        body.applicationId !== existing.applicationId &&
+        body.permissions === undefined &&
+        existingRolePerms.length > 0
+      ) {
+        throwHttpError({
+          status: 409,
+          message: 'ROLE_APPLICATION_CHANGE_REQUIRES_PERMISSIONS',
+          code: 'ROLE_APPLICATION_CHANGE_REQUIRES_PERMISSIONS',
+        });
+      }
+
       const [updated] = await db.transaction(async (tx) => {
         if (body.applicationId) {
           const app = await tx.query.applications.findFirst({
@@ -454,6 +474,27 @@ export const role = tsr.router(contract.role, {
       const existingRolePerms = await db.query.rolePermissions.findMany({
         where: eq(rolePermissions.roleId, id),
       });
+
+      const [assignedUsers, assignedApiClients] = await Promise.all([
+        db
+          .select({ roleId: userRoles.roleId })
+          .from(userRoles)
+          .where(eq(userRoles.roleId, id))
+          .limit(1),
+        db
+          .select({ roleId: apiClientRoles.roleId })
+          .from(apiClientRoles)
+          .where(eq(apiClientRoles.roleId, id))
+          .limit(1),
+      ]);
+
+      if (assignedUsers.length || assignedApiClients.length) {
+        throwHttpError({
+          status: 409,
+          message: 'ROLE_IN_USE',
+          code: 'ROLE_IN_USE',
+        });
+      }
 
       await db.delete(roles).where(eq(roles.id, id));
 

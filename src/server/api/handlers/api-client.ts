@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { db } from '@/server/db';
-import { apiClientRoles, apiClients } from '@/server/db/schema';
+import { apiClientRoles, apiClients, roles } from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
 import { hashPassword } from '@/server/utils/password';
 import { requireAdminPermission } from '@/server/utils/require-permission';
@@ -8,7 +8,7 @@ import { logAudit } from '@/server/utils/audit-logger';
 import { getClientIp } from '@/server/utils/get-client-ip';
 import { UnifiedAuthContext } from '@/server/utils/auth-context';
 import { tsr } from '@ts-rest/serverless/next';
-import { and, eq, notInArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { contract } from '../contracts';
 import { buildTypedIncludes, createIncludeMap } from '@/server/utils/query/include-builder';
 import {
@@ -79,6 +79,23 @@ function sanitizeApiClient<T extends { clientSecretHash?: string }>(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { clientSecretHash, ...safe } = client;
   return safe;
+}
+
+async function assertRolesBelongToAccount(accountId: string, roleIds: string[]) {
+  if (!roleIds.length) return;
+
+  const validRoles = await db
+    .select({ id: roles.id })
+    .from(roles)
+    .where(and(eq(roles.accountId, accountId), inArray(roles.id, roleIds)));
+
+  if (validRoles.length !== roleIds.length) {
+    throwHttpError({
+      status: 400,
+      message: 'API_CLIENT_ROLES_INVALID',
+      code: 'API_CLIENT_ROLES_INVALID',
+    });
+  }
 }
 
 // ============================================
@@ -197,6 +214,10 @@ export const apiClient = tsr.router(contract.apiClient, {
       const clientSecret = generateClientSecret();
       const clientSecretHash = await hashPassword(clientSecret);
 
+      if (roleIds?.length) {
+        await assertRolesBelongToAccount(session.accountId, roleIds);
+      }
+
       const created = await db.transaction(async (tx) => {
         const [newClient] = await tx
           .insert(apiClients)
@@ -298,6 +319,10 @@ export const apiClient = tsr.router(contract.apiClient, {
       });
 
       const { roleIds, ...data } = body;
+
+      if (roleIds !== undefined) {
+        await assertRolesBelongToAccount(session.accountId, roleIds);
+      }
 
       const updated = await db.transaction(async (tx) => {
         const [updatedClient] = await tx

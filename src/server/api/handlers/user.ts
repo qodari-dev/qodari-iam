@@ -1,6 +1,7 @@
 import { db } from '@/server/db';
 import {
   User,
+  roles,
   USER_SENSITIVE_FIELDS,
   userRoles,
   users,
@@ -10,7 +11,7 @@ import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/gener
 import { hashPassword } from '@/server/utils/password';
 import { requireAdminPermission } from '@/server/utils/require-permission';
 import { tsr } from '@ts-rest/serverless/next';
-import { and, eq, notInArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { contract } from '../contracts';
 
 import {
@@ -103,6 +104,23 @@ const USER_INCLUDES = createIncludeMap<typeof db.query.users>()({
 const SENSITIVE_COLUMNS = Object.fromEntries(
   USER_SENSITIVE_FIELDS.map((f) => [f, false])
 ) as Record<UserSensitiveField, false>;
+
+async function assertRolesBelongToAccount(accountId: string, roleIds: string[]) {
+  if (!roleIds.length) return;
+
+  const validRoles = await db
+    .select({ id: roles.id })
+    .from(roles)
+    .where(and(eq(roles.accountId, accountId), inArray(roles.id, roleIds)));
+
+  if (validRoles.length !== roleIds.length) {
+    throwHttpError({
+      status: 400,
+      message: 'USER_ROLES_INVALID',
+      code: 'USER_ROLES_INVALID',
+    });
+  }
+}
 
 // ============================================
 // HANDLER
@@ -231,6 +249,13 @@ export const user = tsr.router(contract.user, {
 
       const passwordHash = await hashPassword(data.password);
 
+      if (roles?.length) {
+        await assertRolesBelongToAccount(
+          session.accountId,
+          roles.map(({ roleId }) => roleId)
+        );
+      }
+
       const newUser = await db.transaction(async (tx) => {
         const [newUser] = await tx
           .insert(users)
@@ -338,27 +363,43 @@ export const user = tsr.router(contract.user, {
         updateData.passwordHash = await hashPassword(password);
       }
 
+      if (roles !== undefined) {
+        await assertRolesBelongToAccount(
+          session.accountId,
+          roles.map(({ roleId }) => roleId)
+        );
+      }
+
       const updated = await db.transaction(async (tx) => {
         const [updated] = await tx
           .update(users)
           .set(updateData)
           .where(eq(users.id, id))
           .returning();
-        if (roles && roles.length > 0) {
-          await tx
-            .insert(userRoles)
-            .values(
-              roles.map(({ roleId }) => ({
-                userId: id,
-                roleId,
-              }))
-            )
-            .onConflictDoNothing();
+
+        if (roles !== undefined) {
+          if (roles.length > 0) {
+            await tx
+              .insert(userRoles)
+              .values(
+                roles.map(({ roleId }) => ({
+                  userId: id,
+                  roleId,
+                }))
+              )
+              .onConflictDoNothing();
+          }
+
+          const roleIds = roles.map(({ roleId }) => roleId);
+          if (roleIds.length === 0) {
+            await tx.delete(userRoles).where(eq(userRoles.userId, id));
+          } else {
+            await tx
+              .delete(userRoles)
+              .where(and(eq(userRoles.userId, id), notInArray(userRoles.roleId, roleIds)));
+          }
         }
-        const rolesIds = roles?.map(({ roleId }) => roleId) ?? [];
-        await tx
-          .delete(userRoles)
-          .where(and(eq(userRoles.userId, id), notInArray(userRoles.roleId, rolesIds)));
+
         return updated;
       });
 

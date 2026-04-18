@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useImageUpload } from '@/hooks/use-image-upload';
 import { useI18n } from '@/i18n/provider';
+import { ACCOUNT_LOGO_UPLOAD_TYPE, type UploadType } from '@/lib/upload';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { getStorageUrl } from '@/utils/storage';
 import { ImagePlus, Loader2, X } from 'lucide-react';
@@ -14,6 +15,7 @@ type ImageUploadProps = {
   onChange?: (value: string | null) => void;
   disabled?: boolean;
   className?: string;
+  uploadType?: UploadType;
   /** Called when a new upload completes with the storage key */
   onUploadComplete?: (key: string) => void;
   /** Called when user removes an image that hasn't been saved yet */
@@ -27,6 +29,7 @@ export function ImageUpload({
   onChange,
   disabled,
   className,
+  uploadType = ACCOUNT_LOGO_UPLOAD_TYPE,
   onUploadComplete,
   onRemoveUnsaved,
 }: ImageUploadProps) {
@@ -34,7 +37,7 @@ export function ImageUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const { upload, isUploading, progress, error, reset } = useImageUpload();
+  const { upload, isUploading, progress, error, reset } = useImageUpload({ uploadType });
 
   const imageUrl = previewUrl || getStorageUrl(value);
 

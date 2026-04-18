@@ -417,7 +417,7 @@ export const rolePermissions = pgTable(
     permissionId: uuid('permission_id')
       .notNull()
       .references(() => permissions.id, {
-        onDelete: 'cascade',
+        onDelete: 'restrict',
         onUpdate: 'cascade',
       }),
     ...timestamps,
@@ -460,7 +460,7 @@ export const userRoles = pgTable(
     roleId: uuid('role_id')
       .notNull()
       .references(() => roles.id, {
-        onDelete: 'cascade',
+        onDelete: 'restrict',
         onUpdate: 'cascade',
       }),
     ...timestamps,
@@ -872,7 +872,7 @@ export const apiClientRoles = pgTable(
       .references(() => apiClients.id, { onDelete: 'cascade' }),
     roleId: uuid('role_id')
       .notNull()
-      .references(() => roles.id, { onDelete: 'cascade' }),
+      .references(() => roles.id, { onDelete: 'restrict' }),
     ...timestamps,
   },
   (table) => [

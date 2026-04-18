@@ -1,4 +1,5 @@
 import { api } from '@/clients/api';
+import { useI18n } from '@/i18n/provider';
 import type { ListApplicationsQuery } from '@/schemas/application';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { useQueryClient } from '@tanstack/react-query';
@@ -54,20 +55,22 @@ export function useApplication(
 }
 
 export function useCreateApplication() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.application.create.useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: applicationsKeys.lists() });
-      toast.success('Aplicación creada exitosamente');
+      toast.success(messages.admin.applications.toast.created);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useUpdateApplication() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.application.update.useMutation({
@@ -75,15 +78,16 @@ export function useUpdateApplication() {
       const appId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: applicationsKeys.lists() });
       queryClient.invalidateQueries({ queryKey: applicationsKeys.detail(appId) });
-      toast.success('Aplicación actualizada');
+      toast.success(messages.admin.applications.toast.updated);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useDeleteApplication() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.application.delete.useMutation({
@@ -91,10 +95,10 @@ export function useDeleteApplication() {
       const appId = variables.params.id;
       queryClient.removeQueries({ queryKey: applicationsKeys.detail(appId) });
       queryClient.invalidateQueries({ queryKey: applicationsKeys.lists() });
-      toast.success('Aplicación eliminada');
+      toast.success(messages.admin.applications.toast.deleted);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }

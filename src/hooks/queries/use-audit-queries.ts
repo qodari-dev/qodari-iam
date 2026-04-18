@@ -1,4 +1,5 @@
 import { api } from '@/clients/api';
+import { useI18n } from '@/i18n/provider';
 import type { ListAuditLogsQuery, AuditLogExportQuery } from '@/schemas/audit';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { useQueryClient } from '@tanstack/react-query';
@@ -50,15 +51,16 @@ export function useAuditLog(
 }
 
 export function useCreateAuditLog() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.audit.create.useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: auditLogsKeys.lists() });
-      toast.success('Registro de auditoria creado');
+      toast.success(messages.admin.audit.toast.created);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }

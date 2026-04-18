@@ -5,14 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTableFacetedFilter, SimpleSelectFilter } from '@/components/data-table';
 import {
-  auditActionOptions,
-  auditStatusOptions,
-  actorTypeOptions,
   AuditStatusEnum,
   ActorTypeEnum,
   AuditActionEnum,
 } from '@/schemas/audit';
 import { api } from '@/clients/api';
+import { useI18n } from '@/i18n/provider';
 import { toast } from 'sonner';
 import { useApplications } from '@/hooks/queries/use-application-queries';
 import { useMemo } from 'react';
@@ -88,7 +86,25 @@ export function AuditToolbar({
   onRefresh,
   isRefreshing = false,
 }: AuditToolbarProps) {
+  const { messages } = useI18n();
   const isFiltered = searchValue || actionFilter.length > 0 || statusFilter || actorTypeFilter;
+  const auditActionOptions = [
+    { label: messages.admin.audit.labels.action.create, value: 'create' },
+    { label: messages.admin.audit.labels.action.update, value: 'update' },
+    { label: messages.admin.audit.labels.action.delete, value: 'delete' },
+    { label: messages.admin.audit.labels.action.read, value: 'read' },
+    { label: messages.admin.audit.labels.action.login, value: 'login' },
+    { label: messages.admin.audit.labels.action.logout, value: 'logout' },
+    { label: messages.admin.audit.labels.action.other, value: 'other' },
+  ] as const;
+  const auditStatusOptions = [
+    { label: messages.admin.audit.labels.status.success, value: 'success' },
+    { label: messages.admin.audit.labels.status.failure, value: 'failure' },
+  ] as const;
+  const actorTypeOptions = [
+    { label: messages.admin.audit.labels.actor.user, value: 'user' },
+    { label: messages.admin.audit.labels.actor.apiClient, value: 'api_client' },
+  ] as const;
 
   const { data: applications } = useApplications();
 
@@ -156,16 +172,19 @@ export function AuditToolbar({
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `registros-auditoria-${new Date().toISOString().split('T')[0]}.${format}`;
+        a.download = messages.admin.audit.toolbar.fileName(
+          new Date().toISOString().split('T')[0],
+          format
+        );
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        toast.success(`Registros de auditoria exportados en ${format.toUpperCase()}`);
+        toast.success(messages.admin.audit.toolbar.exportSuccess(format.toUpperCase()));
       }
     } catch (error) {
       console.log(error);
-      toast.error('No se pudieron exportar los registros de auditoria');
+      toast.error(messages.admin.audit.toolbar.exportError);
     }
   };
 
@@ -174,7 +193,7 @@ export function AuditToolbar({
       <div className="flex flex-1 flex-col-reverse items-start gap-2 space-x-2 lg:flex-row lg:items-center">
         {/* Search Input */}
         <Input
-          placeholder="Buscar por recurso, usuario o cliente..."
+          placeholder={messages.admin.audit.toolbar.searchPlaceholder}
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
           className="md:max-w-xs"
@@ -186,21 +205,21 @@ export function AuditToolbar({
 
         {/* Application Filter (Single-select) */}
         <SimpleSelectFilter
-          title="Aplicacion"
+          title={messages.admin.audit.toolbar.filters.application}
           options={applicationFilterData}
           value={applicationFilter}
           onValueChange={onApplicationFilterChange}
         />
         {/* User Filter (Single-select) */}
         <SimpleSelectFilter
-          title="Usuario"
+          title={messages.admin.audit.toolbar.filters.user}
           options={userFilterData}
           value={userFilter}
           onValueChange={onUserFilterChange}
         />
         {/* API Client Filter (Single-select) */}
         <SimpleSelectFilter
-          title="Cliente API"
+          title={messages.admin.audit.toolbar.filters.apiClient}
           options={apiClientFilterData}
           value={apiClientFilter}
           onValueChange={onApiClientFilterChange}
@@ -208,7 +227,7 @@ export function AuditToolbar({
 
         {/* Action Filter (Multi-select) */}
         <DataTableFacetedFilter
-          title="Accion"
+          title={messages.admin.audit.toolbar.filters.action}
           options={[...auditActionOptions]}
           value={actionFilter}
           onValueChange={onActionFilterChange}
@@ -216,7 +235,7 @@ export function AuditToolbar({
 
         {/* Status Filter (Single-select) */}
         <SimpleSelectFilter
-          title="Estado"
+          title={messages.admin.audit.toolbar.filters.status}
           options={[...auditStatusOptions]}
           value={statusFilter}
           onValueChange={onStatusFilterChange}
@@ -224,7 +243,7 @@ export function AuditToolbar({
 
         {/* Actor Type Filter (Single-select) */}
         <SimpleSelectFilter
-          title="Actor"
+          title={messages.admin.audit.toolbar.filters.actor}
           options={[...actorTypeOptions]}
           value={actorTypeFilter}
           onValueChange={onActorTypeFilterChange}
@@ -233,7 +252,7 @@ export function AuditToolbar({
         {/* Reset Button */}
         {isFiltered && (
           <Button variant="ghost" onClick={onReset} className="h-9 px-2 lg:px-3">
-            Limpiar
+            {messages.admin.audit.toolbar.reset}
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}
@@ -243,11 +262,11 @@ export function AuditToolbar({
         {/* Export Buttons */}
         <Button variant="outline" size="sm" onClick={() => handleExport('csv')} className="h-9">
           <Download className="mr-2 h-4 w-4" />
-          CSV
+          {messages.admin.audit.toolbar.exportCsv}
         </Button>
         <Button variant="outline" size="sm" onClick={() => handleExport('json')} className="h-9">
           <Download className="mr-2 h-4 w-4" />
-          JSON
+          {messages.admin.audit.toolbar.exportJson}
         </Button>
 
         {onRefresh && (
@@ -259,7 +278,7 @@ export function AuditToolbar({
             className="h-9"
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Actualizar
+            {messages.admin.audit.toolbar.refresh}
           </Button>
         )}
       </div>

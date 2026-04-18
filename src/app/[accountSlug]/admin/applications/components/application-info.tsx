@@ -2,6 +2,7 @@ import { DescriptionList, DescriptionSection } from '@/components/description-li
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useI18n } from '@/i18n/provider';
 import { Application } from '@/schemas/application';
 import { formatDate } from '@/utils/formatters';
 import { getStorageUrl } from '@/utils/storage';
@@ -19,6 +20,7 @@ export function ApplicationInfo({
   opened: boolean;
   onOpened(opened: boolean): void;
 }) {
+  const { messages } = useI18n();
   const [copiedField, setCopiedField] = useState<
     'clientId' | 'clientSecret' | 'clientJwtSecret' | null
   >(null);
@@ -30,10 +32,10 @@ export function ApplicationInfo({
     try {
       await navigator.clipboard.writeText(text);
       setCopiedField(field);
-      toast.success('Copiado al portapapeles');
+      toast.success(messages.common.copiedToClipboard);
       setTimeout(() => setCopiedField(null), 2000);
     } catch {
-      toast.error('No se pudo copiar al portapapeles');
+      toast.error(messages.common.copyToClipboardFailed);
     }
   };
   if (!application) return null;
@@ -41,26 +43,34 @@ export function ApplicationInfo({
   const logoUrl = getStorageUrl(application.logo);
   const portalUrl = getStorageUrl(application.image);
   const authUrl = getStorageUrl(application.imageAd);
-  const statusLabel = application.status === 'active' ? 'Activo' : 'Suspendido';
-  const clientTypeLabel = application.clientType === 'public' ? 'Publico' : 'Confidencial';
-  const mfaLabel = application.mfaEnabled ? 'Activado' : 'Desactivado';
+  const statusLabel =
+    application.status === 'active'
+      ? messages.admin.applications.info.labels.status.active
+      : messages.admin.applications.info.labels.status.suspended;
+  const clientTypeLabel =
+    application.clientType === 'public'
+      ? messages.admin.applications.info.labels.clientType.public
+      : messages.admin.applications.info.labels.clientType.confidential;
+  const mfaLabel = application.mfaEnabled
+    ? messages.admin.applications.info.labels.mfa.enabled
+    : messages.admin.applications.info.labels.mfa.disabled;
 
   const sections: DescriptionSection[] = [
     {
-      title: 'Datos basicos',
+      title: messages.admin.applications.info.sections.basic,
       columns: 2,
       items: [
-        { label: 'Nombre', value: application.name },
-        { label: 'Slug', value: application.slug },
-        { label: 'Tipo de cliente', value: clientTypeLabel },
+        { label: messages.admin.applications.info.fields.name, value: application.name },
+        { label: messages.admin.applications.info.fields.slug, value: application.slug },
+        { label: messages.admin.applications.info.fields.clientType, value: clientTypeLabel },
         {
-          label: 'MFA',
+          label: messages.admin.applications.info.fields.mfa,
           value: (
             <Badge variant={application.mfaEnabled ? 'default' : 'secondary'}>{mfaLabel}</Badge>
           ),
         },
         {
-          label: 'Estado',
+          label: messages.admin.applications.info.fields.status,
           value: (
             <Badge variant={application.status === 'active' ? 'default' : 'secondary'}>
               {statusLabel}
@@ -68,7 +78,7 @@ export function ApplicationInfo({
           ),
         },
         {
-          label: 'Logo',
+          label: messages.admin.applications.info.fields.logo,
           value: logoUrl ? (
             <div className="relative h-16 w-16 overflow-hidden rounded-lg border">
               <Image
@@ -84,7 +94,7 @@ export function ApplicationInfo({
           ),
         },
         {
-          label: 'Imagen del portal',
+          label: messages.admin.applications.info.fields.portalImage,
           value: portalUrl ? (
             <div className="relative h-16 w-16 overflow-hidden rounded-lg border">
               <Image
@@ -100,7 +110,7 @@ export function ApplicationInfo({
           ),
         },
         {
-          label: 'Imagen de anuncio (auth)',
+          label: messages.admin.applications.info.fields.authImage,
           value: authUrl ? (
             <div className="relative h-16 w-16 overflow-hidden rounded-lg border">
               <Image
@@ -118,12 +128,12 @@ export function ApplicationInfo({
       ],
     },
     {
-      title: 'URLs',
+      title: messages.admin.applications.info.sections.urls,
       columns: 1,
       items: [
-        { label: 'URL de inicio', value: application.homeUrl ?? '—' },
+        { label: messages.admin.applications.info.fields.homeUrl, value: application.homeUrl ?? '—' },
         {
-          label: 'URLs de logout',
+          label: messages.admin.applications.info.fields.logoutUrls,
           value:
             application.logoutUrl && application.logoutUrl.length > 0 ? (
               <ul className="list-inside list-disc space-y-1">
@@ -138,7 +148,7 @@ export function ApplicationInfo({
             ),
         },
         {
-          label: 'URLs de callback',
+          label: messages.admin.applications.info.fields.callbackUrls,
           value:
             application.callbackUrls && application.callbackUrls.length > 0 ? (
               <ul className="list-inside list-disc space-y-1">
@@ -155,10 +165,10 @@ export function ApplicationInfo({
       ],
     },
     {
-      title: 'Permisos',
+      title: messages.admin.applications.info.sections.permissions,
       items: [
         {
-          label: 'Permisos definidos',
+          label: messages.admin.applications.info.fields.definedPermissions,
           value: application.permissions?.length ? (
             <div className="flex flex-wrap gap-1">
               {application.permissions.map((p) => (
@@ -174,11 +184,11 @@ export function ApplicationInfo({
       ],
     },
     {
-      title: 'Actividad',
+      title: messages.admin.applications.info.sections.activity,
       columns: 2,
       items: [
-        { label: 'Creado', value: formatDate(application.createdAt) },
-        { label: 'Actualizado', value: formatDate(application.updatedAt) },
+        { label: messages.admin.applications.info.fields.created, value: formatDate(application.createdAt) },
+        { label: messages.admin.applications.info.fields.updated, value: formatDate(application.updatedAt) },
       ],
     },
   ];
@@ -187,14 +197,16 @@ export function ApplicationInfo({
     <Sheet open={opened} onOpenChange={(open) => onOpened(open)}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>Aplicacion</SheetTitle>
+          <SheetTitle>{messages.admin.applications.info.title}</SheetTitle>
         </SheetHeader>
         <div className="px-4">
           <DescriptionList sections={sections} columns={2} />
           <div className="mt-4 space-y-4">
-            <h4 className="text-md font-semibold">Credenciales</h4>
+            <h4 className="text-md font-semibold">{messages.admin.applications.info.credentials}</h4>
             <div className="space-y-2">
-              <label className="text-sm font-medium">JWT secret</label>
+              <label className="text-sm font-medium">
+                {messages.admin.applications.info.credentialsFields.jwtSecret}
+              </label>
               <div className="flex items-center gap-2">
                 <code className="bg-muted flex-1 overflow-auto rounded-md p-3 font-mono text-sm">
                   {application.clientJwtSecret}
@@ -213,7 +225,9 @@ export function ApplicationInfo({
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">ID del cliente</label>
+              <label className="text-sm font-medium">
+                {messages.admin.applications.info.credentialsFields.clientId}
+              </label>
               <div className="flex items-center gap-2">
                 <code className="bg-muted flex-1 overflow-auto rounded-md p-3 font-mono text-sm">
                   {application.clientId}
@@ -232,10 +246,12 @@ export function ApplicationInfo({
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Secreto del cliente</label>
+              <label className="text-sm font-medium">
+                {messages.admin.applications.info.credentialsFields.clientSecret}
+              </label>
               <div className="flex items-center gap-2">
                 <code className="bg-muted flex-1 overflow-auto rounded-md p-3 font-mono text-sm">
-                  **********************
+                  {messages.admin.applications.info.credentialsFields.maskedSecret}
                 </code>
                 <Button
                   variant="outline"

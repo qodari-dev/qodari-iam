@@ -2,6 +2,7 @@
 
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
+import { useI18n } from '@/i18n/provider';
 import { cn } from '@/lib/utils';
 import { CreateRoleBodySchema } from '@/schemas/role';
 import { useApplication } from '@/hooks/queries/use-application-queries';
@@ -12,6 +13,7 @@ import { z } from 'zod';
 type FormValues = z.infer<typeof CreateRoleBodySchema>;
 
 export function RolePermissionsForm() {
+  const { messages } = useI18n();
   const form = useFormContext<FormValues>();
   const selectedAppId = form.watch('applicationId');
   const prevAppIdRef = useRef<string | null>(null);
@@ -48,7 +50,7 @@ export function RolePermissionsForm() {
   if (!selectedAppId) {
     return (
       <div className={cn('text-muted-foreground rounded-md border border-dashed p-4 text-sm')}>
-        Selecciona una aplicación para ver sus permisos.
+        {messages.admin.roles.form.permissions.selectApplication}
       </div>
     );
   }
@@ -56,12 +58,16 @@ export function RolePermissionsForm() {
   return (
     <div className="space-y-3">
       <Field>
-        <FieldLabel>Permisos de la aplicación</FieldLabel>
+        <FieldLabel>{messages.admin.roles.form.permissions.title}</FieldLabel>
         <div className="rounded-md border">
           {isLoading ? (
-            <div className="text-muted-foreground p-3 text-sm">Cargando permisos...</div>
+            <div className="text-muted-foreground p-3 text-sm">
+              {messages.admin.roles.form.permissions.loading}
+            </div>
           ) : permissions.length === 0 ? (
-            <div className="text-muted-foreground p-3 text-sm">No hay permisos configurados.</div>
+            <div className="text-muted-foreground p-3 text-sm">
+              {messages.admin.roles.form.permissions.empty}
+            </div>
           ) : (
             <div className="divide-y">
               {permissions.map((perm) => (

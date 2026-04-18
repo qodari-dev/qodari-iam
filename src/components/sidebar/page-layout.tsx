@@ -69,7 +69,7 @@ export function PageLayout({ children, breadcrumbs, permissionKey }: Props) {
             </BreadcrumbList>
           </Breadcrumb>
         </div>
-        <div>
+        <div className="flex items-center gap-2">
           <ModeToggle />
         </div>
       </header>

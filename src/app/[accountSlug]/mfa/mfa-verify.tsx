@@ -14,6 +14,7 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
+import { useI18n } from '@/i18n/provider';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { Mail } from 'lucide-react';
 import Link from 'next/link';
@@ -36,23 +37,30 @@ export default function MfaVerify({
   redirect,
 }: MfaVerifyProps) {
   const router = useRouter();
+  const { locale, messages } = useI18n();
   const [code, setCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const { mutateAsync: verifyMfa, isPending: isVerifying } = api.auth.mfaVerify.useMutation({
     onError(error) {
-      toast.error('Error', { description: getTsRestErrorMessage(error) });
+      toast.error(messages.common.error, {
+        description: getTsRestErrorMessage(error, locale),
+      });
       setCode('');
     },
   });
 
   const { mutateAsync: resendMfa, isPending: isResending } = api.auth.mfaResend.useMutation({
     onSuccess(data) {
-      toast.success('Codigo enviado', { description: data.body.message });
+      toast.success(messages.auth.mfa.codeSent, {
+        description: getTsRestErrorMessage({ message: data.body.message }, locale),
+      });
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
     },
     onError(error) {
-      toast.error('Error', { description: getTsRestErrorMessage(error) });
+      toast.error(messages.common.error, {
+        description: getTsRestErrorMessage(error, locale),
+      });
     },
   });
 
@@ -109,9 +117,9 @@ export default function MfaVerify({
         <div className="bg-muted flex size-12 items-center justify-center rounded-full">
           <Mail className="text-muted-foreground size-6" />
         </div>
-        <h1 className="text-2xl font-bold">Revisa tu correo</h1>
+        <h1 className="text-2xl font-bold">{messages.auth.mfa.title}</h1>
         <p className="text-muted-foreground text-sm text-balance">
-          Enviamos un codigo de verificacion a <span className="font-medium">{maskedEmail}</span>
+          {messages.auth.mfa.description} <span className="font-medium">{maskedEmail}</span>
         </p>
       </div>
 
@@ -134,16 +142,16 @@ export default function MfaVerify({
           {isVerifying ? (
             <div className="flex items-center justify-center gap-2">
               <Spinner className="h-4 w-4" />
-              <span>Verificando...</span>
+              <span>{messages.auth.mfa.verifying}</span>
             </div>
           ) : (
-            'Verificar'
+            messages.auth.mfa.verify
           )}
         </Button>
 
         <div className="text-muted-foreground flex flex-col items-center gap-2 text-sm">
           <span>
-            {'No recibiste el codigo? '}
+            {`${messages.auth.mfa.notReceived} `}
             <button
               type="button"
               onClick={handleResend}
@@ -151,16 +159,16 @@ export default function MfaVerify({
               className="text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isResending
-                ? 'Enviando...'
+                ? messages.auth.mfa.sending
                 : resendCooldown > 0
-                  ? `Reenviar en ${resendCooldown}s`
-                  : 'Reenviar codigo'}
+                  ? `${messages.auth.mfa.resendIn} ${resendCooldown}s`
+                  : messages.auth.mfa.resend}
             </button>
           </span>
         </div>
 
         <Button variant="link" asChild>
-          <Link href={loginUrl}>Volver al inicio de sesion</Link>
+          <Link href={loginUrl}>{messages.auth.mfa.backToLogin}</Link>
         </Button>
       </div>
     </AuthLayout>

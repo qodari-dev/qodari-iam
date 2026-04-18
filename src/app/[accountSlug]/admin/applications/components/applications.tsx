@@ -14,10 +14,11 @@ import {
 import { PageContent, PageHeader } from '@/components/layout';
 import { Spinner } from '@/components/ui/spinner';
 import { useApplications, useDeleteApplication } from '@/hooks/queries/use-application-queries';
+import { useI18n } from '@/i18n/provider';
 import { Application, ApplicationInclude, ApplicationSortField } from '@/schemas/application';
 import { RowData, TableMeta } from '@tanstack/react-table';
 import * as React from 'react';
-import { applicationColumns } from './application-columns';
+import { useApplicationColumns } from './application-columns';
 import { ApplicationForm } from './application-form';
 import { ApplicationsToolbar } from './application-toolbar';
 import { ApplicationInfo } from './application-info';
@@ -35,7 +36,9 @@ declare module '@tanstack/table-core' {
 }
 
 export function Applications() {
+  const { locale, messages } = useI18n();
   const [application, setApplication] = React.useState<Application>();
+  const applicationColumns = useApplicationColumns();
 
   const {
     pageIndex,
@@ -97,16 +100,18 @@ export function Applications() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `applications-roles-${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = messages.admin.applications.report.fileName(
+          new Date().toISOString().split('T')[0]
+        );
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       }
     } catch (error) {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     }
-  }, []);
+  }, [locale, messages.admin.applications.report]);
 
   const tableMeta = React.useMemo<TableMeta<Application>>(
     () => ({
@@ -120,7 +125,10 @@ export function Applications() {
 
   return (
     <>
-      <PageHeader title="Aplicaciones" description="Administra aplicaciones y sus permisos." />
+      <PageHeader
+        title={messages.admin.applications.title}
+        description={messages.admin.applications.description}
+      />
       <PageContent>
         <DataTable
           columns={applicationColumns}
@@ -143,7 +151,7 @@ export function Applications() {
               isRefreshing={isFetching && !isLoading}
             />
           }
-          emptyMessage="No se encontraron aplicaciones."
+          emptyMessage={messages.admin.applications.empty}
           meta={tableMeta}
         />
       </PageContent>
@@ -162,17 +170,18 @@ export function Applications() {
       <AlertDialog open={openedDeleteDialog} onOpenChange={setOpenedDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar aplicacion</AlertDialogTitle>
+            <AlertDialogTitle>{messages.admin.applications.deleteDialog.title}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta accion no se puede deshacer. Estas seguro de eliminar{' '}
-              <strong>{application?.name}</strong>?
+              {application?.name
+                ? messages.admin.applications.deleteDialog.description(application.name)
+                : null}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{messages.common.cancel}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
               {isDeleting && <Spinner className="mr-2 h-4 w-4" />}
-              Eliminar
+              {messages.admin.applications.deleteDialog.confirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

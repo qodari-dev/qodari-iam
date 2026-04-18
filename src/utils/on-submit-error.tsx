@@ -1,5 +1,9 @@
+import type { BaseSyntheticEvent } from 'react';
 import type { FieldErrors, FieldValues } from 'react-hook-form';
 import { toast } from 'sonner';
+import { type Locale } from '@/i18n/config';
+import { getMessages } from '@/i18n';
+import { getTsRestErrorMessage } from './get-ts-rest-error-message';
 
 /**
  * Extrae todos los mensajes de error de un objeto FieldErrors (incluyendo nested)
@@ -30,29 +34,36 @@ function extractErrorMessages(
 /**
  * Muestra errores de formulario en un toast
  */
-export function onSubmitError<T extends FieldValues>(errors: FieldErrors<T>) {
+export function onSubmitError<T extends FieldValues>(
+  errors: FieldErrors<T>,
+  _event?: BaseSyntheticEvent,
+  locale: Locale = 'es'
+) {
   const errorMessages = extractErrorMessages(errors);
+  const messages = getMessages(locale);
 
   if (errorMessages.length === 0) return;
 
   if (errorMessages.length === 1) {
     // Un solo error - toast simple
-    toast.error(errorMessages[0].message, {
+    toast.error(getTsRestErrorMessage({ message: errorMessages[0].message }, locale), {
       description: errorMessages[0].path,
     });
     return;
   }
 
   // Múltiples errores - toast con lista
-  toast.error('Validation errors:', {
+  toast.error(messages.common.validationErrors, {
     description: (
       <ul className="mt-2 list-disc pl-4">
         {errorMessages.slice(0, 8).map(({ path, message }) => (
           <li key={path}>
-            <b>{path}:</b> {message}
+            <b>{path}:</b> {getTsRestErrorMessage({ message }, locale)}
           </li>
         ))}
-        {errorMessages.length > 8 && <li>+{errorMessages.length - 5} more errors</li>}
+        {errorMessages.length > 8 && (
+          <li>{messages.common.moreErrors(errorMessages.length - 8)}</li>
+        )}
       </ul>
     ),
   });

@@ -2,6 +2,7 @@
 
 import type { Column } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown, EyeOff } from 'lucide-react';
+import { useI18n } from '@/i18n/provider';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +33,7 @@ export function DataTableColumnHeader<TData, TValue>({
   className,
   enableHiding = true,
 }: DataTableColumnHeaderProps<TData, TValue>) {
+  const { messages } = useI18n();
   // If column is not sortable, just render the title
   if (!column.getCanSort()) {
     return <div className={cn(className)}>{title}</div>;
@@ -55,18 +57,18 @@ export function DataTableColumnHeader<TData, TValue>({
         <DropdownMenuContent align="start">
           <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
             <ArrowUp className="text-muted-foreground/70 mr-2 h-3.5 w-3.5" />
-            Asc
+            {messages.common.dataTable.sortAsc}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
             <ArrowDown className="text-muted-foreground/70 mr-2 h-3.5 w-3.5" />
-            Desc
+            {messages.common.dataTable.sortDesc}
           </DropdownMenuItem>
           {enableHiding && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
                 <EyeOff className="text-muted-foreground/70 mr-2 h-3.5 w-3.5" />
-                Hide
+                {messages.common.dataTable.hide}
               </DropdownMenuItem>
             </>
           )}

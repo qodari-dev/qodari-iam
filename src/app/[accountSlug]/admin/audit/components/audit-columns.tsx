@@ -3,6 +3,7 @@
 import { DataTableColumnHeader } from '@/components/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n/provider';
 import { AuditLog, AuditAction, AuditStatus, ActorType } from '@/schemas/audit';
 import { formatDate } from '@/utils/formatters';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -25,27 +26,27 @@ import {
 // Status Badge Component
 // ============================================================================
 
-const statusConfig: Record<
-  AuditStatus,
-  {
-    label: string;
-    variant: 'default' | 'secondary' | 'outline' | 'destructive';
-    icon: typeof CheckCircle;
-  }
-> = {
-  success: {
-    label: 'Exito',
-    variant: 'default',
-    icon: CheckCircle,
-  },
-  failure: {
-    label: 'Fallo',
-    variant: 'destructive',
-    icon: XCircle,
-  },
-};
-
 function StatusBadge({ status }: { status: AuditStatus }) {
+  const { messages } = useI18n();
+  const statusConfig: Record<
+    AuditStatus,
+    {
+      label: string;
+      variant: 'default' | 'secondary' | 'outline' | 'destructive';
+      icon: typeof CheckCircle;
+    }
+  > = {
+    success: {
+      label: messages.admin.audit.labels.status.success,
+      variant: 'default',
+      icon: CheckCircle,
+    },
+    failure: {
+      label: messages.admin.audit.labels.status.failure,
+      variant: 'destructive',
+      icon: XCircle,
+    },
+  };
   const config = statusConfig[status] ?? statusConfig.success;
   const Icon = config.icon;
 
@@ -62,6 +63,7 @@ function StatusBadge({ status }: { status: AuditStatus }) {
 // ============================================================================
 
 function ActorBadge({ actorType, name }: { actorType: ActorType; name: string | null }) {
+  const { messages } = useI18n();
   const isUser = actorType === 'user';
 
   return (
@@ -72,7 +74,10 @@ function ActorBadge({ actorType, name }: { actorType: ActorType; name: string | 
         <Bot className="text-muted-foreground h-4 w-4" />
       )}
       <span className="truncate">
-        {name || (isUser ? 'Usuario desconocido' : 'Cliente desconocido')}
+        {name ||
+          (isUser
+            ? messages.admin.audit.labels.actor.unknownUser
+            : messages.admin.audit.labels.actor.unknownClient)}
       </span>
     </div>
   );
@@ -82,52 +87,52 @@ function ActorBadge({ actorType, name }: { actorType: ActorType; name: string | 
 // Action Badge
 // ============================================================================
 
-const actionConfig: Record<
-  AuditAction,
-  {
-    label: string;
-    variant: 'default' | 'secondary' | 'outline' | 'destructive';
-    icon: typeof Plus;
-  }
-> = {
-  create: {
-    label: 'Crear',
-    variant: 'default',
-    icon: Plus,
-  },
-  update: {
-    label: 'Actualizar',
-    variant: 'secondary',
-    icon: Pencil,
-  },
-  delete: {
-    label: 'Eliminar',
-    variant: 'destructive',
-    icon: Trash2,
-  },
-  read: {
-    label: 'Leer',
-    variant: 'outline',
-    icon: Eye,
-  },
-  login: {
-    label: 'Inicio de sesion',
-    variant: 'default',
-    icon: LogIn,
-  },
-  logout: {
-    label: 'Cierre de sesion',
-    variant: 'secondary',
-    icon: LogOut,
-  },
-  other: {
-    label: 'Otro',
-    variant: 'outline',
-    icon: MoreHorizontal,
-  },
-};
-
 function ActionBadge({ action }: { action: string }) {
+  const { messages } = useI18n();
+  const actionConfig: Record<
+    AuditAction,
+    {
+      label: string;
+      variant: 'default' | 'secondary' | 'outline' | 'destructive';
+      icon: typeof Plus;
+    }
+  > = {
+    create: {
+      label: messages.admin.audit.labels.action.create,
+      variant: 'default',
+      icon: Plus,
+    },
+    update: {
+      label: messages.admin.audit.labels.action.update,
+      variant: 'secondary',
+      icon: Pencil,
+    },
+    delete: {
+      label: messages.admin.audit.labels.action.delete,
+      variant: 'destructive',
+      icon: Trash2,
+    },
+    read: {
+      label: messages.admin.audit.labels.action.read,
+      variant: 'outline',
+      icon: Eye,
+    },
+    login: {
+      label: messages.admin.audit.labels.action.login,
+      variant: 'default',
+      icon: LogIn,
+    },
+    logout: {
+      label: messages.admin.audit.labels.action.logout,
+      variant: 'secondary',
+      icon: LogOut,
+    },
+    other: {
+      label: messages.admin.audit.labels.action.other,
+      variant: 'outline',
+      icon: MoreHorizontal,
+    },
+  };
   const config = actionConfig[action as AuditAction] ?? actionConfig.other;
   const Icon = config.icon;
 
@@ -143,11 +148,16 @@ function ActionBadge({ action }: { action: string }) {
 // Column Definitions
 // ============================================================================
 
-export const auditColumns: ColumnDef<AuditLog>[] = [
+export function useAuditColumns(): ColumnDef<AuditLog>[] {
+  const { messages } = useI18n();
+
+  return [
   // Created At Column
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Fecha" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={messages.admin.audit.columns.date} />
+    ),
     cell: ({ row }) => {
       const date = row.original.createdAt;
       return (
@@ -164,7 +174,7 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
   // Actor Column
   {
     id: 'actor',
-    header: 'Actor',
+    header: messages.admin.audit.columns.actor,
     cell: ({ row }) => {
       const { actorType, userName, apiClientName } = row.original;
       const name = actorType === 'user' ? userName : apiClientName;
@@ -176,14 +186,18 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
   // Action Column
   {
     accessorKey: 'action',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Accion" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={messages.admin.audit.columns.action} />
+    ),
     cell: ({ row }) => <ActionBadge action={row.getValue('action')} />,
   },
 
   // Resource Column
   {
     accessorKey: 'resource',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Recurso" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={messages.admin.audit.columns.resource} />
+    ),
     cell: ({ row }) => {
       const { resourceKey, resourceLabel, resourceId } = row.original;
       return (
@@ -196,7 +210,7 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
           )}
           {!resourceLabel && resourceId && (
             <span className="text-muted-foreground max-w-[200px] truncate text-xs">
-              ID: {resourceId}
+              {messages.admin.audit.columns.resourceId}: {resourceId}
             </span>
           )}
         </div>
@@ -207,7 +221,7 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
   // Application Column
   {
     accessorKey: 'applicationName',
-    header: 'Aplicacion',
+    header: messages.admin.audit.columns.application,
     cell: ({ row }) => {
       const appName = row.original.applicationName;
       return appName ? (
@@ -222,14 +236,16 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
   // Status Column
   {
     accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Estado" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={messages.admin.audit.columns.status} />
+    ),
     cell: ({ row }) => <StatusBadge status={row.getValue('status')} />,
   },
 
   // IP Address Column (hidden by default)
   {
     accessorKey: 'ipAddress',
-    header: 'Direccion IP',
+    header: messages.admin.audit.columns.ipAddress,
     cell: ({ row }) => {
       const ip = row.original.ipAddress;
       return ip ? (
@@ -249,9 +265,10 @@ export const auditColumns: ColumnDef<AuditLog>[] = [
       return (
         <Button variant="ghost" size="sm" onClick={() => meta?.onRowView?.(row.original)}>
           <Eye className="h-4 w-4" />
-          <span className="sr-only">Ver detalles</span>
+          <span className="sr-only">{messages.admin.audit.columns.viewDetails}</span>
         </Button>
       );
     },
   },
-];
+  ];
+}

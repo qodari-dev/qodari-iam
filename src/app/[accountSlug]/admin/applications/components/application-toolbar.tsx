@@ -2,6 +2,7 @@
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n/provider';
 import { Plus, RefreshCw } from 'lucide-react';
 
 type ToolbarProps = {
@@ -19,10 +20,11 @@ export function ApplicationsToolbar({
   onRefresh,
   isRefreshing = false,
 }: ToolbarProps) {
+  const { messages } = useI18n();
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <Input
-        placeholder="Buscar aplicaciones..."
+        placeholder={messages.admin.applications.toolbar.searchPlaceholder}
         value={searchValue}
         onChange={(e) => onSearchChange(e.target.value)}
         className="md:max-w-xs"
@@ -37,12 +39,12 @@ export function ApplicationsToolbar({
             className="h-9"
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Actualizar
+            {messages.admin.applications.toolbar.refresh}
           </Button>
         )}
         <Button type="button" size="sm" onClick={onCreate} className="h-9">
           <Plus className="mr-2 h-4 w-4" />
-          Nueva aplicacion
+          {messages.admin.applications.toolbar.create}
         </Button>
       </div>
     </div>

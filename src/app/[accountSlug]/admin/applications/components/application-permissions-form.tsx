@@ -22,11 +22,13 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n/provider';
 import {
   CreateApplicationBodySchema,
   PermissionInput,
   PermissionInputSchema,
 } from '@/schemas/application';
+import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -37,6 +39,7 @@ import { z } from 'zod';
 type FormValues = z.infer<typeof CreateApplicationBodySchema>;
 
 export function ApplicationPermissionsForm() {
+  const { locale, messages } = useI18n();
   const form = useFormContext<FormValues>();
 
   const { fields, append, update, remove } = useFieldArray({
@@ -87,7 +90,7 @@ export function ApplicationPermissionsForm() {
     );
 
     if (isDuplicate) {
-      toast.error('Ya existe un permiso con ese recurso y acción');
+      toast.error(messages.admin.applications.form.permissions.duplicateError);
       return;
     }
 
@@ -103,22 +106,24 @@ export function ApplicationPermissionsForm() {
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="text-sm font-medium">Permisos de la aplicación</p>
+          <p className="text-sm font-medium">{messages.admin.applications.form.permissions.title}</p>
           <p className="text-muted-foreground text-sm">
-            Define los permisos (resource + action) asociados a esta aplicación.
+            {messages.admin.applications.form.permissions.description}
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button type="button" size="sm" onClick={handleAddClick}>
               <Plus className="h-4 w-4" />
-              Agregar permiso
+              {messages.admin.applications.form.permissions.add}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {editingIndex !== null ? 'Editar permiso' : 'Agregar permiso'}
+                {editingIndex !== null
+                  ? messages.admin.applications.form.permissions.editTitle
+                  : messages.admin.applications.form.permissions.addTitle}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
@@ -127,9 +132,22 @@ export function ApplicationPermissionsForm() {
                 control={dialogForm.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="permName">Nombre</FieldLabel>
+                    <FieldLabel htmlFor="permName">
+                      {messages.admin.applications.form.permissions.fields.name}
+                    </FieldLabel>
                     <Input id="permName" {...field} aria-invalid={fieldState.invalid} />
-                    {fieldState.error && <FieldError errors={[fieldState.error]} />}
+                    {fieldState.error && (
+                      <FieldError
+                        errors={[
+                          {
+                            message: getTsRestErrorMessage(
+                              { message: fieldState.error?.message },
+                              locale
+                            ),
+                          },
+                        ]}
+                      />
+                    )}
                   </Field>
                 )}
               />
@@ -138,9 +156,22 @@ export function ApplicationPermissionsForm() {
                 control={dialogForm.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="permResource">Recurso</FieldLabel>
+                    <FieldLabel htmlFor="permResource">
+                      {messages.admin.applications.form.permissions.fields.resource}
+                    </FieldLabel>
                     <Input id="permResource" {...field} aria-invalid={fieldState.invalid} />
-                    {fieldState.error && <FieldError errors={[fieldState.error]} />}
+                    {fieldState.error && (
+                      <FieldError
+                        errors={[
+                          {
+                            message: getTsRestErrorMessage(
+                              { message: fieldState.error?.message },
+                              locale
+                            ),
+                          },
+                        ]}
+                      />
+                    )}
                   </Field>
                 )}
               />
@@ -149,9 +180,22 @@ export function ApplicationPermissionsForm() {
                 control={dialogForm.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="permAction">Acción</FieldLabel>
+                    <FieldLabel htmlFor="permAction">
+                      {messages.admin.applications.form.permissions.fields.action}
+                    </FieldLabel>
                     <Input id="permAction" {...field} aria-invalid={fieldState.invalid} />
-                    {fieldState.error && <FieldError errors={[fieldState.error]} />}
+                    {fieldState.error && (
+                      <FieldError
+                        errors={[
+                          {
+                            message: getTsRestErrorMessage(
+                              { message: fieldState.error?.message },
+                              locale
+                            ),
+                          },
+                        ]}
+                      />
+                    )}
                   </Field>
                 )}
               />
@@ -160,14 +204,27 @@ export function ApplicationPermissionsForm() {
                 control={dialogForm.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="permDescription">Descripción</FieldLabel>
+                    <FieldLabel htmlFor="permDescription">
+                      {messages.admin.applications.form.permissions.fields.description}
+                    </FieldLabel>
                     <Textarea
                       id="permDescription"
                       {...field}
                       aria-invalid={fieldState.invalid}
                       className="min-h-20"
                     />
-                    {fieldState.error && <FieldError errors={[fieldState.error]} />}
+                    {fieldState.error && (
+                      <FieldError
+                        errors={[
+                          {
+                            message: getTsRestErrorMessage(
+                              { message: fieldState.error?.message },
+                              locale
+                            ),
+                          },
+                        ]}
+                      />
+                    )}
                   </Field>
                 )}
               />
@@ -175,11 +232,13 @@ export function ApplicationPermissionsForm() {
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline">
-                  Cancelar
+                  {messages.common.cancel}
                 </Button>
               </DialogClose>
               <Button type="button" onClick={dialogForm.handleSubmit(onSave)}>
-                {editingIndex !== null ? 'Guardar cambios' : 'Agregar permiso'}
+                {editingIndex !== null
+                  ? messages.admin.applications.form.permissions.saveChanges
+                  : messages.admin.applications.form.permissions.add}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -190,10 +249,12 @@ export function ApplicationPermissionsForm() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Recurso</TableHead>
-              <TableHead>Acción</TableHead>
-              <TableHead className="w-[120px] text-right">Acciones</TableHead>
+              <TableHead>{messages.admin.applications.form.permissions.table.name}</TableHead>
+              <TableHead>{messages.admin.applications.form.permissions.table.resource}</TableHead>
+              <TableHead>{messages.admin.applications.form.permissions.table.action}</TableHead>
+              <TableHead className="w-[120px] text-right">
+                {messages.admin.applications.form.permissions.table.actions}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -215,7 +276,9 @@ export function ApplicationPermissionsForm() {
                     onClick={() => handleEditClick(index)}
                   >
                     <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Editar</span>
+                    <span className="sr-only">
+                      {messages.admin.applications.form.permissions.table.edit}
+                    </span>
                   </Button>
                   <Button
                     type="button"
@@ -225,7 +288,9 @@ export function ApplicationPermissionsForm() {
                     onClick={() => remove(index)}
                   >
                     <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Eliminar</span>
+                    <span className="sr-only">
+                      {messages.admin.applications.form.permissions.table.delete}
+                    </span>
                   </Button>
                 </TableCell>
               </TableRow>
@@ -234,7 +299,7 @@ export function ApplicationPermissionsForm() {
         </Table>
       ) : (
         <div className={cn('text-muted-foreground rounded-md border border-dashed p-4 text-sm')}>
-          No hay permisos agregados.
+          {messages.admin.applications.form.permissions.empty}
         </div>
       )}
     </div>

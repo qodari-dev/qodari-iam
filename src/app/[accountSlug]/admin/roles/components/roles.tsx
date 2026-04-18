@@ -14,10 +14,11 @@ import {
 import { PageContent, PageHeader } from '@/components/layout';
 import { Spinner } from '@/components/ui/spinner';
 import { useDeleteRole, useRoles } from '@/hooks/queries/use-role-queries';
+import { useI18n } from '@/i18n/provider';
 import { Role, RoleInclude, RoleSortField } from '@/schemas/role';
 import { RowData, TableMeta } from '@tanstack/react-table';
 import * as React from 'react';
-import { roleColumns } from './role-columns';
+import { useRoleColumns } from './role-columns';
 import { RoleForm } from './role-form';
 import { RolesToolbar } from './role-toolbar';
 import { RoleInfo } from './role-info';
@@ -31,7 +32,9 @@ declare module '@tanstack/table-core' {
 }
 
 export function Roles() {
+  const { messages } = useI18n();
   const [role, setRole] = React.useState<Role>();
+  const roleColumns = useRoleColumns();
 
   const {
     pageIndex,
@@ -95,8 +98,8 @@ export function Roles() {
   return (
     <>
       <PageHeader
-        title="Roles"
-        description="Administra roles y asigna permisos por aplicacion."
+        title={messages.admin.roles.title}
+        description={messages.admin.roles.description}
       />
       <PageContent>
         <DataTable
@@ -120,7 +123,7 @@ export function Roles() {
               isRefreshing={isFetching && !isLoading}
             />
           }
-          emptyMessage="No se encontraron roles."
+          emptyMessage={messages.admin.roles.empty}
           meta={tableMeta}
         />
       </PageContent>
@@ -131,17 +134,16 @@ export function Roles() {
       <AlertDialog open={openedDeleteDialog} onOpenChange={setOpenedDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar rol</AlertDialogTitle>
+            <AlertDialogTitle>{messages.admin.roles.deleteDialog.title}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta accion no se puede deshacer. Estas seguro de eliminar{' '}
-              <strong>{role?.name}</strong>?
+              {role?.name ? messages.admin.roles.deleteDialog.description(role.name) : null}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{messages.common.cancel}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
               {isDeleting && <Spinner className="mr-2 h-4 w-4" />}
-              Eliminar
+              {messages.admin.roles.deleteDialog.confirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

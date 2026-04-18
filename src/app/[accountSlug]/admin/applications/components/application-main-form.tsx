@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { z } from 'zod';
 import { CreateApplicationBodySchema } from '@/schemas/application';
+import { useI18n } from '@/i18n/provider';
+import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import {
   Select,
   SelectContent,
@@ -30,17 +32,8 @@ type ApplicationMainFormProps = {
   onRemoveUnsaved?: (key: string | null) => void;
 };
 
-const statusOptions: Array<{ label: string; value: FormValues['status'] }> = [
-  { label: 'Activo', value: 'active' },
-  { label: 'Suspendido', value: 'suspended' },
-];
-
-const clientTypeOptions: Array<{ label: string; value: FormValues['clientType'] }> = [
-  { label: 'Publico', value: 'public' },
-  { label: 'Confidencial', value: 'confidential' },
-];
-
 function LogoutUrlsField() {
+  const { locale, messages } = useI18n();
   const form = useFormContext<FormValues>();
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -49,7 +42,7 @@ function LogoutUrlsField() {
 
   return (
     <Field>
-      <FieldLabel>URLs de logout</FieldLabel>
+      <FieldLabel>{messages.admin.applications.form.fields.logoutUrls}</FieldLabel>
       <div className="space-y-2">
         {fields.map((field, index) => (
           <div key={field.id} className="flex gap-2">
@@ -63,7 +56,18 @@ function LogoutUrlsField() {
                     placeholder="https://example.com/logout"
                     aria-invalid={fieldState.invalid}
                   />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  {fieldState.invalid && (
+                    <FieldError
+                      errors={[
+                        {
+                          message: getTsRestErrorMessage(
+                            { message: fieldState.error?.message },
+                            locale
+                          ),
+                        },
+                      ]}
+                    />
+                  )}
                 </div>
               )}
             />
@@ -74,7 +78,7 @@ function LogoutUrlsField() {
         ))}
         <Button type="button" variant="outline" size="sm" onClick={() => append('')}>
           <Plus className="mr-2 h-4 w-4" />
-          Agregar URL de logout
+          {messages.admin.applications.form.fields.addLogoutUrl}
         </Button>
       </div>
     </Field>
@@ -82,6 +86,7 @@ function LogoutUrlsField() {
 }
 
 function CallbackUrlsField() {
+  const { locale, messages } = useI18n();
   const form = useFormContext<FormValues>();
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -90,7 +95,7 @@ function CallbackUrlsField() {
 
   return (
     <Field>
-      <FieldLabel>URLs de callback</FieldLabel>
+      <FieldLabel>{messages.admin.applications.form.fields.callbackUrls}</FieldLabel>
       <div className="space-y-2">
         {fields.map((field, index) => (
           <div key={field.id} className="flex gap-2">
@@ -104,7 +109,18 @@ function CallbackUrlsField() {
                     placeholder="https://example.com/callback"
                     aria-invalid={fieldState.invalid}
                   />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  {fieldState.invalid && (
+                    <FieldError
+                      errors={[
+                        {
+                          message: getTsRestErrorMessage(
+                            { message: fieldState.error?.message },
+                            locale
+                          ),
+                        },
+                      ]}
+                    />
+                  )}
                 </div>
               )}
             />
@@ -115,7 +131,7 @@ function CallbackUrlsField() {
         ))}
         <Button type="button" variant="outline" size="sm" onClick={() => append('')}>
           <Plus className="mr-2 h-4 w-4" />
-          Agregar URL de callback
+          {messages.admin.applications.form.fields.addCallbackUrl}
         </Button>
       </div>
     </Field>
@@ -126,7 +142,21 @@ export function ApplicationMainForm({
   onRemoveUnsaved,
   onUploadComplete,
 }: ApplicationMainFormProps) {
+  const { locale, messages } = useI18n();
   const form = useFormContext<FormValues>();
+  const statusOptions: Array<{ label: string; value: FormValues['status'] }> = [
+    { label: messages.admin.applications.form.options.status.active, value: 'active' },
+    { label: messages.admin.applications.form.options.status.suspended, value: 'suspended' },
+  ];
+
+  const clientTypeOptions: Array<{ label: string; value: FormValues['clientType'] }> = [
+    { label: messages.admin.applications.form.options.clientType.public, value: 'public' },
+    {
+      label: messages.admin.applications.form.options.clientType.confidential,
+      value: 'confidential',
+    },
+  ];
+
   return (
     <FieldGroup className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Controller
@@ -134,9 +164,15 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Nombre</FieldLabel>
+            <FieldLabel htmlFor={field.name}>{messages.admin.applications.form.fields.name}</FieldLabel>
             <Input {...field} aria-invalid={fieldState.invalid} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -147,7 +183,13 @@ export function ApplicationMainForm({
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel htmlFor={field.name}>Slug</FieldLabel>
             <Input {...field} aria-invalid={fieldState.invalid} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -156,9 +198,17 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>Descripcion</FieldLabel>
+            <FieldLabel htmlFor={field.name}>
+              {messages.admin.applications.form.fields.description}
+            </FieldLabel>
             <Textarea {...field} aria-invalid={fieldState.invalid} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -167,9 +217,9 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>Logo</FieldLabel>
+            <FieldLabel htmlFor={field.name}>{messages.admin.applications.form.fields.logo}</FieldLabel>
             <p className="text-muted-foreground mb-2 text-sm">
-              Se usa en el encabezado de las pantallas de autenticacion de esta aplicacion.
+              {messages.admin.applications.form.fields.logoDescription}
             </p>
             <ImageUpload
               value={field.value}
@@ -177,7 +227,13 @@ export function ApplicationMainForm({
               onUploadComplete={onUploadComplete}
               onRemoveUnsaved={onRemoveUnsaved}
             />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -186,9 +242,11 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>Imagen del portal</FieldLabel>
+            <FieldLabel htmlFor={field.name}>
+              {messages.admin.applications.form.fields.portalImage}
+            </FieldLabel>
             <p className="text-muted-foreground mb-2 text-sm">
-              Se muestra en la tarjeta de la aplicacion dentro del portal del usuario.
+              {messages.admin.applications.form.fields.portalImageDescription}
             </p>
             <ImageUpload
               value={field.value}
@@ -196,7 +254,13 @@ export function ApplicationMainForm({
               onUploadComplete={onUploadComplete}
               onRemoveUnsaved={onRemoveUnsaved}
             />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -205,9 +269,11 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>Imagen de la pagina de auth</FieldLabel>
+            <FieldLabel htmlFor={field.name}>
+              {messages.admin.applications.form.fields.authImage}
+            </FieldLabel>
             <p className="text-muted-foreground mb-2 text-sm">
-              Se muestra en el panel derecho del login y recuperacion de contrasena.
+              {messages.admin.applications.form.fields.authImageDescription}
             </p>
             <ImageUpload
               value={field.value}
@@ -215,7 +281,13 @@ export function ApplicationMainForm({
               onUploadComplete={onUploadComplete}
               onRemoveUnsaved={onRemoveUnsaved}
             />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -224,9 +296,17 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>URL de inicio</FieldLabel>
+            <FieldLabel htmlFor={field.name}>
+              {messages.admin.applications.form.fields.homeUrl}
+            </FieldLabel>
             <Input {...field} aria-invalid={fieldState.invalid} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -238,10 +318,14 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Tipo de cliente</FieldLabel>
+            <FieldLabel htmlFor={field.name}>
+              {messages.admin.applications.form.fields.clientType}
+            </FieldLabel>
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="">
-                <SelectValue placeholder="Aplicacion" />
+                <SelectValue
+                  placeholder={messages.admin.applications.form.fields.clientTypePlaceholder}
+                />
               </SelectTrigger>
               <SelectContent>
                 {clientTypeOptions.map((opt) => (
@@ -251,7 +335,13 @@ export function ApplicationMainForm({
                 ))}
               </SelectContent>
             </Select>
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -260,13 +350,15 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>JWT secret del cliente</FieldLabel>
+            <FieldLabel htmlFor={field.name}>
+              {messages.admin.applications.form.fields.clientJwtSecret}
+            </FieldLabel>
             <InputGroup>
               <InputGroupInput {...field} aria-invalid={fieldState.invalid} />
               <InputGroupAddon align="inline-end">
                 <InputGroupButton
-                  aria-label="Generar"
-                  title="Generar"
+                  aria-label={messages.common.generate}
+                  title={messages.common.generate}
                   size="icon-xs"
                   onClick={() => {
                     form.setValue(field.name, randomBase64Url(30));
@@ -276,7 +368,13 @@ export function ApplicationMainForm({
                 </InputGroupButton>
               </InputGroupAddon>
             </InputGroup>
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -285,13 +383,15 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>ID de cliente</FieldLabel>
+            <FieldLabel htmlFor={field.name}>
+              {messages.admin.applications.form.fields.clientId}
+            </FieldLabel>
             <InputGroup>
               <InputGroupInput {...field} aria-invalid={fieldState.invalid} />
               <InputGroupAddon align="inline-end">
                 <InputGroupButton
-                  aria-label="Generar"
-                  title="Generar"
+                  aria-label={messages.common.generate}
+                  title={messages.common.generate}
                   size="icon-xs"
                   onClick={() => {
                     form.setValue(field.name, generateClientId('cli_'));
@@ -301,7 +401,13 @@ export function ApplicationMainForm({
                 </InputGroupButton>
               </InputGroupAddon>
             </InputGroup>
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -310,13 +416,15 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid} className="lg:col-span-2">
-            <FieldLabel htmlFor={field.name}>Secreto del cliente</FieldLabel>
+            <FieldLabel htmlFor={field.name}>
+              {messages.admin.applications.form.fields.clientSecret}
+            </FieldLabel>
             <InputGroup>
               <InputGroupInput {...field} aria-invalid={fieldState.invalid} />
               <InputGroupAddon align="inline-end">
                 <InputGroupButton
-                  aria-label="Generar"
-                  title="Generar"
+                  aria-label={messages.common.generate}
+                  title={messages.common.generate}
                   size="icon-xs"
                   onClick={() => {
                     form.setValue(field.name, randomBase64Url(48));
@@ -326,7 +434,13 @@ export function ApplicationMainForm({
                 </InputGroupButton>
               </InputGroupAddon>
             </InputGroup>
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -335,9 +449,17 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Expiracion del codigo auth</FieldLabel>
+            <FieldLabel htmlFor={field.name}>
+              {messages.admin.applications.form.fields.authCodeExp}
+            </FieldLabel>
             <Input {...field} type="number" aria-invalid={fieldState.invalid} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -346,9 +468,17 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Expiracion del access token</FieldLabel>
+            <FieldLabel htmlFor={field.name}>
+              {messages.admin.applications.form.fields.accessTokenExp}
+            </FieldLabel>
             <Input {...field} type="number" aria-invalid={fieldState.invalid} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -357,9 +487,17 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Expiracion del refresh token</FieldLabel>
+            <FieldLabel htmlFor={field.name}>
+              {messages.admin.applications.form.fields.refreshTokenExp}
+            </FieldLabel>
             <Input {...field} type="number" aria-invalid={fieldState.invalid} />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />
@@ -373,9 +511,11 @@ export function ApplicationMainForm({
           <Field className="lg:col-span-2">
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <FieldLabel htmlFor={field.name}>Autenticacion multifactor (MFA)</FieldLabel>
+                <FieldLabel htmlFor={field.name}>
+                  {messages.admin.applications.form.fields.mfa}
+                </FieldLabel>
                 <p className="text-muted-foreground text-sm">
-                  Requiere validar identidad con un codigo enviado por correo
+                  {messages.admin.applications.form.fields.mfaDescription}
                 </p>
               </div>
               <Switch checked={field.value ?? false} onCheckedChange={field.onChange} />
@@ -388,10 +528,10 @@ export function ApplicationMainForm({
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Estado</FieldLabel>
+            <FieldLabel htmlFor={field.name}>{messages.admin.applications.form.fields.status}</FieldLabel>
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="">
-                <SelectValue placeholder="Estado" />
+                <SelectValue placeholder={messages.admin.applications.form.fields.statusPlaceholder} />
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((opt) => (
@@ -401,7 +541,13 @@ export function ApplicationMainForm({
                 ))}
               </SelectContent>
             </Select>
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            {fieldState.invalid && (
+              <FieldError
+                errors={[
+                  { message: getTsRestErrorMessage({ message: fieldState.error?.message }, locale) },
+                ]}
+              />
+            )}
           </Field>
         )}
       />

@@ -66,14 +66,17 @@ export const ListRolesQuerySchema = createListQuerySchema({
 // ============================================
 
 export const CreateRoleBodySchema = z.object({
-  name: z.string().min(1),
-  slug: z.string().min(1),
-  applicationId: z.string().uuid(),
-  description: z.string().max(500).optional(),
+  name: z.string().min(1, 'ROLE_NAME_REQUIRED'),
+  slug: z.string().min(1, 'ROLE_SLUG_REQUIRED'),
+  applicationId: z
+    .string()
+    .min(1, 'ROLE_APPLICATION_REQUIRED')
+    .uuid('ROLE_APPLICATION_INVALID'),
+  description: z.string().max(500, 'ROLE_DESCRIPTION_TOO_LONG').optional(),
   permissions: z
     .array(
       z.object({
-        permissionId: z.string().uuid(),
+        permissionId: z.string().uuid('ROLE_PERMISSION_ID_INVALID'),
       })
     )
     .optional(),

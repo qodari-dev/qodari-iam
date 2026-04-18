@@ -7,10 +7,14 @@ import { keepPreviousData, QueryClient, QueryClientProvider } from '@tanstack/re
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ThemeProvider } from 'next-themes';
 import { api } from '@/clients/api';
+import { I18nProvider } from '@/i18n/provider';
+import { type Locale } from '@/i18n/config';
 
-type ProvidersProps = React.PropsWithChildren;
+type ProvidersProps = React.PropsWithChildren<{
+  initialLocale: Locale;
+}>;
 
-export const Providers = ({ children }: ProvidersProps) => {
+export const Providers = ({ children, initialLocale }: ProvidersProps) => {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -38,15 +42,17 @@ export const Providers = ({ children }: ProvidersProps) => {
   return (
     <QueryClientProvider client={queryClient}>
       <api.ReactQueryProvider>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster richColors />
-        </ThemeProvider>
+        <I18nProvider initialLocale={initialLocale}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster richColors />
+          </ThemeProvider>
+        </I18nProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </api.ReactQueryProvider>
     </QueryClientProvider>

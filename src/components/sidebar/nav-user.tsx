@@ -18,6 +18,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { useI18n } from '@/i18n/provider';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { usePathname, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -34,14 +35,15 @@ export function NavUser({
   const { isMobile } = useSidebar();
   const router = useRouter();
   const pathname = usePathname();
+  const { locale, messages } = useI18n();
 
   // Extract accountSlug from pathname (e.g., /acme/admin -> acme)
   const accountSlug = pathname.split('/')[1];
 
   const { mutateAsync: logout, isPending } = api.auth.logout.useMutation({
     onError(error) {
-      toast.error('Error al cerrar sesión', {
-        description: getTsRestErrorMessage(error),
+      toast.error(messages.common.error, {
+        description: getTsRestErrorMessage(error, locale),
       });
     },
     onSuccess() {
@@ -96,11 +98,11 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleGoToPortal}>
               <PanelLeft />
-              Portal
+              {messages.navigation.portal}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout} disabled={isPending}>
               <LogOut />
-              Log out
+              {isPending ? messages.navigation.loggingOut : messages.navigation.logout}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

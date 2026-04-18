@@ -15,6 +15,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar';
+import { useI18n } from '@/i18n/provider';
 import { cn } from '@/lib/utils';
 import { useAuthUser, useHasPermission } from '@/stores/auth-store-provider';
 import companyLogo from '../../../public/iam-logo.png';
@@ -32,6 +33,7 @@ function AppLogo({ className }: { className?: string }) {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { messages } = useI18n();
   const user = useAuthUser();
   const pathname = usePathname();
   const canSeeUsers = useHasPermission('users:read');
@@ -57,12 +59,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
       navMain: [
         {
-          title: 'Principal',
+          title: messages.navigation.main,
           items: [
             ...(canSeeUsers
               ? [
                   {
-                    title: 'Usuarios',
+                    title: messages.navigation.users,
                     url: `/${accountSlug}/admin/users`,
                     icon: Users,
                   },
@@ -71,7 +73,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ...(canSeeApplications
               ? [
                   {
-                    title: 'Aplicaciones',
+                    title: messages.navigation.applications,
                     url: `/${accountSlug}/admin/applications`,
                     icon: AppWindowMacIcon,
                   },
@@ -80,7 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ...(canSeeRoles
               ? [
                   {
-                    title: 'Roles',
+                    title: messages.navigation.roles,
                     url: `/${accountSlug}/admin/roles`,
                     icon: ShieldCheck,
                   },
@@ -89,7 +91,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ...(canSeeApiClients
               ? [
                   {
-                    title: 'Clientes API',
+                    title: messages.navigation.apiClients,
                     url: `/${accountSlug}/admin/api-clients`,
                     icon: Key,
                   },
@@ -98,7 +100,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ...(canSeeAuditLogs
               ? [
                   {
-                    title: 'Audit Logs',
+                    title: messages.navigation.auditLogs,
                     url: `/${accountSlug}/admin/audit`,
                     icon: ScrollText,
                   },
@@ -107,7 +109,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ...(user?.isAdmin
               ? [
                   {
-                    title: 'Settings',
+                    title: messages.navigation.settings,
                     url: `/${accountSlug}/admin/settings`,
                     icon: Settings,
                   },
@@ -125,6 +127,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     canSeeRoles,
     canSeeApiClients,
     canSeeAuditLogs,
+    messages,
   ]);
 
   return (

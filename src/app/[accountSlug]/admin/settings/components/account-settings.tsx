@@ -8,6 +8,7 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { useImageUploadWithCleanup } from '@/hooks/use-image-upload-with-cleanup';
+import { useI18n } from '@/i18n/provider';
 import { UpdateAccountBodySchema } from '@/schemas/account';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +20,7 @@ import { z } from 'zod';
 type FormValues = z.infer<typeof UpdateAccountBodySchema>;
 
 export function AccountSettings() {
+  const { locale, messages } = useI18n();
   const { data, isLoading } = api.account.get.useQuery({
     queryKey: ['account'],
     queryData: {},
@@ -47,11 +49,13 @@ export function AccountSettings() {
 
   const { mutateAsync: updateAccount, isPending } = api.account.update.useMutation({
     onError(error) {
-      toast.error('Error', { description: getTsRestErrorMessage(error) });
+      toast.error(messages.common.error, {
+        description: getTsRestErrorMessage(error, locale),
+      });
     },
     onSuccess() {
-      toast.success('Configuracion guardada', {
-        description: 'La configuracion de la cuenta se actualizo correctamente.',
+      toast.success(messages.admin.settings.toast.savedTitle, {
+        description: messages.admin.settings.toast.savedDescription,
       });
     },
   });
@@ -75,8 +79,8 @@ export function AccountSettings() {
   return (
     <>
       <PageHeader
-        title="Configuracion de la cuenta"
-        description="Administra la marca y la apariencia de tu cuenta."
+        title={messages.admin.settings.title}
+        description={messages.admin.settings.description}
       />
       <PageContent>
         <div className="max-w-xl">
@@ -87,9 +91,22 @@ export function AccountSettings() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>Nombre de la cuenta</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>
+                      {messages.admin.settings.fields.name}
+                    </FieldLabel>
                     <Input {...field} value={field.value ?? ''} aria-invalid={fieldState.invalid} />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    {fieldState.invalid && (
+                      <FieldError
+                        errors={[
+                          {
+                            message: getTsRestErrorMessage(
+                              { message: fieldState.error?.message },
+                              locale
+                            ),
+                          },
+                        ]}
+                      />
+                    )}
                   </Field>
                 )}
               />
@@ -99,9 +116,9 @@ export function AccountSettings() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>Logo</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>{messages.admin.settings.fields.logo}</FieldLabel>
                     <p className="text-muted-foreground mb-2 text-sm">
-                      Se usa en el encabezado de las paginas de autenticacion.
+                      {messages.admin.settings.fields.logoDescription}
                     </p>
                     <ImageUpload
                       value={field.value}
@@ -109,7 +126,18 @@ export function AccountSettings() {
                       onUploadComplete={onUploadComplete}
                       onRemoveUnsaved={onRemoveUnsaved}
                     />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    {fieldState.invalid && (
+                      <FieldError
+                        errors={[
+                          {
+                            message: getTsRestErrorMessage(
+                              { message: fieldState.error?.message },
+                              locale
+                            ),
+                          },
+                        ]}
+                      />
+                    )}
                   </Field>
                 )}
               />
@@ -119,10 +147,11 @@ export function AccountSettings() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>Imagen de la pagina de autenticacion</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>
+                      {messages.admin.settings.fields.authImage}
+                    </FieldLabel>
                     <p className="text-muted-foreground mb-2 text-sm">
-                      Se muestra en el panel derecho de las paginas de inicio de sesion y
-                      restablecimiento de contrasena.
+                      {messages.admin.settings.fields.authImageDescription}
                     </p>
                     <ImageUpload
                       value={field.value}
@@ -130,7 +159,18 @@ export function AccountSettings() {
                       onUploadComplete={onUploadComplete}
                       onRemoveUnsaved={onRemoveUnsaved}
                     />
-                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    {fieldState.invalid && (
+                      <FieldError
+                        errors={[
+                          {
+                            message: getTsRestErrorMessage(
+                              { message: fieldState.error?.message },
+                              locale
+                            ),
+                          },
+                        ]}
+                      />
+                    )}
                   </Field>
                 )}
               />
@@ -141,10 +181,10 @@ export function AccountSettings() {
                 {isPending ? (
                   <div className="flex items-center gap-2">
                     <Spinner className="h-4 w-4" />
-                    <span>Guardando...</span>
+                    <span>{messages.admin.settings.actions.saving}</span>
                   </div>
                 ) : (
-                  'Guardar cambios'
+                  messages.admin.settings.actions.save
                 )}
               </Button>
             </div>

@@ -1,4 +1,5 @@
 import { api } from '@/clients/api';
+import { useI18n } from '@/i18n/provider';
 import type { ListRolesQuery } from '@/schemas/role';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { useQueryClient } from '@tanstack/react-query';
@@ -47,20 +48,22 @@ export function useRole(
 }
 
 export function useCreateRole() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.role.create.useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: rolesKeys.lists() });
-      toast.success('Rol creado exitosamente');
+      toast.success(messages.admin.roles.toast.created);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useUpdateRole() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.role.update.useMutation({
@@ -68,15 +71,16 @@ export function useUpdateRole() {
       const roleId = variables.params.id;
       queryClient.invalidateQueries({ queryKey: rolesKeys.lists() });
       queryClient.invalidateQueries({ queryKey: rolesKeys.detail(roleId) });
-      toast.success('Rol actualizado');
+      toast.success(messages.admin.roles.toast.updated);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }
 
 export function useDeleteRole() {
+  const { locale, messages } = useI18n();
   const queryClient = api.useQueryClient();
 
   return api.role.delete.useMutation({
@@ -84,10 +88,10 @@ export function useDeleteRole() {
       const roleId = variables.params.id;
       queryClient.removeQueries({ queryKey: rolesKeys.detail(roleId) });
       queryClient.invalidateQueries({ queryKey: rolesKeys.lists() });
-      toast.success('Rol eliminado');
+      toast.success(messages.admin.roles.toast.deleted);
     },
     onError: (error) => {
-      toast.error(getTsRestErrorMessage(error));
+      toast.error(getTsRestErrorMessage(error, locale));
     },
   });
 }

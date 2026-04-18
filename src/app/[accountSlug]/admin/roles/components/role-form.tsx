@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n/provider';
 import {
   Sheet,
   SheetClose,
@@ -33,6 +34,7 @@ export function RoleForm({
   opened: boolean;
   onOpened(opened: boolean): void;
 }) {
+  const { locale, messages } = useI18n();
   const formId = useId();
 
   const form = useForm<FormValues>({
@@ -83,17 +85,23 @@ export function RoleForm({
     <Sheet open={opened} onOpenChange={onOpened}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>{role ? 'Editar rol' : 'Nuevo rol'}</SheetTitle>
-          <SheetDescription>
-            Define el alcance y los permisos del rol para esta aplicacion.
-          </SheetDescription>
+          <SheetTitle>
+            {role ? messages.admin.roles.form.editTitle : messages.admin.roles.form.createTitle}
+          </SheetTitle>
+          <SheetDescription>{messages.admin.roles.form.description}</SheetDescription>
         </SheetHeader>
         <FormProvider {...form}>
-          <form id={formId} onSubmit={form.handleSubmit(onSubmit, onSubmitError)} className="px-4">
+          <form
+            id={formId}
+            onSubmit={form.handleSubmit(onSubmit, (errors) => onSubmitError(errors, undefined, locale))}
+            className="px-4"
+          >
             <Tabs defaultValue="main" className="w-full">
               <TabsList className="mb-4 w-full">
-                <TabsTrigger value="main">General</TabsTrigger>
-                <TabsTrigger value="permissions">Permisos</TabsTrigger>
+                <TabsTrigger value="main">{messages.admin.roles.form.tabs.general}</TabsTrigger>
+                <TabsTrigger value="permissions">
+                  {messages.admin.roles.form.tabs.permissions}
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="main">
                 <RoleMainForm />
@@ -109,10 +117,10 @@ export function RoleForm({
         <SheetFooter>
           <Button type="submit" form={formId} disabled={isLoading}>
             {isLoading && <Spinner />}
-            Guardar
+            {messages.admin.roles.form.actions.save}
           </Button>
           <SheetClose asChild>
-            <Button variant="outline">Cerrar</Button>
+            <Button variant="outline">{messages.admin.roles.form.actions.close}</Button>
           </SheetClose>
         </SheetFooter>
       </SheetContent>

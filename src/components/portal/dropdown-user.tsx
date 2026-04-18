@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { useAuthUser } from '@/stores/auth-store-provider';
+import { useI18n } from '@/i18n/provider';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -25,6 +26,7 @@ import { ChangePasswordDialog } from './change-password-dialog';
 export const title = 'Menu de perfil con avatar';
 
 export function DropdownUser() {
+  const { locale, messages } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
   const user = useAuthUser();
@@ -35,8 +37,8 @@ export function DropdownUser() {
 
   const { mutateAsync: logout, isPending } = api.auth.logout.useMutation({
     onError(error) {
-      toast.error('Error', {
-        description: getTsRestErrorMessage(error),
+      toast.error(messages.common.error, {
+        description: getTsRestErrorMessage(error, locale),
       });
     },
     onSuccess() {
@@ -58,6 +60,7 @@ export function DropdownUser() {
                 {user?.lastName.substring(0, 1)}
               </AvatarFallback>
             </Avatar>
+            <span className="sr-only">{messages.portal.profileMenuTitle}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
@@ -72,17 +75,17 @@ export function DropdownUser() {
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setShowChangePasswordDialog(true)}>
             <LockKeyholeOpen />
-            Cambiar contrasena
+            {messages.portal.changePassword}
           </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onClick={handleLogout}>
             <LogOut />
             {isPending ? (
               <span className="flex items-center gap-2">
                 <Spinner className="h-4 w-4" />
-                Cerrando sesion...
+                {messages.navigation.loggingOut}
               </span>
             ) : (
-              'Cerrar sesion'
+              messages.navigation.logout
             )}
           </DropdownMenuItem>
         </DropdownMenuContent>

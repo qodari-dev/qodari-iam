@@ -1,6 +1,7 @@
 import { DescriptionList, DescriptionSection } from '@/components/description-list';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useI18n } from '@/i18n/provider';
 import { Role } from '@/schemas/role';
 import { formatDate } from '@/utils/formatters';
 
@@ -13,23 +14,24 @@ export function RoleInfo({
   opened: boolean;
   onOpened(opened: boolean): void;
 }) {
+  const { messages } = useI18n();
   if (!role) return null;
 
   const sections: DescriptionSection[] = [
     {
-      title: 'Datos basicos',
+      title: messages.admin.roles.info.sections.basic,
       columns: 2,
       items: [
-        { label: 'Nombre', value: role.name },
-        { label: 'Slug', value: role.slug },
-        { label: 'Aplicacion', value: role?.application?.name ?? '—' },
+        { label: messages.admin.roles.info.fields.name, value: role.name },
+        { label: messages.admin.roles.info.fields.slug, value: role.slug },
+        { label: messages.admin.roles.info.fields.application, value: role?.application?.name ?? '—' },
       ],
     },
     {
-      title: 'Permisos',
+      title: messages.admin.roles.info.sections.permissions,
       items: [
         {
-          label: 'Permisos asignados',
+          label: messages.admin.roles.info.fields.assignedPermissions,
           value: role?.rolePermissions?.length ? (
             <div className="flex flex-wrap gap-1">
               {role.rolePermissions.map((rp) => (
@@ -49,11 +51,11 @@ export function RoleInfo({
       ],
     },
     {
-      title: 'Actividad',
+      title: messages.admin.roles.info.sections.activity,
       columns: 2,
       items: [
-        { label: 'Creado', value: formatDate(role.createdAt) },
-        { label: 'Actualizado', value: formatDate(role.updatedAt) },
+        { label: messages.admin.roles.info.fields.created, value: formatDate(role.createdAt) },
+        { label: messages.admin.roles.info.fields.updated, value: formatDate(role.updatedAt) },
       ],
     },
   ];
@@ -62,7 +64,7 @@ export function RoleInfo({
     <Sheet open={opened} onOpenChange={(open) => onOpened(open)}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>Rol</SheetTitle>
+          <SheetTitle>{messages.admin.roles.info.title}</SheetTitle>
         </SheetHeader>
         <div className="px-4">
           <DescriptionList sections={sections} columns={2} />

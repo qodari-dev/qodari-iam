@@ -2,10 +2,11 @@
 
 import { DataTable, useDataTable } from '@/components/data-table';
 import * as React from 'react';
-import { auditColumns } from './audit-columns';
+import { useAuditColumns } from './audit-columns';
 
 import { PageContent, PageHeader } from '@/components/layout';
 import { useAuditLogs } from '@/hooks/queries/use-audit-queries';
+import { useI18n } from '@/i18n/provider';
 import { AuditLog, AuditLogSortField, AuditLogInclude } from '@/schemas/audit';
 import { RowData, TableMeta } from '@tanstack/react-table';
 import { AuditInfo } from './audit-info';
@@ -18,7 +19,9 @@ declare module '@tanstack/table-core' {
 }
 
 export function AuditLogs() {
+  const { messages } = useI18n();
   const [auditLog, setAuditLog] = React.useState<AuditLog>();
+  const auditColumns = useAuditColumns();
 
   const {
     pageIndex,
@@ -124,8 +127,8 @@ export function AuditLogs() {
   return (
     <>
       <PageHeader
-        title="Registros de auditoria"
-        description="Consulta y exporta los registros de auditoria de todas las operaciones de esta cuenta."
+        title={messages.admin.audit.title}
+        description={messages.admin.audit.description}
       />
       <PageContent>
         <DataTable
@@ -189,7 +192,7 @@ export function AuditLogs() {
               isRefreshing={isFetching && !isLoading}
             />
           }
-          emptyMessage="No se encontraron registros de auditoria. Intenta ajustar los filtros."
+          emptyMessage={messages.admin.audit.empty}
           meta={tableMeta}
         />
       </PageContent>

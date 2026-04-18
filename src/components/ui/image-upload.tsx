@@ -3,6 +3,8 @@
 import { useCallback, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useImageUpload } from '@/hooks/use-image-upload';
+import { useI18n } from '@/i18n/provider';
+import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import { getStorageUrl } from '@/utils/storage';
 import { ImagePlus, Loader2, X } from 'lucide-react';
 import Image from 'next/image';
@@ -28,6 +30,7 @@ export function ImageUpload({
   onUploadComplete,
   onRemoveUnsaved,
 }: ImageUploadProps) {
+  const { locale, messages } = useI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -150,7 +153,7 @@ export function ImageUpload({
           <>
             <Image
               src={imageUrl}
-              alt="Preview"
+              alt={messages.common.imageUpload.previewAlt}
               fill
               className="rounded-lg object-cover"
               unoptimized
@@ -168,7 +171,7 @@ export function ImageUpload({
         ) : (
           <div className="text-muted-foreground flex flex-col items-center gap-2">
             <ImagePlus className="h-8 w-8" />
-            <span className="text-xs">Click or drop</span>
+            <span className="text-xs">{messages.common.imageUpload.clickOrDrop}</span>
           </div>
         )}
 
@@ -182,7 +185,7 @@ export function ImageUpload({
 
       {error && (
         <p className="text-destructive mt-1 text-xs">
-          {error} - {value}
+          {getTsRestErrorMessage({ message: error }, locale)}
         </p>
       )}
     </div>

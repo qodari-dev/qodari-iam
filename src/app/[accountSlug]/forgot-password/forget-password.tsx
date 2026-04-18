@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import { useI18n } from '@/i18n/provider';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import Link from 'next/link';
 import { useCallback } from 'react';
@@ -25,6 +26,7 @@ interface ForgetPasswordProps {
 }
 
 export default function ForgetPassword({ accountSlug, appSlug }: ForgetPasswordProps) {
+  const { locale, messages } = useI18n();
   // Build login URL with app param if we have one
   const loginUrl = `/${accountSlug}/login${appSlug ? `?app=${appSlug}` : ''}`;
   const form = useForm<ForgotFormValues>({
@@ -37,11 +39,13 @@ export default function ForgetPassword({ accountSlug, appSlug }: ForgetPasswordP
 
   const { mutateAsync: forgotPassword, isPending } = api.auth.forgotPassword.useMutation({
     onError(error) {
-      toast.error('Error', { description: getTsRestErrorMessage(error) });
+      toast.error(messages.common.error, {
+        description: getTsRestErrorMessage(error, locale),
+      });
     },
     onSuccess(data) {
-      toast.success('Solicitud enviada', {
-        description: data.body.message,
+      toast.success(messages.auth.forgotPassword.successTitle, {
+        description: getTsRestErrorMessage({ message: data.body.message }, locale),
       });
     },
   });
@@ -60,9 +64,9 @@ export default function ForgetPassword({ accountSlug, appSlug }: ForgetPasswordP
     <AuthLayout accountSlug={accountSlug} appSlug={appSlug}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Olvidaste tu contrasena?</h1>
+          <h1 className="text-2xl font-bold">{messages.auth.forgotPassword.title}</h1>
           <p className="text-muted-foreground text-sm text-balance">
-            Ingresa tu correo para recibir un enlace de restablecimiento
+            {messages.auth.forgotPassword.description}
           </p>
         </div>
         <FieldGroup>
@@ -71,15 +75,26 @@ export default function ForgetPassword({ accountSlug, appSlug }: ForgetPasswordP
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="login-email">Correo electronico</FieldLabel>
+                <FieldLabel htmlFor="login-email">{messages.auth.login.email}</FieldLabel>
                 <Input
                   {...field}
                   type="email"
                   autoComplete="email"
                   aria-invalid={fieldState.invalid}
-                  placeholder="tu@email.com"
+                  placeholder={messages.auth.login.emailPlaceholder}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError
+                    errors={[
+                      {
+                        message: getTsRestErrorMessage(
+                          { message: fieldState.error?.message },
+                          locale
+                        ),
+                      },
+                    ]}
+                  />
+                )}
               </Field>
             )}
           />
@@ -89,15 +104,15 @@ export default function ForgetPassword({ accountSlug, appSlug }: ForgetPasswordP
           {isPending ? (
             <div className="flex items-center justify-center gap-2">
               <Spinner className="h-4 w-4" />
-              <span>Enviando...</span>
+              <span>{messages.auth.forgotPassword.submitting}</span>
             </div>
           ) : (
-            'Enviar enlace de restablecimiento'
+            messages.auth.forgotPassword.submit
           )}
         </Button>
 
         <Button variant="link" className="w-full" asChild>
-          <Link href={loginUrl}>Volver al inicio de sesion</Link>
+          <Link href={loginUrl}>{messages.auth.forgotPassword.backToLogin}</Link>
         </Button>
       </form>
     </AuthLayout>

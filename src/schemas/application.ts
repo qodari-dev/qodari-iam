@@ -56,32 +56,45 @@ export const GetApplicationQuerySchema = z.object({
 // ============================================
 
 export const PermissionInputSchema = z.object({
-  name: z.string().min(1, 'Nombre es requerido').max(45, 'Máximo 45 caracteres'),
-  resource: z.string().min(1, 'Recurso es requerido').max(45, 'Máximo 45 caracteres'),
-  action: z.string().min(1, 'Acción es requerida').max(45, 'Máximo 45 caracteres'),
-  description: z.string().max(500, 'Máximo 500 caracteres').optional(),
+  name: z
+    .string()
+    .min(1, 'APPLICATION_PERMISSION_NAME_REQUIRED')
+    .max(45, 'APPLICATION_PERMISSION_NAME_TOO_LONG'),
+  resource: z
+    .string()
+    .min(1, 'APPLICATION_PERMISSION_RESOURCE_REQUIRED')
+    .max(45, 'APPLICATION_PERMISSION_RESOURCE_TOO_LONG'),
+  action: z
+    .string()
+    .min(1, 'APPLICATION_PERMISSION_ACTION_REQUIRED')
+    .max(45, 'APPLICATION_PERMISSION_ACTION_TOO_LONG'),
+  description: z.string().max(500, 'APPLICATION_PERMISSION_DESCRIPTION_TOO_LONG').optional(),
 });
 
 export type PermissionInput = z.infer<typeof PermissionInputSchema>;
 
 export const CreateApplicationBodySchema = z.object({
-  name: z.string().min(1).max(255),
-  slug: z.string().min(1).max(100),
-  description: z.string().max(500).optional(),
+  name: z.string().min(1, 'APPLICATION_NAME_REQUIRED').max(255, 'APPLICATION_NAME_TOO_LONG'),
+  slug: z.string().min(1, 'APPLICATION_SLUG_REQUIRED').max(100, 'APPLICATION_SLUG_TOO_LONG'),
+  description: z.string().max(500, 'APPLICATION_DESCRIPTION_TOO_LONG').optional(),
   status: z.enum(['active', 'suspended']),
   clientType: z.enum(['public', 'confidential']),
-  clientId: z.string().min(1),
-  clientSecret: z.string().min(1),
+  clientId: z.string().min(1, 'APPLICATION_CLIENT_ID_REQUIRED'),
+  clientSecret: z.string().min(1, 'APPLICATION_CLIENT_SECRET_REQUIRED'),
   authCodeExp: z.number(),
   accessTokenExp: z.number(),
   refreshTokenExp: z.number(),
-  clientJwtSecret: z.string().min(1),
+  clientJwtSecret: z.string().min(1, 'APPLICATION_CLIENT_JWT_SECRET_REQUIRED'),
   logo: z.string().nullable().optional(),
   image: z.string().nullable().optional(),
   imageAd: z.string().nullable().optional(),
-  homeUrl: z.string().url().optional(),
-  logoutUrl: z.array(z.string().url()).min(1),
-  callbackUrls: z.array(z.string().url()).min(1),
+  homeUrl: z.string().url('APPLICATION_HOME_URL_INVALID').optional(),
+  logoutUrl: z
+    .array(z.string().url('APPLICATION_LOGOUT_URL_INVALID'))
+    .min(1, 'APPLICATION_LOGOUT_URL_REQUIRED'),
+  callbackUrls: z
+    .array(z.string().url('APPLICATION_CALLBACK_URL_INVALID'))
+    .min(1, 'APPLICATION_CALLBACK_URL_REQUIRED'),
   permissions: PermissionInputSchema.array().optional(),
   mfaEnabled: z.boolean().optional(),
 });

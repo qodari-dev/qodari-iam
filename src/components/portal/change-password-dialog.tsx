@@ -18,6 +18,7 @@ import { Input } from '../ui/input';
 import { Spinner } from '../ui/spinner';
 import { api } from '@/clients/api';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
+import { useI18n } from '@/i18n/provider';
 import { toast } from 'sonner';
 
 type Props = {
@@ -28,6 +29,7 @@ type Props = {
 type FormValues = z.infer<typeof ChangePasswordBodySchema>;
 
 export function ChangePasswordDialog({ opened, onOpened }: Props) {
+  const { locale, messages } = useI18n();
   const form = useForm<FormValues>({
     resolver: zodResolver(ChangePasswordBodySchema),
     defaultValues: {
@@ -39,10 +41,12 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
 
   const { mutateAsync: changePassword, isPending } = api.auth.changePassword.useMutation({
     onError(error) {
-      toast.error('Error', { description: getTsRestErrorMessage(error) });
+      toast.error(messages.common.error, {
+        description: getTsRestErrorMessage(error, locale),
+      });
     },
     onSuccess() {
-      toast.success('Contrasena actualizada');
+      toast.success(messages.auth.changePassword.successTitle);
       form.reset();
       onOpened(false);
     },
@@ -62,8 +66,8 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
           <DialogHeader>
-            <DialogTitle>Cambiar contrasena</DialogTitle>
-            <DialogDescription>Ingresa la informacion para actualizar tu contrasena.</DialogDescription>
+            <DialogTitle>{messages.auth.changePassword.title}</DialogTitle>
+            <DialogDescription>{messages.auth.changePassword.description}</DialogDescription>
           </DialogHeader>
           <FieldGroup>
             <Controller
@@ -71,7 +75,9 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="current-password">Contrasena actual</FieldLabel>
+                  <FieldLabel htmlFor="current-password">
+                    {messages.auth.changePassword.currentPassword}
+                  </FieldLabel>
                   <Input
                     {...field}
                     id="current-password"
@@ -79,7 +85,18 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
                     aria-invalid={fieldState.invalid}
                     placeholder="••••••••"
                   />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  {fieldState.invalid && (
+                    <FieldError
+                      errors={[
+                        {
+                          message: getTsRestErrorMessage(
+                            { message: fieldState.error?.message },
+                            locale
+                          ),
+                        },
+                      ]}
+                    />
+                  )}
                 </Field>
               )}
             />
@@ -90,7 +107,9 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="new-password">Nueva contrasena</FieldLabel>
+                  <FieldLabel htmlFor="new-password">
+                    {messages.auth.changePassword.newPassword}
+                  </FieldLabel>
                   <Input
                     {...field}
                     id="new-password"
@@ -99,7 +118,18 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
                     aria-invalid={fieldState.invalid}
                     placeholder="••••••••"
                   />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  {fieldState.invalid && (
+                    <FieldError
+                      errors={[
+                        {
+                          message: getTsRestErrorMessage(
+                            { message: fieldState.error?.message },
+                            locale
+                          ),
+                        },
+                      ]}
+                    />
+                  )}
                 </Field>
               )}
             />
@@ -110,7 +140,9 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="confirm-password">Confirmar contrasena</FieldLabel>
+                  <FieldLabel htmlFor="confirm-password">
+                    {messages.auth.changePassword.confirmPassword}
+                  </FieldLabel>
                   <Input
                     {...field}
                     id="confirm-password"
@@ -118,7 +150,18 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
                     aria-invalid={fieldState.invalid}
                     placeholder="••••••••"
                   />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  {fieldState.invalid && (
+                    <FieldError
+                      errors={[
+                        {
+                          message: getTsRestErrorMessage(
+                            { message: fieldState.error?.message },
+                            locale
+                          ),
+                        },
+                      ]}
+                    />
+                  )}
                 </Field>
               )}
             />
@@ -126,16 +169,16 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancelar</Button>
+              <Button variant="outline">{messages.common.cancel}</Button>
             </DialogClose>
             <Button type="submit">
               {isPending ? (
                 <span className="flex items-center gap-2">
                   <Spinner className="h-4 w-4" />
-                  Actualizando...
+                  {messages.auth.changePassword.submitting}
                 </span>
               ) : (
-                'Cambiar contrasena'
+                messages.auth.changePassword.submit
               )}
             </Button>
           </DialogFooter>

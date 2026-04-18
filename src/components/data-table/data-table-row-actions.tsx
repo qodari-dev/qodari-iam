@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { MoreHorizontal } from 'lucide-react';
+import { useI18n } from '@/i18n/provider';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -54,8 +55,9 @@ function isActionGroup<TData>(
 export function DataTableRowActions<TData>({
   row,
   actions,
-  label = 'Actions',
+  label,
 }: DataTableRowActionsProps<TData>) {
+  const { messages } = useI18n();
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleClick = async (action: RowAction<TData>) => {
@@ -108,11 +110,11 @@ export function DataTableRowActions<TData>({
           disabled={isLoading}
         >
           <MoreHorizontal className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
+          <span className="sr-only">{messages.common.openMenu}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuLabel>{label}</DropdownMenuLabel>
+        <DropdownMenuLabel>{label ?? messages.common.dataTable.actions}</DropdownMenuLabel>
         <DropdownMenuSeparator />
 
         {actions.map((item, index) => {

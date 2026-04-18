@@ -3,15 +3,17 @@
 import Link from 'next/link';
 
 import { DropdownUser } from '@/components/portal/dropdown-user';
+import { useI18n } from '@/i18n/provider';
 import { useAuth } from '@/stores/auth-store-provider';
 import { getStorageUrl } from '@/utils/storage';
 import Image from 'next/image';
 
 export function Portal() {
+  const { messages } = useI18n();
   const auth = useAuth();
 
   if (!auth) {
-    return <div className="p-4">No hay usuario autenticado</div>;
+    return <div className="p-4">{messages.portal.noAuthenticatedUser}</div>;
   }
 
   return (
@@ -19,10 +21,10 @@ export function Portal() {
       <header className="container mx-auto mb-12 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold lg:text-3xl">
-            Bienvenido, <br className="lg:hidden" /> {auth.user.firstName} {auth.user.lastName}
+            {messages.portal.welcome(auth.user.firstName, auth.user.lastName)}
           </h1>
         </div>
-        <div>
+        <div className="flex items-center gap-2">
           <DropdownUser />
         </div>
       </header>
@@ -53,7 +55,7 @@ export function Portal() {
                       className="absolute inset-0 flex items-end p-4 opacity-0 group-hover:opacity-100"
                     >
                       <div className="w-full rounded-md bg-white/75 px-4 py-2 text-center text-sm font-medium text-gray-900 backdrop-blur backdrop-filter">
-                        Ir a la aplicacion
+                        {messages.portal.goToApplication}
                       </div>
                     </div>
                   </div>

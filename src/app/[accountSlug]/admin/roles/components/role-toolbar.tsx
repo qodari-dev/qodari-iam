@@ -2,6 +2,7 @@
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/i18n/provider';
 import { Plus, RefreshCw } from 'lucide-react';
 
 export function RolesToolbar({
@@ -17,10 +18,11 @@ export function RolesToolbar({
   onRefresh?: () => void;
   isRefreshing?: boolean;
 }) {
+  const { messages } = useI18n();
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <Input
-        placeholder="Buscar roles..."
+        placeholder={messages.admin.roles.toolbar.searchPlaceholder}
         value={searchValue}
         onChange={(e) => onSearchChange(e.target.value)}
         className="md:max-w-xs"
@@ -35,12 +37,12 @@ export function RolesToolbar({
             className="h-9"
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Actualizar
+            {messages.admin.roles.toolbar.refresh}
           </Button>
         )}
         <Button type="button" size="sm" onClick={onCreate} className="h-9">
           <Plus className="mr-2 h-4 w-4" />
-          Nuevo rol
+          {messages.admin.roles.toolbar.create}
         </Button>
       </div>
     </div>

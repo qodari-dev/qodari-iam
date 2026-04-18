@@ -16,6 +16,7 @@ import {
   useCreateApplication,
   useUpdateApplication,
 } from '@/hooks/queries/use-application-queries';
+import { useI18n } from '@/i18n/provider';
 import { Application, CreateApplicationBodySchema } from '@/schemas/application';
 import { onSubmitError } from '@/utils/on-submit-error';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,6 +38,7 @@ export function ApplicationForm({
   opened: boolean;
   onOpened(opened: boolean): void;
 }) {
+  const { locale, messages } = useI18n();
   const formId = useId();
   const { onUploadComplete, onRemoveUnsaved, markAsSaved } = useImageUploadWithCleanup();
 
@@ -120,17 +122,25 @@ export function ApplicationForm({
     <Sheet open={opened} onOpenChange={onOpened}>
       <SheetContent className="overflow-y-scroll sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>{application ? 'Editar aplicacion' : 'Nueva aplicacion'}</SheetTitle>
-          <SheetDescription>
-            Define como esta aplicacion se identifica, autentica y que permisos ofrece.
-          </SheetDescription>
+          <SheetTitle>
+            {application
+              ? messages.admin.applications.form.editTitle
+              : messages.admin.applications.form.createTitle}
+          </SheetTitle>
+          <SheetDescription>{messages.admin.applications.form.description}</SheetDescription>
         </SheetHeader>
         <FormProvider {...form}>
-          <form id={formId} onSubmit={form.handleSubmit(onSubmit, onSubmitError)} className="px-4">
+          <form
+            id={formId}
+            onSubmit={form.handleSubmit(onSubmit, (errors) => onSubmitError(errors, undefined, locale))}
+            className="px-4"
+          >
             <Tabs defaultValue="main" className="w-full">
               <TabsList className="mb-4 w-full">
-                <TabsTrigger value="main">General</TabsTrigger>
-                <TabsTrigger value="permissions">Permisos</TabsTrigger>
+                <TabsTrigger value="main">{messages.admin.applications.form.tabs.general}</TabsTrigger>
+                <TabsTrigger value="permissions">
+                  {messages.admin.applications.form.tabs.permissions}
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="main" className="space-y-4 pt-2">
                 <ApplicationMainForm
@@ -149,10 +159,10 @@ export function ApplicationForm({
         <SheetFooter>
           <Button type="submit" form={formId} disabled={isLoading}>
             {isLoading && <Spinner />}
-            Guardar
+            {messages.admin.applications.form.actions.save}
           </Button>
           <SheetClose asChild>
-            <Button variant="outline">Cerrar</Button>
+            <Button variant="outline">{messages.admin.applications.form.actions.close}</Button>
           </SheetClose>
         </SheetFooter>
       </SheetContent>

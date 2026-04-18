@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import { useI18n } from '@/i18n/provider';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import Link from 'next/link';
 import { useCallback } from 'react';
@@ -27,6 +28,7 @@ interface ResetPasswordProps {
 }
 
 export default function ResetPassword({ accountSlug, appSlug }: ResetPasswordProps) {
+  const { locale, messages } = useI18n();
   const searchParams = useSearchParams();
   const tokenFromUrl = searchParams.get('token') ?? '';
   const router = useRouter();
@@ -46,11 +48,13 @@ export default function ResetPassword({ accountSlug, appSlug }: ResetPasswordPro
 
   const { mutateAsync: resetPassword, isPending } = api.auth.resetPassword.useMutation({
     onError(error) {
-      toast.error('Error', { description: getTsRestErrorMessage(error) });
+      toast.error(messages.common.error, {
+        description: getTsRestErrorMessage(error, locale),
+      });
     },
     onSuccess(data) {
-      toast.success('Contrasena actualizada', {
-        description: data.body.message,
+      toast.success(messages.auth.resetPassword.successTitle, {
+        description: getTsRestErrorMessage({ message: data.body.message }, locale),
       });
       router.push(loginUrl);
     },
@@ -70,14 +74,12 @@ export default function ResetPassword({ accountSlug, appSlug }: ResetPasswordPro
       <div className="bg-background flex min-h-screen items-center justify-center px-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Enlace inválido</CardTitle>
-            <CardDescription>
-              El enlace para restablecer la contraseña no es válido o está incompleto.
-            </CardDescription>
+            <CardTitle>{messages.auth.resetPassword.invalidLinkTitle}</CardTitle>
+            <CardDescription>{messages.auth.resetPassword.invalidLinkDescription}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <Link href={forgotPasswordUrl}>Solicitar un nuevo enlace</Link>
+              <Link href={forgotPasswordUrl}>{messages.auth.resetPassword.requestNewLink}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -89,9 +91,9 @@ export default function ResetPassword({ accountSlug, appSlug }: ResetPasswordPro
     <AuthLayout accountSlug={accountSlug} appSlug={appSlug}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Restablece tu contrasena</h1>
+          <h1 className="text-2xl font-bold">{messages.auth.resetPassword.title}</h1>
           <p className="text-muted-foreground text-sm text-balance">
-            Ingresa tu nueva contrasena
+            {messages.auth.resetPassword.description}
           </p>
         </div>
         <FieldGroup>
@@ -100,7 +102,9 @@ export default function ResetPassword({ accountSlug, appSlug }: ResetPasswordPro
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="reset-password">Nueva contrasena</FieldLabel>
+                <FieldLabel htmlFor="reset-password">
+                  {messages.auth.resetPassword.newPassword}
+                </FieldLabel>
                 <Input
                   {...field}
                   id="reset-password"
@@ -109,7 +113,18 @@ export default function ResetPassword({ accountSlug, appSlug }: ResetPasswordPro
                   aria-invalid={fieldState.invalid}
                   placeholder="••••••••"
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError
+                    errors={[
+                      {
+                        message: getTsRestErrorMessage(
+                          { message: fieldState.error?.message },
+                          locale
+                        ),
+                      },
+                    ]}
+                  />
+                )}
               </Field>
             )}
           />
@@ -118,15 +133,15 @@ export default function ResetPassword({ accountSlug, appSlug }: ResetPasswordPro
           {isPending ? (
             <div className="flex items-center justify-center gap-2">
               <Spinner className="h-4 w-4" />
-              <span>Guardando...</span>
+              <span>{messages.auth.resetPassword.submitting}</span>
             </div>
           ) : (
-            'Guardar nueva contrasena'
+            messages.auth.resetPassword.submit
           )}
         </Button>
 
         <Button variant="link" className="w-full" asChild>
-          <Link href={loginUrl}>Volver al inicio de sesion</Link>
+          <Link href={loginUrl}>{messages.auth.resetPassword.backToLogin}</Link>
         </Button>
       </form>
     </AuthLayout>

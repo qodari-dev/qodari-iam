@@ -3,6 +3,7 @@
 import * as React from 'react';
 import type { Column } from '@tanstack/react-table';
 import { CalendarIcon, Check, PlusCircle } from 'lucide-react';
+import { useI18n } from '@/i18n/provider';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,6 +54,7 @@ export function DataTableFacetedFilter<TData, TValue>({
   value: externalValue,
   onValueChange,
 }: DataTableFacetedFilterProps<TData, TValue>) {
+  const { messages } = useI18n();
   // Use external value if provided (server-side), otherwise use column filter
   const selectedValues = React.useMemo(() => {
     if (externalValue !== undefined) {
@@ -106,7 +108,7 @@ export function DataTableFacetedFilter<TData, TValue>({
               <div className="hidden space-x-1 lg:flex">
                 {selectedValues.size > 2 ? (
                   <Badge variant="secondary" className="rounded-sm px-1 font-normal">
-                    {selectedValues.size} selected
+                    {selectedValues.size}
                   </Badge>
                 ) : (
                   options
@@ -130,7 +132,7 @@ export function DataTableFacetedFilter<TData, TValue>({
         <Command>
           <CommandInput placeholder={title} />
           <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>{messages.common.dataTable.noResults}</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value);
@@ -157,7 +159,7 @@ export function DataTableFacetedFilter<TData, TValue>({
                 <CommandSeparator />
                 <CommandGroup>
                   <CommandItem onSelect={handleClear} className="justify-center text-center">
-                    Clear filters
+                    {messages.common.dataTable.clearFilters}
                   </CommandItem>
                 </CommandGroup>
               </>
@@ -186,6 +188,7 @@ export function SimpleSelectFilter({
   value,
   onValueChange,
 }: SimpleSelectFilterProps) {
+  const { messages } = useI18n();
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -206,7 +209,7 @@ export function SimpleSelectFilter({
         <Command>
           <CommandInput placeholder={title} />
           <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>{messages.common.dataTable.noResults}</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
                 const isSelected = value === option.value;
@@ -239,7 +242,7 @@ export function SimpleSelectFilter({
                     onSelect={() => onValueChange(undefined)}
                     className="justify-center text-center"
                   >
-                    Clear filter
+                    {messages.common.dataTable.clearFilter}
                   </CommandItem>
                 </CommandGroup>
               </>
@@ -260,6 +263,7 @@ export function DatePickerWithRangeFilter({
   value,
   onValueChange,
 }: DatePickerWithRangeFilterProps) {
+  const { messages } = useI18n();
   return (
     <Field className="w-60">
       <Popover>
@@ -279,7 +283,7 @@ export function DatePickerWithRangeFilter({
                 format(value.from, 'LLL dd, y')
               )
             ) : (
-              <span>Pick a date</span>
+              <span>{messages.common.dataTable.pickDate}</span>
             )}
           </Button>
         </PopoverTrigger>

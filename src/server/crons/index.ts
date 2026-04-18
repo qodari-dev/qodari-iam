@@ -17,7 +17,7 @@ const onceADayJobs = new CronJob(
   },
   null, // onComplete hook
   false, // autostart
-  'America/New_York' // time zone
+  env.SCHEDULER_TIMEZONE
 );
 
 (() => {

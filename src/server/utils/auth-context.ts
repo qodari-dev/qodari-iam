@@ -1,8 +1,15 @@
 import type { NextRequest } from 'next/server';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import { db } from '@/server/db';
-import { apiClients, applications, userRoles, users, type Session } from '@/server/db/schema';
+import {
+  apiClients,
+  applications,
+  permissions as permissionsTable,
+  userRoles,
+  users,
+  type Session,
+} from '@/server/db/schema';
 import { getSessionFromRequest } from '@/server/utils/session';
 import type { MeResponse } from '@/schemas/auth';
 import { getUserRolesAndPermissions } from './get-user-roles-and-permissions';
@@ -80,26 +87,38 @@ export async function getAuthContextFromRequest(
       .from(applications)
       .where(and(eq(applications.accountId, currentAccountId), eq(applications.status, 'active')));
   } else {
-    const userRolesData = await db.query.userRoles.findMany({
-      where: eq(userRoles.userId, user.id),
-      with: {
-        role: true,
-      },
-    });
-
-    const appIds = userRolesData.map((userRole) => userRole.role.applicationId);
-
-    if (appIds.length > 0) {
-      apps = await db
+    const [userRolesData, activeApps, appsWithPermissions] = await Promise.all([
+      db.query.userRoles.findMany({
+        where: eq(userRoles.userId, user.id),
+        with: {
+          role: true,
+        },
+      }),
+      db
         .select(applicationSelect)
         .from(applications)
-        .where(and(inArray(applications.id, appIds), eq(applications.status, 'active')));
-    }
+        .where(and(eq(applications.accountId, currentAccountId), eq(applications.status, 'active'))),
+      db
+        .selectDistinct({ applicationId: permissionsTable.applicationId })
+        .from(permissionsTable)
+        .where(eq(permissionsTable.accountId, currentAccountId)),
+    ]);
+
+    const appIdsFromRoles = new Set(
+      userRolesData
+        .map((userRole) => userRole.role?.applicationId)
+        .filter((applicationId): applicationId is string => Boolean(applicationId))
+    );
+    const appIdsWithPermissions = new Set(appsWithPermissions.map((app) => app.applicationId));
+
+    apps = activeApps.filter(
+      (app) => appIdsFromRoles.has(app.id) || !appIdsWithPermissions.has(app.id)
+    );
   }
 
   // 3) Roles y permisos para una app concreta (opcional)
   let roles: string[] | undefined;
-  let permissions: string[] | undefined;
+  let scopedPermissions: string[] | undefined;
 
   if (options?.appSlug) {
     const app = await db.query.applications.findFirst({
@@ -116,7 +135,7 @@ export async function getAuthContextFromRequest(
       });
 
       roles = r.roles;
-      permissions = r.permissions;
+      scopedPermissions = r.permissions;
     }
   }
 
@@ -134,7 +153,7 @@ export async function getAuthContextFromRequest(
     accountId: currentAccountId,
     applications: apps,
     roles,
-    permissions,
+    permissions: scopedPermissions,
   };
 
   return context;

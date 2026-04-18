@@ -18,6 +18,7 @@ export const env = createEnv({
     PAUSE_SCHEDULER: z
       .union([z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')])
       .optional(),
+    SCHEDULER_TIMEZONE: z.string().default('America/Toronto'),
     // DigitalOcean Spaces
     DO_SPACES_ENDPOINT: z.string().url(),
     DO_SPACES_REGION: z.string().min(1),
@@ -54,6 +55,7 @@ export const env = createEnv({
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_MAIL_FROM: process.env.RESEND_MAIL_FROM,
     PAUSE_SCHEDULER: process.env.PAUSE_SCHEDULER,
+    SCHEDULER_TIMEZONE: process.env.SCHEDULER_TIMEZONE,
     // DigitalOcean Spaces
     DO_SPACES_ENDPOINT: process.env.DO_SPACES_ENDPOINT,
     DO_SPACES_REGION: process.env.DO_SPACES_REGION,

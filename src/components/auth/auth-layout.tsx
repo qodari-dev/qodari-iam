@@ -83,15 +83,18 @@ export function AuthLayout({ accountSlug, appSlug, children, variant = 'split' }
           <div className="w-full max-w-xs">{children}</div>
         </div>
       </div>
-      <div className="bg-muted relative hidden lg:block">
-        <Image
-          src={imageAdUrl ?? PICSUM_URL}
-          alt={messages.auth.imageAlt}
-          className="absolute inset-0 h-full w-full object-cover"
-          width={1000}
-          height={1000}
-          unoptimized
-        />
+      <div className="relative hidden overflow-hidden lg:block">
+        <div className="absolute inset-3 overflow-hidden">
+          <Image
+            src={imageAdUrl ?? PICSUM_URL}
+            alt={messages.auth.imageAlt}
+            className="absolute inset-0 h-full w-full object-contain object-center"
+            width={1800}
+            height={2400}
+            priority
+            unoptimized
+          />
+        </div>
       </div>
     </div>
   );

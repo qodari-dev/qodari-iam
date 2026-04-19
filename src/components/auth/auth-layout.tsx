@@ -87,7 +87,7 @@ export function AuthLayout({ accountSlug, appSlug, children, variant = 'split' }
         <Image
           src={imageAdUrl ?? PICSUM_URL}
           alt={messages.auth.imageAlt}
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+          className="absolute inset-0 h-full w-full object-cover"
           width={1000}
           height={1000}
           unoptimized

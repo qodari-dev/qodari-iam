@@ -1,7 +1,14 @@
 import { useState, useCallback } from 'react';
 import imageCompression from 'browser-image-compression';
 import { api } from '@/clients/api';
-import { ACCOUNT_LOGO_UPLOAD_TYPE, type UploadType } from '@/lib/upload';
+import {
+  ACCOUNT_IMAGE_AD_UPLOAD_TYPE,
+  ACCOUNT_LOGO_UPLOAD_TYPE,
+  APPLICATION_IMAGE_AD_UPLOAD_TYPE,
+  APPLICATION_IMAGE_UPLOAD_TYPE,
+  APPLICATION_LOGO_UPLOAD_TYPE,
+  type UploadType,
+} from '@/lib/upload';
 
 type UploadState = {
   isUploading: boolean;
@@ -13,13 +20,45 @@ type UploadOptions = {
   uploadType?: UploadType;
   maxSizeMB?: number;
   maxWidthOrHeight?: number;
+  initialQuality?: number;
 };
 
 const DEFAULT_OPTIONS: Required<UploadOptions> = {
   uploadType: ACCOUNT_LOGO_UPLOAD_TYPE,
   maxSizeMB: 0.1, // 100KB
   maxWidthOrHeight: 512,
+  initialQuality: 0.8,
 };
+
+function getUploadProfile(uploadType: UploadType): Required<UploadOptions> {
+  switch (uploadType) {
+    case ACCOUNT_LOGO_UPLOAD_TYPE:
+    case APPLICATION_LOGO_UPLOAD_TYPE:
+      return {
+        uploadType,
+        maxSizeMB: 0.1,
+        maxWidthOrHeight: 512,
+        initialQuality: 0.8,
+      };
+    case APPLICATION_IMAGE_UPLOAD_TYPE:
+      return {
+        uploadType,
+        maxSizeMB: 0.35,
+        maxWidthOrHeight: 1280,
+        initialQuality: 0.82,
+      };
+    case ACCOUNT_IMAGE_AD_UPLOAD_TYPE:
+    case APPLICATION_IMAGE_AD_UPLOAD_TYPE:
+      return {
+        uploadType,
+        maxSizeMB: 1.5,
+        maxWidthOrHeight: 1920,
+        initialQuality: 0.9,
+      };
+  }
+
+  throw new Error(`Unsupported upload type: ${uploadType}`);
+}
 
 export function useImageUpload(options?: UploadOptions) {
   const [state, setState] = useState<UploadState>({
@@ -30,7 +69,8 @@ export function useImageUpload(options?: UploadOptions) {
 
   const presignMutation = api.upload.presign.useMutation();
 
-  const opts = { ...DEFAULT_OPTIONS, ...options };
+  const uploadType = options?.uploadType ?? DEFAULT_OPTIONS.uploadType;
+  const opts = { ...getUploadProfile(uploadType), ...options };
 
   const compressImage = useCallback(
     async (file: File): Promise<File> => {
@@ -44,13 +84,14 @@ export function useImageUpload(options?: UploadOptions) {
         maxWidthOrHeight: opts.maxWidthOrHeight,
         useWebWorker: true,
         fileType: 'image/webp',
+        initialQuality: opts.initialQuality,
       });
 
       // Return as WebP with corrected name
       const name = file.name.replace(/\.[^.]+$/, '.webp');
       return new File([compressed], name, { type: 'image/webp' });
     },
-    [opts.maxSizeMB, opts.maxWidthOrHeight]
+    [opts.initialQuality, opts.maxSizeMB, opts.maxWidthOrHeight]
   );
 
   const upload = useCallback(

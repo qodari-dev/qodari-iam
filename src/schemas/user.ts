@@ -117,6 +117,10 @@ export const SetUserPasswordBodySchema = z.object({
   password: z.string().min(8, 'USER_PASSWORD_MIN'),
 });
 
+export const VerifyUserPasswordBodySchema = z.object({
+  password: z.string().min(1, 'USER_PASSWORD_REQUIRED'),
+});
+
 // ============================================
 // TYPES
 // ============================================

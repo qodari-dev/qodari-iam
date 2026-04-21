@@ -6,6 +6,7 @@ import {
   ListUsersQuerySchema,
   SetUserPasswordBodySchema,
   UpdateUserBodySchema,
+  VerifyUserPasswordBodySchema,
 } from '@/schemas/user';
 import { SafeUser } from '@/server/db/schema';
 import { Paginated } from '@/server/utils/query/schemas';
@@ -112,6 +113,27 @@ export const user = c.router(
       } satisfies TsRestMetaData,
       responses: {
         200: c.type<SafeUser>(),
+        400: TsRestErrorSchema,
+        401: TsRestErrorSchema,
+        403: TsRestErrorSchema,
+        404: TsRestErrorSchema,
+        500: TsRestErrorSchema,
+      },
+    },
+    verifyPassword: {
+      method: 'POST',
+      path: '/:id/verify-password',
+      pathParams: IdParamSchema,
+      body: VerifyUserPasswordBodySchema,
+      metadata: {
+        auth: 'required',
+        permissionKey: {
+          resourceKey: 'users',
+          actionKey: 'read',
+        },
+      } satisfies TsRestMetaData,
+      responses: {
+        204: c.noBody(),
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,

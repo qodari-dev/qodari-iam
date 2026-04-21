@@ -8,7 +8,7 @@ import {
   UserSensitiveField,
 } from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
-import { hashPassword } from '@/server/utils/password';
+import { hashPassword, verifyPassword } from '@/server/utils/password';
 import { requireAdminPermission } from '@/server/utils/require-permission';
 import { tsr } from '@ts-rest/serverless/next';
 import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
@@ -519,6 +519,66 @@ export const user = tsr.router(contract.user, {
         actionKey: appRoute.metadata.permissionKey.actionKey,
         action: 'delete',
         functionName: 'delete',
+        resourceId: id,
+        status: 'failure',
+        errorMessage: error?.body.message,
+        ipAddress,
+        userAgent,
+      });
+      return error;
+    }
+  },
+
+  // ==========================================
+  // VERIFY PASSWORD - POST /users/:id/verify-password
+  // ==========================================
+  verifyPassword: async ({ params: { id }, body }, { request, appRoute, nextRequest }) => {
+    let session: UnifiedAuthContext | undefined;
+    const ipAddress = getClientIp(nextRequest);
+    const userAgent = nextRequest.headers.get('user-agent');
+    try {
+      session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({ status: 401, message: 'No autenticado', code: 'UNAUTHENTICATED' });
+      }
+
+      const existing = await db.query.users.findFirst({
+        where: eq(users.id, id),
+        columns: { id: true, firstName: true, lastName: true, passwordHash: true },
+      });
+
+      if (!existing) {
+        throwHttpError({ status: 404, message: `Usuario con ID ${id} no encontrado`, code: 'USER_NOT_FOUND' });
+      }
+
+      const isValid = await verifyPassword(body.password, existing.passwordHash);
+
+      logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
+        action: 'read',
+        functionName: 'verifyPassword',
+        resourceId: existing.id,
+        resourceLabel: `${existing.firstName} ${existing.lastName}`,
+        status: isValid ? 'success' : 'failure',
+        ipAddress,
+        userAgent,
+      });
+
+      if (!isValid) {
+        throwHttpError({ status: 401, message: 'Contraseña incorrecta', code: 'INVALID_PASSWORD' });
+      }
+
+      return { status: 204 as const, body: undefined };
+    } catch (e) {
+      const error = genericTsRestErrorResponse(e, {
+        genericMsg: `Error al verificar contraseña para usuario ${id}`,
+      });
+      await logAudit(session, {
+        resourceKey: appRoute.metadata.permissionKey.resourceKey,
+        actionKey: appRoute.metadata.permissionKey.actionKey,
+        action: 'read',
+        functionName: 'verifyPassword',
         resourceId: id,
         status: 'failure',
         errorMessage: error?.body.message,

@@ -8,6 +8,12 @@ import { env } from "@/env";
 
 export const runtime = "nodejs";
 
+function buildPublicAuthorizeUrl(request: NextRequest) {
+  const pathname = request.nextUrl.pathname || "/oauth/authorize";
+  const search = request.nextUrl.search || "";
+  return new URL(`${pathname}${search}`, env.NEXT_PUBLIC_APP_URL).toString();
+}
+
 function buildErrorRedirect(params: {
   redirectUri: string;
   error: string;
@@ -92,7 +98,7 @@ export async function GET(request: NextRequest) {
     // No hay sesión: redirigimos a login del IAM con el account slug
     const loginUrl = new URL(`/${accountSlug}/login`, env.NEXT_PUBLIC_APP_URL);
     // "redirect" = volver a este authorize con todos los query params
-    loginUrl.searchParams.set("redirect", url.toString());
+    loginUrl.searchParams.set("redirect", buildPublicAuthorizeUrl(request));
     // Include app slug for branding
     loginUrl.searchParams.set("app", app.slug);
 

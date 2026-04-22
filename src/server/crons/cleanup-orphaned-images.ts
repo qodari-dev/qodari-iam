@@ -1,9 +1,42 @@
 import { db } from '../db';
 import { accounts, applications } from '../db/schema';
-import { getManagedStoragePrefix } from '../utils/storage-paths';
+import { env } from '@/env';
+import { getManagedStoragePrefix, isManagedStorageKey } from '../utils/storage-paths';
 import { deleteObject, listObjects, type S3Object } from '../utils/spaces';
 
 const ORPHAN_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24 hours
+const MANAGED_IMAGE_RESOURCE_PATHS = new Set([
+  'account-logo',
+  'account-image-ad',
+  'application-logo',
+  'application-image',
+  'application-image-ad',
+]);
+
+function normalizeReferencedImageKey(value: string | null | undefined): string | null {
+  if (!value) return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const storageUrlPrefix = `${env.NEXT_PUBLIC_STORAGE_URL.replace(/\/+$/, '')}/`;
+  const normalizedKey = trimmed.startsWith(storageUrlPrefix)
+    ? trimmed.slice(storageUrlPrefix.length)
+    : trimmed.replace(/^\/+/, '');
+
+  return isManagedStorageKey(normalizedKey) ? normalizedKey : null;
+}
+
+function isManagedImageObjectKey(key: string): boolean {
+  if (!isManagedStorageKey(key)) {
+    return false;
+  }
+
+  const relativePath = key.slice(`${getManagedStoragePrefix()}/`.length);
+  const [, resourcePath, fileName] = relativePath.split('/');
+
+  return Boolean(fileName) && MANAGED_IMAGE_RESOURCE_PATHS.has(resourcePath);
+}
 
 /**
  * Gets all image keys referenced in the database.
@@ -20,14 +53,21 @@ async function getReferencedImageKeys(): Promise<Set<string>> {
   const keys = new Set<string>();
 
   for (const acc of accountsData) {
-    if (acc.logo) keys.add(acc.logo);
-    if (acc.imageAd) keys.add(acc.imageAd);
+    const logoKey = normalizeReferencedImageKey(acc.logo);
+    const imageAdKey = normalizeReferencedImageKey(acc.imageAd);
+
+    if (logoKey) keys.add(logoKey);
+    if (imageAdKey) keys.add(imageAdKey);
   }
 
   for (const app of applicationsData) {
-    if (app.logo) keys.add(app.logo);
-    if (app.image) keys.add(app.image);
-    if (app.imageAd) keys.add(app.imageAd);
+    const logoKey = normalizeReferencedImageKey(app.logo);
+    const imageKey = normalizeReferencedImageKey(app.image);
+    const imageAdKey = normalizeReferencedImageKey(app.imageAd);
+
+    if (logoKey) keys.add(logoKey);
+    if (imageKey) keys.add(imageKey);
+    if (imageAdKey) keys.add(imageAdKey);
   }
 
   return keys;
@@ -45,6 +85,10 @@ function findOrphanedImages(
   now: Date
 ): S3Object[] {
   return objects.filter((obj) => {
+    if (!isManagedImageObjectKey(obj.key)) {
+      return false;
+    }
+
     const age = now.getTime() - obj.lastModified.getTime();
     const isOldEnough = age > ORPHAN_THRESHOLD_MS;
     const isNotReferenced = !referencedKeys.has(obj.key);

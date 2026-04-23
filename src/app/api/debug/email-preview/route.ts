@@ -100,7 +100,7 @@ function renderPreviewPage({
 }
 
 export async function GET(request: NextRequest) {
-  if (env.NODE_ENV === 'production') {
+  if (env.APP_ENV === 'prod') {
     return new Response('Email preview is disabled in production.', { status: 403 });
   }
 
@@ -160,8 +160,10 @@ export async function GET(request: NextRequest) {
           name,
           resetUrl:
             searchParams.get('resetUrl') ??
-            new URL(`/${account.slug}/reset-password?token=preview-reset-token`, env.NEXT_PUBLIC_APP_URL)
-              .toString(),
+            new URL(
+              `/${account.slug}/reset-password?token=preview-reset-token`,
+              env.NEXT_PUBLIC_APP_URL
+            ).toString(),
           accountName: account.name,
           accountLogo: account.logo,
         });
@@ -183,10 +185,7 @@ export async function GET(request: NextRequest) {
 
   return new Response(
     renderPreviewPage({
-      title:
-        template === 'mfa'
-          ? 'MFA security email preview'
-          : 'Password reset email preview',
+      title: template === 'mfa' ? 'MFA security email preview' : 'Password reset email preview',
       subject: rendered.subject,
       previewHtml: rendered.html,
       template,

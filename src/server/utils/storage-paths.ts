@@ -15,8 +15,7 @@ function joinKeyParts(...parts: Array<string | null | undefined>): string {
 }
 
 export function getStoragePrefix(): string {
-  const environment = env.NODE_ENV === 'production' ? 'prod' : 'dev';
-  return joinKeyParts(environment, env.IAM_APP_SLUG);
+  return joinKeyParts(env.APP_ENV, env.IAM_APP_SLUG);
 }
 
 export function getManagedStoragePrefix(): string {

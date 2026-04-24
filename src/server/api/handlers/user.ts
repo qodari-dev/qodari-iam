@@ -1,6 +1,11 @@
+import { randomUUID } from 'node:crypto';
+
+import { env } from '@/env';
 import { db } from '@/server/db';
 import {
   User,
+  applications,
+  refreshTokens,
   roles,
   USER_SENSITIVE_FIELDS,
   userRoles,
@@ -8,8 +13,11 @@ import {
   UserSensitiveField,
 } from '@/server/db/schema';
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
+import { signAccessToken } from '@/server/utils/jwt';
 import { hashPassword, verifyPassword } from '@/server/utils/password';
 import { requireAdminPermission } from '@/server/utils/require-permission';
+import { hashToken } from '@/server/utils/session';
+import { getUserRolesAndPermissions } from '@/server/utils/get-user-roles-and-permissions';
 import { tsr } from '@ts-rest/serverless/next';
 import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { contract } from '../contracts';
@@ -912,6 +920,114 @@ export const user = tsr.router(contract.user, {
         userAgent,
       });
       return error;
+    }
+  },
+
+  // ==========================================
+  // CREATE TOKEN - POST /users/:id/token
+  // Issues an access + refresh token pair for a user via M2M.
+  // Used by apps to auto-login a user immediately after registration
+  // without requiring them to go through the OAuth login flow.
+  // ==========================================
+  createToken: async ({ params: { id }, body: { clientId } }, { request, appRoute }) => {
+    try {
+      const session = await requireAdminPermission(request, appRoute.metadata);
+      if (!session) {
+        throwHttpError({ status: 401, message: 'No autenticado', code: 'UNAUTHENTICATED' });
+      }
+
+      // Only M2M clients (client_credentials) may call this endpoint
+      if (session.type !== 'api_client') {
+        throwHttpError({ status: 403, message: 'Solo M2M puede usar este endpoint', code: 'FORBIDDEN' });
+      }
+
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, id),
+        columns: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          isAdmin: true,
+          status: true,
+          accountId: true,
+        },
+      });
+
+      if (!user) {
+        throwHttpError({ status: 404, message: 'Usuario no encontrado', code: 'USER_NOT_FOUND' });
+      }
+
+      if (user.status !== 'active') {
+        throwHttpError({ status: 403, message: 'Usuario inactivo', code: 'USER_INACTIVE' });
+      }
+
+      // Resolve the application by clientId so the token is signed with
+      // that app's JWT secret — must match what the calling app uses to verify.
+      const app = await db.query.applications.findFirst({
+        where: eq(applications.clientId, clientId),
+      });
+
+      if (!app) {
+        throwHttpError({ status: 404, message: 'Aplicacion no encontrada', code: 'APP_NOT_FOUND' });
+      }
+
+      // Roles + permissions for the user in this application
+      const { roles, permissions } = await getUserRolesAndPermissions({
+        userId: user.id,
+        applicationId: app.id,
+      });
+
+      // Sign access token
+      const accessToken = await signAccessToken({
+        payload: {
+          sub: user.id,
+          accountId: user.accountId,
+          appId: app.id,
+          roles,
+          permissions,
+          user: {
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            isAdmin: user.isAdmin,
+          },
+        },
+        expiresInSec: app.accessTokenExp,
+        issuer: env.IAM_ISSUER,
+        audience: app.clientId,
+        jwtSecret: app.clientJwtSecret,
+      });
+
+      // Create refresh token
+      const familyId = randomUUID();
+      const rawRefreshToken = randomUUID();
+      const refreshTokenHash = await hashToken(rawRefreshToken);
+      const refreshExpiresAt = new Date(Date.now() + app.refreshTokenExp * 1000);
+
+      await db.insert(refreshTokens).values({
+        familyId,
+        userId: user.id,
+        accountId: user.accountId,
+        applicationId: app.id,
+        tokenHash: refreshTokenHash,
+        expiresAt: refreshExpiresAt,
+        revoked: false,
+      });
+
+      return {
+        status: 200,
+        body: {
+          accessToken,
+          refreshToken: rawRefreshToken,
+          tokenType: 'Bearer' as const,
+          expiresIn: app.accessTokenExp,
+        },
+      };
+    } catch (e) {
+      return genericTsRestErrorResponse(e, {
+        genericMsg: `Error al crear token para usuario ${id}`,
+      });
     }
   },
 });

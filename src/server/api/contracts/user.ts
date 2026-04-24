@@ -2,6 +2,7 @@ import { IdParamSchema } from '@/schemas/shared';
 import { TsRestErrorSchema, TsRestMetaData } from '@/schemas/ts-rest';
 import {
   CreateUserBodySchema,
+  CreateUserTokenBodySchema,
   GetUserQuerySchema,
   ListUsersQuerySchema,
   SetUserPasswordBodySchema,
@@ -219,6 +220,26 @@ export const user = c.router(
       responses: {
         200: c.type<SafeUser>(),
         400: TsRestErrorSchema,
+        401: TsRestErrorSchema,
+        403: TsRestErrorSchema,
+        404: TsRestErrorSchema,
+        500: TsRestErrorSchema,
+      },
+    },
+    createToken: {
+      method: 'POST',
+      path: '/:id/token',
+      pathParams: IdParamSchema,
+      body: CreateUserTokenBodySchema,
+      metadata: {
+        auth: 'required',
+        permissionKey: {
+          resourceKey: 'users',
+          actionKey: 'read',
+        },
+      } satisfies TsRestMetaData,
+      responses: {
+        200: c.type<{ accessToken: string; refreshToken: string; tokenType: 'Bearer'; expiresIn: number }>(),
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,
         404: TsRestErrorSchema,

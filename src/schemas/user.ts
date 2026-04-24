@@ -121,6 +121,11 @@ export const VerifyUserPasswordBodySchema = z.object({
   password: z.string().min(1, 'USER_PASSWORD_REQUIRED'),
 });
 
+export const CreateUserTokenBodySchema = z.object({
+  /** clientId of the application to issue the token for (e.g. the OAuth app's clientId). */
+  clientId: z.string().min(1),
+});
+
 // ============================================
 // TYPES
 // ============================================

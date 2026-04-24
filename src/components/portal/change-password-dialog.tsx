@@ -12,7 +12,8 @@ import { ChangePasswordBodySchema } from '@/schemas/auth';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useCallback } from 'react';
+import { EyeIcon, EyeOffIcon } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { Field, FieldError, FieldGroup, FieldLabel } from '../ui/field';
 import { Input } from '../ui/input';
 import { Spinner } from '../ui/spinner';
@@ -38,6 +39,10 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
       confirmPassword: '',
     },
   });
+
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { mutateAsync: changePassword, isPending } = api.auth.changePassword.useMutation({
     onError(error) {
@@ -78,13 +83,24 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
                   <FieldLabel htmlFor="current-password">
                     {messages.auth.changePassword.currentPassword}
                   </FieldLabel>
-                  <Input
-                    {...field}
-                    id="current-password"
-                    type="password"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      id="current-password"
+                      type={showCurrent ? 'text' : 'password'}
+                      aria-invalid={fieldState.invalid}
+                      placeholder="••••••••"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrent((v) => !v)}
+                      className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2"
+                      tabIndex={-1}
+                    >
+                      {showCurrent ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+                    </button>
+                  </div>
                   {fieldState.invalid && (
                     <FieldError
                       errors={[
@@ -110,14 +126,25 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
                   <FieldLabel htmlFor="new-password">
                     {messages.auth.changePassword.newPassword}
                   </FieldLabel>
-                  <Input
-                    {...field}
-                    id="new-password"
-                    type="password"
-                    autoComplete="new-password"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      id="new-password"
+                      type={showNew ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="••••••••"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNew((v) => !v)}
+                      className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2"
+                      tabIndex={-1}
+                    >
+                      {showNew ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+                    </button>
+                  </div>
                   {fieldState.invalid && (
                     <FieldError
                       errors={[
@@ -143,13 +170,24 @@ export function ChangePasswordDialog({ opened, onOpened }: Props) {
                   <FieldLabel htmlFor="confirm-password">
                     {messages.auth.changePassword.confirmPassword}
                   </FieldLabel>
-                  <Input
-                    {...field}
-                    id="confirm-password"
-                    type="password"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      id="confirm-password"
+                      type={showConfirm ? 'text' : 'password'}
+                      aria-invalid={fieldState.invalid}
+                      placeholder="••••••••"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm((v) => !v)}
+                      className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2"
+                      tabIndex={-1}
+                    >
+                      {showConfirm ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+                    </button>
+                  </div>
                   {fieldState.invalid && (
                     <FieldError
                       errors={[

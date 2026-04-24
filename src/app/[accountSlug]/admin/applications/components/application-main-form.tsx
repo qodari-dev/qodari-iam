@@ -1,4 +1,5 @@
-import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
+import { Controller, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { useEffect, useRef } from 'react';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,17 @@ import {
 import { generateClientId, randomBase64Url } from '@/utils/random-base64-url';
 
 type FormValues = z.infer<typeof CreateApplicationBodySchema>;
+
+function toSlug(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
 
 type ApplicationMainFormProps = {
   onUploadComplete?: (key: string) => void;
@@ -149,6 +161,18 @@ export function ApplicationMainForm({
 }: ApplicationMainFormProps) {
   const { locale, messages } = useI18n();
   const form = useFormContext<FormValues>();
+  const lastAutoSlug = useRef('');
+  const name = useWatch({ control: form.control, name: 'name' });
+
+  useEffect(() => {
+    const currentSlug = form.getValues('slug');
+    if (currentSlug === '' || currentSlug === lastAutoSlug.current) {
+      const generated = toSlug(name);
+      lastAutoSlug.current = generated;
+      form.setValue('slug', generated, { shouldValidate: false });
+    }
+  }, [name, form]);
+
   const statusOptions: Array<{ label: string; value: FormValues['status'] }> = [
     { label: messages.admin.applications.form.options.status.active, value: 'active' },
     { label: messages.admin.applications.form.options.status.suspended, value: 'suspended' },
@@ -187,7 +211,31 @@ export function ApplicationMainForm({
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel htmlFor={field.name}>Slug</FieldLabel>
-            <Input {...field} aria-invalid={fieldState.invalid} />
+            <InputGroup>
+              <InputGroupInput
+                {...field}
+                aria-invalid={fieldState.invalid}
+                className="font-mono text-sm"
+                onChange={(e) => {
+                  lastAutoSlug.current = '';
+                  field.onChange(e);
+                }}
+              />
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  aria-label={messages.common.generate}
+                  title={messages.common.generate}
+                  size="icon-xs"
+                  onClick={() => {
+                    const generated = toSlug(form.getValues('name'));
+                    lastAutoSlug.current = generated;
+                    form.setValue('slug', generated, { shouldValidate: true });
+                  }}
+                >
+                  <RefreshCw />
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
             {fieldState.invalid && (
               <FieldError
                 errors={[

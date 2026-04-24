@@ -1,7 +1,6 @@
 'use client';
 
-import { toast } from 'sonner';
-import { Eye, Pencil, Trash, Copy, Lock } from 'lucide-react';
+import { Eye, Pencil, Trash, Lock } from 'lucide-react';
 import { DataTableRowActions, type RowAction, type RowActionGroup } from '@/components/data-table';
 import { useI18n } from '@/i18n/provider';
 import { Application } from '@/schemas/application';
@@ -21,18 +20,7 @@ export function ApplicationRowActions({ row, table }: ApplicationRowActionsProps
   const canUpdateApps = useHasPermission('applications:update');
   const canDeleteApps = useHasPermission('applications:delete');
 
-  const handleCopySlug = () => {
-    navigator.clipboard.writeText(app.slug);
-    toast.success(messages.common.copiedToClipboard);
-  };
-
   const actions: (RowAction<Application> | RowActionGroup<Application>)[] = [
-    {
-      label: messages.admin.applications.actions.copySlug,
-      icon: Copy,
-      onClick: handleCopySlug,
-      hidden: !canReadApps,
-    },
     {
       label: messages.admin.applications.actions.viewDetails,
       icon: Eye,

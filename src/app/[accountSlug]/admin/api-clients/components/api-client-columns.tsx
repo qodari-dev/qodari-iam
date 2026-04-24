@@ -50,6 +50,36 @@ export function useApiClientColumns(): ColumnDef<ApiClientItem>[] {
       enableHiding: false,
     },
     {
+      id: 'roles',
+      header: () => (
+        <span className="text-muted-foreground text-xs font-medium">
+          {messages.admin.apiClients.columns.roles}
+        </span>
+      ),
+      cell: ({ row }) => {
+        const roles = row.original.roles ?? [];
+        if (roles.length === 0) {
+          return <span className="text-muted-foreground text-xs">—</span>;
+        }
+        const visible = roles.slice(0, 3);
+        const extra = roles.length - visible.length;
+        return (
+          <div className="flex flex-wrap gap-1">
+            {visible.map((r) => r.role && (
+              <Badge key={r.role.id} variant="outline" className="text-xs">
+                {r.role.name}
+              </Badge>
+            ))}
+            {extra > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                +{extra}
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: 'status',
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={messages.admin.apiClients.columns.status} />

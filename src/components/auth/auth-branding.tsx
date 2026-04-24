@@ -21,18 +21,18 @@ export function AuthBranding({ name, logo }: AuthBrandingProps) {
   const logoUrl = getStorageUrl(logo);
 
   return (
-    <a href="#" className="flex items-center gap-2 font-medium">
+    <a href="#" className="flex items-center gap-3 font-semibold text-lg">
       {logoUrl ? (
         <Image
           src={logoUrl}
           alt={name}
-          width={24}
-          height={24}
-          className="size-6 rounded-md object-cover"
+          width={40}
+          height={40}
+          className="size-10 rounded-xl object-cover"
           unoptimized
         />
       ) : (
-        <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md text-xs font-semibold">
+        <div className="bg-primary text-primary-foreground flex size-10 items-center justify-center rounded-xl text-base font-bold">
           {getInitials(name)}
         </div>
       )}

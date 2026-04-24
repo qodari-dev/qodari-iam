@@ -198,7 +198,6 @@ export const admin = {
       create: 'New application',
     },
     actions: {
-      copySlug: 'Copy slug',
       viewDetails: 'View details',
       rolesReport: 'Roles report',
       edit: 'Edit application',
@@ -337,6 +336,7 @@ export const admin = {
     },
     columns: {
       name: 'Name',
+      security: 'Security',
       clientType: 'Client type',
       status: 'Status',
       created: 'Created',
@@ -497,6 +497,7 @@ export const admin = {
     },
     columns: {
       name: 'Name',
+      roles: 'Roles',
       status: 'Status',
       accessTokenExp: 'Token expiration',
       lastUsed: 'Last used',

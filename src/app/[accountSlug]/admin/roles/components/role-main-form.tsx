@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,14 +13,38 @@ import { useApplications } from '@/hooks/queries/use-application-queries';
 import { useI18n } from '@/i18n/provider';
 import { CreateRoleBodySchema } from '@/schemas/role';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
-import { Controller, useFormContext } from 'react-hook-form';
+import { RefreshCw } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 type FormValues = z.infer<typeof CreateRoleBodySchema>;
 
+function toSlug(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
 export function RoleMainForm() {
   const { locale, messages } = useI18n();
   const form = useFormContext<FormValues>();
+  const lastAutoSlug = useRef('');
+  const name = useWatch({ control: form.control, name: 'name' });
+
+  useEffect(() => {
+    const currentSlug = form.getValues('slug');
+    if (currentSlug === '' || currentSlug === lastAutoSlug.current) {
+      const generated = toSlug(name);
+      lastAutoSlug.current = generated;
+      form.setValue('slug', generated, { shouldValidate: false });
+    }
+  }, [name, form]);
 
   const { data: apps } = useApplications({ limit: 100 });
   const appOptions =
@@ -55,7 +80,29 @@ export function RoleMainForm() {
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
             <FieldLabel htmlFor={field.name}>Slug</FieldLabel>
-            <Input {...field} aria-invalid={fieldState.invalid} />
+            <div className="flex gap-2">
+              <Input
+                {...field}
+                aria-invalid={fieldState.invalid}
+                className="font-mono text-sm"
+                onChange={(e) => {
+                  lastAutoSlug.current = '';
+                  field.onChange(e);
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  const generated = toSlug(form.getValues('name'));
+                  lastAutoSlug.current = generated;
+                  form.setValue('slug', generated, { shouldValidate: true });
+                }}
+              >
+                <RefreshCw className="size-4" />
+              </Button>
+            </div>
             {fieldState.invalid && (
               <FieldError
                 errors={[

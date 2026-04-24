@@ -202,7 +202,6 @@ export const admin: LocaleShape<AdminMessages> = {
       create: 'Nueva aplicación',
     },
     actions: {
-      copySlug: 'Copiar slug',
       viewDetails: 'Ver detalles',
       rolesReport: 'Reporte de roles',
       edit: 'Editar aplicación',
@@ -342,6 +341,7 @@ export const admin: LocaleShape<AdminMessages> = {
     },
     columns: {
       name: 'Nombre',
+      security: 'Seguridad',
       clientType: 'Tipo de cliente',
       status: 'Estado',
       created: 'Creado',
@@ -502,6 +502,7 @@ export const admin: LocaleShape<AdminMessages> = {
     },
     columns: {
       name: 'Nombre',
+      roles: 'Roles',
       status: 'Estado',
       accessTokenExp: 'Expiración del token',
       lastUsed: 'Último uso',

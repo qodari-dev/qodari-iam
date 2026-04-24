@@ -353,6 +353,14 @@ function getAccountDisplayName(accountName?: string) {
   return accountName?.trim() || 'Qodari IAM';
 }
 
+function toTitleCase(value: string) {
+  return value
+    .trim()
+    .split(/[\s_-]+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 function getInitials(value: string) {
   const words = value
     .trim()
@@ -401,7 +409,6 @@ function EmailLayout({
                   <div style={styles.logoFallback}>{initials}</div>
                 )}
                 <div style={styles.brandMeta}>
-                  <Text style={styles.securityLabel}>{eyebrow}</Text>
                   <Heading as="h2" style={styles.brandName}>
                     {displayName}
                   </Heading>
@@ -541,7 +548,9 @@ function MfaCodeEmail({
   const localeCopy = copy[locale];
   const displayName = getAccountDisplayName(accountName);
   const displayRecipient = name?.trim() || localeCopy.common.accountFallback;
-  const effectiveApplicationName = applicationName?.trim() || displayName;
+  const effectiveApplicationName = applicationName?.trim()
+    ? toTitleCase(applicationName.trim())
+    : displayName;
 
   return (
     <EmailLayout

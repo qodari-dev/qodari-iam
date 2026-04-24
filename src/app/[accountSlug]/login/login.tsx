@@ -15,7 +15,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { useI18n } from '@/i18n/provider';
 import { getTsRestErrorMessage } from '@/utils/get-ts-rest-error-message';
 import Link from 'next/link';
-import { useCallback } from 'react';
+import { EyeIcon, EyeOffIcon } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -40,6 +41,8 @@ export default function Login({ accountSlug, appSlug, redirect }: LoginProps) {
       password: '',
     },
   });
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const { mutateAsync: login, isPending } = api.auth.login.useMutation({
     onError(error) {
@@ -124,13 +127,28 @@ export default function Login({ accountSlug, appSlug, redirect }: LoginProps) {
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="login-password">{messages.auth.login.password}</FieldLabel>
-                  <Input
-                    {...field}
-                    type="password"
-                    autoComplete="current-password"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="••••••••"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOffIcon className="size-4" />
+                      ) : (
+                        <EyeIcon className="size-4" />
+                      )}
+                    </button>
+                  </div>
                   {fieldState.invalid && (
                     <FieldError
                       errors={[

@@ -407,35 +407,35 @@ export const auth = tsr.router(contract.auth, {
   }, // --------------------------------------
   // POST - /token
   // --------------------------------------
-  oauthToken: async ({ body }, { nextRequest }) => {
+  oauthToken: async ({ body }, { nextRequest: _ }) => {
     try {
       // ----- RATE LIMIT por IP + email -----
-      const ip = getClientIp(nextRequest);
+      // const ip = getClientIp(nextRequest);
 
-      const ipKey = `oauthToken:ip:${ip}`;
-
-      const windowMs = 5 * 60 * 1000; // 5 min
-
-      const ipRl = await checkRateLimit({
-        key: ipKey,
-        limit: 5,
-        windowMs,
-      });
-
-      if (!ipRl.success) {
-        return {
-          status: 429,
-          body: {
-            message: 'Demasiadas solicitudes. Intentalo de nuevo mas tarde.',
-            code: 'RATE_LIMIT_EXCEEDED',
-          },
-          headers: {
-            'X-RateLimit-Limit': String(ipRl.limit),
-            'X-RateLimit-Remaining': String(ipRl.remaining),
-            'X-RateLimit-Reset': ipRl.resetAt.toISOString(),
-          },
-        };
-      }
+      // const ipKey = `oauthToken:ip:${ip}`;
+      //
+      // const windowMs = 5 * 60 * 1000; // 5 min
+      //
+      // const ipRl = await checkRateLimit({
+      //   key: ipKey,
+      //   limit: 5,
+      //   windowMs,
+      // });
+      //
+      // if (!ipRl.success) {
+      //   return {
+      //     status: 429,
+      //     body: {
+      //       message: 'Demasiadas solicitudes. Intentalo de nuevo mas tarde.',
+      //       code: 'RATE_LIMIT_EXCEEDED',
+      //     },
+      //     headers: {
+      //       'X-RateLimit-Limit': String(ipRl.limit),
+      //       'X-RateLimit-Remaining': String(ipRl.remaining),
+      //       'X-RateLimit-Reset': ipRl.resetAt.toISOString(),
+      //     },
+      //   };
+      // }
       if (body.grant_type === 'authorization_code') {
         const { code, client_id, client_secret, redirect_uri, code_verifier } = body;
 

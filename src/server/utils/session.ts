@@ -2,7 +2,7 @@ import { db } from '@/server/db';
 import { cookies } from 'next/headers';
 import { sessions } from '@/server/db/schema';
 import { eq } from 'drizzle-orm';
-import { parse } from 'cookie';
+import { parseCookie } from 'cookie';
 import { createHash } from 'node:crypto';
 
 export const SESSION_COOKIE_NAME = 'qodari_iam_session';
@@ -51,8 +51,8 @@ export async function getSessionFromRequest(req: Request) {
   const cookieHeader = req.headers.get('cookie') ?? '';
   if (!cookieHeader) return null;
 
-  const cookies = parse(cookieHeader);
-  const sessionId = cookies[SESSION_COOKIE_NAME];
+  const parsedCookies = parseCookie(cookieHeader);
+  const sessionId = parsedCookies[SESSION_COOKIE_NAME];
   if (!sessionId) return null;
 
   const session = await db.query.sessions.findFirst({

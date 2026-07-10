@@ -19,7 +19,7 @@ function extractErrorMessages(
 
     if (value?.message && typeof value.message === 'string') {
       messages.push({ path, message: value.message });
-    } else if (value?.root?.message) {
+    } else if (value && typeof value === 'object' && 'root' in value && value.root?.message) {
       // Para arrays con error en root
       messages.push({ path, message: value.root.message as string });
     } else if (typeof value === 'object' && value !== null) {

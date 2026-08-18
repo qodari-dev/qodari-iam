@@ -23,6 +23,7 @@ import { requireAdminPermission } from '@/server/utils/require-permission';
 import { deleteObject, isStorageKey } from '@/server/utils/spaces';
 import { logAudit } from '@/server/utils/audit-logger';
 import { getClientIp } from '@/server/utils/get-client-ip';
+import { generateAppKeys } from '@/server/utils/app-keys';
 import { UnifiedAuthContext } from '@/server/utils/auth-context';
 import { tsr } from '@ts-rest/serverless/next';
 import { and, eq, inArray, sql } from 'drizzle-orm';
@@ -180,6 +181,14 @@ export const application = tsr.router(contract.application, {
           .values({
             ...data,
             accountId: session!.accountId,
+            // Las aplicaciones NUEVAS nacen con firma asimetrica. El default de
+            // la columna sigue siendo HS256, que es lo correcto para las filas
+            // que ya existian —aplicar la migracion no debe cambiarles el
+            // comportamiento—, pero heredarlo aca crearia deuda para siempre:
+            // cada app nueva obligaria a entregarle el secreto de firma a su
+            // consumidor, que es justo lo que se vino a eliminar.
+            tokenAlg: 'RS256',
+            ...generateAppKeys(),
           })
           .returning();
 

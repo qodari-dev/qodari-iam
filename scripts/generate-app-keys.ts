@@ -12,9 +12,9 @@
  * consultas activado en desarrollo, y aqui los parametros de la consulta son la
  * llave PRIVADA — quedaria impresa en la terminal.
  */
-import { generateKeyPairSync, randomBytes } from 'node:crypto';
-
 import { Client } from 'pg';
+
+import { generateAppKeys } from '../src/server/utils/app-keys';
 
 type AppRow = {
   id: string;
@@ -22,21 +22,6 @@ type AppRow = {
   token_alg: 'HS256' | 'RS256';
   jwt_kid: string | null;
 };
-
-function generateKeyPair() {
-  const { publicKey, privateKey } = generateKeyPairSync('rsa', {
-    modulusLength: 2048,
-    publicKeyEncoding: { type: 'spki', format: 'pem' },
-    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-  });
-  return {
-    // `kid` aleatorio y no el id de la aplicacion: el JWKS es anonimo y no debe
-    // filtrar los UUID internos.
-    kid: randomBytes(16).toString('hex'),
-    publicKey,
-    privateKey,
-  };
-}
 
 async function main() {
   const [target, ...flags] = process.argv.slice(2);
@@ -72,7 +57,7 @@ async function main() {
         continue;
       }
 
-      const { kid, publicKey, privateKey } = generateKeyPair();
+      const { jwtKid: kid, jwtPublicKey: publicKey, jwtPrivateKey: privateKey } = generateAppKeys();
       await client.query(
         'UPDATE applications SET jwt_kid = $1, jwt_public_key = $2, jwt_private_key = $3, updated_at = now() WHERE id = $4',
         [kid, publicKey, privateKey, app.id]

@@ -73,12 +73,16 @@ export const auth = tsr.router(contract.auth, {
   // --------------------------------------
   login: async ({ body }, { request, nextRequest }) => {
     try {
-      const { email, password, appSlug, accountSlug } = body;
+      const { password, appSlug, accountSlug } = body;
+      // `user.create` guarda el correo normalizado en minusculas, asi que la
+      // busqueda tiene que normalizar igual. Sin esto, escribirlo con mayusculas
+      // devuelve "credenciales invalidas" sin ninguna pista de por que.
+      const email = body.email.toLowerCase();
 
       // ----- RATE LIMIT por IP + email -----
       const ip = getClientIp(nextRequest);
 
-      const emailKey = `login:email:${email.toLowerCase()}`;
+      const emailKey = `login:email:${email}`;
       const ipKey = `login:ip:${ip}`;
 
       const windowMs = 5 * 60 * 1000; // 5 min
@@ -845,12 +849,14 @@ export const auth = tsr.router(contract.auth, {
   },
   forgotPassword: async ({ body }, { nextRequest }) => {
     try {
-      const { email, accountSlug } = body;
+      const { accountSlug } = body;
+      // Mismo criterio que en login: el correo se guarda en minusculas.
+      const email = body.email.toLowerCase();
 
       // ----- RATE LIMIT por IP + email -----
       const ip = getClientIp(nextRequest);
 
-      const emailKey = `forgot:email:${email.toLowerCase()}`;
+      const emailKey = `forgot:email:${email}`;
       const ipKey = `forgot:ip:${ip}`;
 
       const windowMs = 15 * 60 * 1000; // 15 min

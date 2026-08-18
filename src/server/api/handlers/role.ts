@@ -496,7 +496,9 @@ export const role = tsr.router(contract.role, {
         });
       }
 
-      await db.delete(roles).where(eq(roles.id, id));
+      await db
+        .delete(roles)
+        .where(and(eq(roles.id, id), eq(roles.accountId, session.accountId)));
 
       logAudit(session, {
         resourceKey: appRoute.metadata.permissionKey.resourceKey,

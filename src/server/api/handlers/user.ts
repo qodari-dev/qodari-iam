@@ -113,6 +113,18 @@ const SENSITIVE_COLUMNS = Object.fromEntries(
   USER_SENSITIVE_FIELDS.map((f) => [f, false])
 ) as Record<UserSensitiveField, false>;
 
+/**
+ * Alcance obligatorio de toda operacion sobre un usuario concreto.
+ *
+ * El `id` de un usuario no es un secreto: viaja en listados, en auditoria y en
+ * respuestas legitimas. Sin este filtro, un admin (o un api-client M2M) de
+ * cualquier cuenta alcanza usuarios de todas las demas. La cuenta sale SIEMPRE
+ * del contexto autenticado, nunca del request.
+ */
+function userScope(id: string, accountId: string) {
+  return and(eq(users.id, id), eq(users.accountId, accountId));
+}
+
 async function assertRolesBelongToAccount(accountId: string, roleIds: string[]) {
   if (!roleIds.length) return;
 
@@ -158,10 +170,16 @@ export const user = tsr.router(contract.user, {
         offset,
       } = buildQuery({ page, limit, search, where, sort }, USER_QUERY_CONFIG);
 
+      // El listado se acota a la cuenta del contexto: los filtros que llegan por
+      // query se suman al alcance, nunca lo reemplazan.
+      const scopedWhere = whereClause
+        ? and(whereClause, eq(users.accountId, session.accountId))
+        : eq(users.accountId, session.accountId);
+
       const [data, countResult] = await Promise.all([
         db.query.users.findMany({
           columns: SENSITIVE_COLUMNS,
-          where: whereClause,
+          where: scopedWhere,
           with: buildTypedIncludes(include, USER_INCLUDES),
           orderBy: orderBy.length ? orderBy : undefined,
           limit: queryLimit,
@@ -170,7 +188,7 @@ export const user = tsr.router(contract.user, {
         db
           .select({ count: sql<number>`count(*)::int` })
           .from(users)
-          .where(whereClause),
+          .where(scopedWhere),
       ]);
 
       const totalCount = countResult[0]?.count ?? 0;
@@ -205,7 +223,7 @@ export const user = tsr.router(contract.user, {
 
       const user = await db.query.users.findFirst({
         columns: SENSITIVE_COLUMNS,
-        where: eq(users.id, id),
+        where: userScope(id, session.accountId),
         with: buildTypedIncludes(query?.include, USER_INCLUDES),
       });
 
@@ -243,8 +261,15 @@ export const user = tsr.router(contract.user, {
       }
       const { roles, ...data } = body;
 
+      // El unico de la base es (account_id, email): la misma persona puede
+      // existir en dos cuentas. Comprobarlo global rechazaba altas legitimas y
+      // convertia el 409 en un oraculo de si un correo existe en algun lugar
+      // del IAM.
       const existing = await db.query.users.findFirst({
-        where: eq(users.email, body.email.toLowerCase()),
+        where: and(
+          eq(users.email, body.email.toLowerCase()),
+          eq(users.accountId, session.accountId)
+        ),
       });
 
       if (existing) {
@@ -348,7 +373,7 @@ export const user = tsr.router(contract.user, {
       const { roles, password, ...data } = body;
 
       const existing = await db.query.users.findFirst({
-        where: eq(users.id, id),
+        where: userScope(id, session.accountId),
         columns: SENSITIVE_COLUMNS,
       });
 
@@ -382,7 +407,7 @@ export const user = tsr.router(contract.user, {
         const [updated] = await tx
           .update(users)
           .set(updateData)
-          .where(eq(users.id, id))
+          .where(userScope(id, session!.accountId))
           .returning();
 
         if (roles !== undefined) {
@@ -479,7 +504,7 @@ export const user = tsr.router(contract.user, {
       }
 
       const existing = await db.query.users.findFirst({
-        where: eq(users.id, id),
+        where: userScope(id, session.accountId),
         columns: SENSITIVE_COLUMNS,
       });
 
@@ -496,7 +521,7 @@ export const user = tsr.router(contract.user, {
         where: eq(userRoles.userId, id),
       });
 
-      await db.delete(users).where(eq(users.id, id));
+      await db.delete(users).where(userScope(id, session.accountId));
 
       logAudit(session, {
         resourceKey: appRoute.metadata.permissionKey.resourceKey,
@@ -551,7 +576,7 @@ export const user = tsr.router(contract.user, {
       }
 
       const existing = await db.query.users.findFirst({
-        where: eq(users.id, id),
+        where: userScope(id, session.accountId),
         columns: { id: true, firstName: true, lastName: true, passwordHash: true },
       });
 
@@ -615,7 +640,7 @@ export const user = tsr.router(contract.user, {
       }
 
       const existing = await db.query.users.findFirst({
-        where: eq(users.id, id),
+        where: userScope(id, session.accountId),
         columns: SENSITIVE_COLUMNS,
       });
 
@@ -637,7 +662,7 @@ export const user = tsr.router(contract.user, {
           lockedUntil: null,
           updatedAt: new Date(),
         })
-        .where(eq(users.id, id));
+        .where(userScope(id, session.accountId));
 
       logAudit(session, {
         resourceKey: appRoute.metadata.permissionKey.resourceKey,
@@ -691,7 +716,7 @@ export const user = tsr.router(contract.user, {
       }
 
       const existing = await db.query.users.findFirst({
-        where: eq(users.id, id),
+        where: userScope(id, session.accountId),
         columns: SENSITIVE_COLUMNS,
       });
 
@@ -709,7 +734,7 @@ export const user = tsr.router(contract.user, {
           status: 'suspended',
           updatedAt: new Date(),
         })
-        .where(eq(users.id, id))
+        .where(userScope(id, session.accountId))
         .returning();
 
       const {
@@ -774,7 +799,7 @@ export const user = tsr.router(contract.user, {
       }
 
       const existing = await db.query.users.findFirst({
-        where: eq(users.id, id),
+        where: userScope(id, session.accountId),
         columns: SENSITIVE_COLUMNS,
       });
 
@@ -792,7 +817,7 @@ export const user = tsr.router(contract.user, {
           status: 'active',
           updatedAt: new Date(),
         })
-        .where(eq(users.id, id))
+        .where(userScope(id, session.accountId))
         .returning();
 
       const {
@@ -857,7 +882,7 @@ export const user = tsr.router(contract.user, {
       }
 
       const existing = await db.query.users.findFirst({
-        where: eq(users.id, id),
+        where: userScope(id, session.accountId),
         columns: SENSITIVE_COLUMNS,
       });
 
@@ -876,7 +901,7 @@ export const user = tsr.router(contract.user, {
           lockedUntil: null,
           updatedAt: new Date(),
         })
-        .where(eq(users.id, id))
+        .where(userScope(id, session.accountId))
         .returning();
 
       const {
@@ -942,7 +967,7 @@ export const user = tsr.router(contract.user, {
       }
 
       const user = await db.query.users.findFirst({
-        where: eq(users.id, id),
+        where: userScope(id, session.accountId),
         columns: {
           id: true,
           email: true,
@@ -964,8 +989,15 @@ export const user = tsr.router(contract.user, {
 
       // Resolve the application by clientId so the token is signed with
       // that app's JWT secret — must match what the calling app uses to verify.
+      //
+      // La aplicacion tambien se acota a la cuenta: sin esto, un api-client podia
+      // pedir un token firmado con el secreto de una app ajena y usarlo contra
+      // ella. Junto con el alcance del usuario, cierra la emision cruzada.
       const app = await db.query.applications.findFirst({
-        where: eq(applications.clientId, clientId),
+        where: and(
+          eq(applications.clientId, clientId),
+          eq(applications.accountId, session.accountId)
+        ),
       });
 
       if (!app) {

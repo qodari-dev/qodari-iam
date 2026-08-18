@@ -6,7 +6,7 @@ import {
   ListApplicationsQuerySchema,
   UpdateApplicationBodySchema,
 } from '@/schemas/application';
-import { Application } from '@/server/db/schema';
+import { SafeApplication } from '@/server/db/schema';
 import { Paginated } from '@/server/utils/query/schemas';
 import { initContract } from '@ts-rest/core';
 
@@ -26,7 +26,7 @@ export const application = c.router(
         },
       } satisfies TsRestMetaData,
       responses: {
-        200: c.type<Paginated<Application>>(),
+        200: c.type<Paginated<SafeApplication>>(),
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,
@@ -46,7 +46,7 @@ export const application = c.router(
         },
       } satisfies TsRestMetaData,
       responses: {
-        200: c.type<Application>(),
+        200: c.type<SafeApplication>(),
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,
@@ -66,7 +66,7 @@ export const application = c.router(
         },
       } satisfies TsRestMetaData,
       responses: {
-        201: c.type<Application>(),
+        201: c.type<SafeApplication>(),
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,
@@ -87,7 +87,7 @@ export const application = c.router(
         },
       } satisfies TsRestMetaData,
       responses: {
-        200: c.type<Application>(),
+        200: c.type<SafeApplication>(),
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,
@@ -108,7 +108,7 @@ export const application = c.router(
         },
       } satisfies TsRestMetaData,
       responses: {
-        200: c.type<Application>(),
+        200: c.type<SafeApplication>(),
         400: TsRestErrorSchema,
         401: TsRestErrorSchema,
         403: TsRestErrorSchema,

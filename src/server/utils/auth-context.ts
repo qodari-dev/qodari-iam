@@ -210,7 +210,7 @@ export async function getM2MAuthContext(
   // 3) Verify the token with the app's JWT secret
   let verifiedPayload: AccessTokenPayload;
   try {
-    verifiedPayload = await verifyAccessToken(token, app.clientJwtSecret, {
+    verifiedPayload = await verifyAccessToken(token, app, {
       issuer: env.IAM_ISSUER,
       audience: app.clientId,
     });

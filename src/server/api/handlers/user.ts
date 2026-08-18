@@ -1028,7 +1028,7 @@ export const user = tsr.router(contract.user, {
         expiresInSec: app.accessTokenExp,
         issuer: env.IAM_ISSUER,
         audience: app.clientId,
-        jwtSecret: app.clientJwtSecret,
+        app,
       });
 
       // Create refresh token

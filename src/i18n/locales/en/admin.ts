@@ -296,6 +296,8 @@ export const admin = {
         clientId: 'Client ID',
         clientSecret: 'Client secret',
         maskedSecret: '**********************',
+        jwtKid: 'Key ID (kid) in the JWKS',
+        jwtSecretUnusedHint: 'Unused: this application signs with RS256',
       },
       sections: {
         basic: 'Basic data',
@@ -307,6 +309,7 @@ export const admin = {
         name: 'Name',
         slug: 'Slug',
         clientType: 'Client type',
+        tokenAlg: 'Token signing',
         mfa: 'MFA',
         status: 'Status',
         logo: 'Logo',
@@ -331,6 +334,10 @@ export const admin = {
         mfa: {
           enabled: 'Enabled',
           disabled: 'Disabled',
+        },
+        tokenAlg: {
+          HS256: 'HS256 · shared secret',
+          RS256: 'RS256 · key published in JWKS',
         },
       },
     },

@@ -32,6 +32,15 @@ import { formatDate } from '@/utils/formatters';
 
 type ApplicationColumn = keyof typeof applications.$inferSelect;
 
+/**
+ * La llave PRIVADA nunca sale del IAM: ese es el punto entero de RS256 frente a
+ * HS256. Y estas rutas no la recortan solas — el contrato declara sus respuestas
+ * con `c.type<Application>()`, que es solo un tipo: `checkZodSchema` no encuentra
+ * un esquema zod y devuelve el objeto intacto, asi que `responseValidation` no
+ * filtra nada. Hay que excluirla en la consulta.
+ */
+const SENSITIVE_COLUMNS = { jwtPrivateKey: false } as const;
+
 const APPLICATION_FIELDS: FieldMap = {
   id: applications.id,
   name: applications.name,
@@ -83,6 +92,7 @@ export const application = tsr.router(contract.application, {
 
       const [data, countResult] = await Promise.all([
         db.query.applications.findMany({
+          columns: SENSITIVE_COLUMNS,
           where: whereWithAccount,
           with: buildTypedIncludes(include, APPLICATION_INCLUDES),
           orderBy: orderBy.length ? orderBy : undefined,
@@ -119,6 +129,7 @@ export const application = tsr.router(contract.application, {
       }
 
       const app = await db.query.applications.findFirst({
+        columns: SENSITIVE_COLUMNS,
         where: and(eq(applications.id, id), eq(applications.accountId, session.accountId)),
         with: buildTypedIncludes(query?.include, APPLICATION_INCLUDES),
       });
@@ -182,7 +193,12 @@ export const application = tsr.router(contract.application, {
           );
         }
 
-        return [app];
+        // `returning()` trae la fila entera. Se saca la llave privada aca: de
+        // aqui sale tanto la respuesta como el `afterValue` de la auditoria.
+        // TypeScript no lo detecta solo — `SafeApplication` es un `Omit`, y el
+        // exceso de propiedades solo se revisa en literales, no en variables.
+        const { jwtPrivateKey: _jwtPrivateKey, ...safeApp } = app;
+        return [safeApp];
       });
 
       logAudit(session, {
@@ -354,7 +370,8 @@ export const application = tsr.router(contract.application, {
           }
         }
 
-        return [appUpdated];
+        const { jwtPrivateKey: _jwtPrivateKey, ...safeApp } = appUpdated;
+        return [safeApp];
       });
 
       // Delete old images from storage after successful update
@@ -480,10 +497,11 @@ export const application = tsr.router(contract.application, {
         (key): key is string => Boolean(key) && isStorageKey(key)
       );
 
-      const [deleted] = await db
+      const [deletedRow] = await db
         .delete(applications)
         .where(and(eq(applications.id, id), eq(applications.accountId, session.accountId)))
         .returning();
+      const { jwtPrivateKey: _jwtPrivateKey, ...deleted } = deletedRow;
 
       // Delete all images from storage after successful deletion
       await Promise.all(

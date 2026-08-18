@@ -301,6 +301,8 @@ export const admin: LocaleShape<AdminMessages> = {
         clientId: 'ID del cliente',
         clientSecret: 'Secreto del cliente',
         maskedSecret: '**********************',
+        jwtKid: 'Key ID (kid) en el JWKS',
+        jwtSecretUnusedHint: 'Sin uso: esta aplicación firma con RS256',
       },
       sections: {
         basic: 'Datos básicos',
@@ -312,6 +314,7 @@ export const admin: LocaleShape<AdminMessages> = {
         name: 'Nombre',
         slug: 'Slug',
         clientType: 'Tipo de cliente',
+        tokenAlg: 'Firma de tokens',
         mfa: 'MFA',
         status: 'Estado',
         logo: 'Logo',
@@ -336,6 +339,10 @@ export const admin: LocaleShape<AdminMessages> = {
         mfa: {
           enabled: 'Activado',
           disabled: 'Desactivado',
+        },
+        tokenAlg: {
+          HS256: 'HS256 · secreto compartido',
+          RS256: 'RS256 · llave publicada en JWKS',
         },
       },
     },

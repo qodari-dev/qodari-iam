@@ -570,7 +570,7 @@ export const auth = tsr.router(contract.auth, {
           expiresInSec: app.accessTokenExp,
           issuer: env.IAM_ISSUER,
           audience: app.clientId,
-          jwtSecret: app.clientJwtSecret,
+          app,
         });
 
         // 7) Refresh + familyId
@@ -723,7 +723,7 @@ export const auth = tsr.router(contract.auth, {
           expiresInSec: app.accessTokenExp,
           issuer: env.IAM_ISSUER,
           audience: app.clientId,
-          jwtSecret: app.clientJwtSecret,
+          app,
         });
 
         const response: OauthTokenResponse = {
@@ -817,7 +817,7 @@ export const auth = tsr.router(contract.auth, {
           expiresInSec: apiClient.accessTokenExp,
           issuer: env.IAM_ISSUER,
           audience: app.clientId,
-          jwtSecret: app.clientJwtSecret,
+          app,
         });
 
         // 8) Update lastUsedAt

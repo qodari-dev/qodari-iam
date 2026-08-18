@@ -1,5 +1,9 @@
 import { SignJWT, jwtVerify } from 'jose';
-import { JWSSignatureVerificationFailed, JWTExpired } from 'jose/errors';
+import {
+  JWSSignatureVerificationFailed,
+  JWTClaimValidationFailed,
+  JWTExpired,
+} from 'jose/errors';
 
 const JWT_ALG = 'HS256';
 
@@ -42,10 +46,31 @@ export async function signAccessToken(opts: {
     .sign(getJwtSecretKey(jwtSecret));
 }
 
-export async function verifyAccessToken(token: string, jwtSecret: string) {
+export type VerifyAccessTokenOptions = {
+  /** `iss` esperado: este mismo IAM (`IAM_ISSUER`). */
+  issuer: string;
+  /** `aud` esperado: el `clientId` de la aplicacion dueña del token. */
+  audience: string;
+};
+
+/**
+ * Verifica un access token emitido por este IAM.
+ *
+ * `issuer` y `audience` son OBLIGATORIOS: hoy el aislamiento entre aplicaciones
+ * lo da el secreto por app (HS256), no una comprobacion explicita. Al pasar a
+ * firma asimetrica el `aud` queda como unica barrera, y un parametro opcional
+ * se olvida justo cuando empieza a importar.
+ */
+export async function verifyAccessToken(
+  token: string,
+  jwtSecret: string,
+  options: VerifyAccessTokenOptions
+) {
   try {
     const { payload } = await jwtVerify(token, getJwtSecretKey(jwtSecret), {
       algorithms: [JWT_ALG],
+      issuer: options.issuer,
+      audience: options.audience,
     });
     return payload as AccessTokenPayload & {
       iss: string;
@@ -54,11 +79,15 @@ export async function verifyAccessToken(token: string, jwtSecret: string) {
       iat: number;
     };
   } catch (error) {
+    // `JWTExpired` implementa `JWTClaimValidationFailed`: va primero.
     if (error instanceof JWTExpired) {
       throw new Error('Token expired');
     }
     if (error instanceof JWSSignatureVerificationFailed) {
       throw new Error('Invalid signature');
+    }
+    if (error instanceof JWTClaimValidationFailed) {
+      throw new Error(`Invalid token claim: ${error.claim}`);
     }
     throw new Error('Invalid token');
   }

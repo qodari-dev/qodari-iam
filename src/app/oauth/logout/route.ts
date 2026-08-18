@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
-import { applications, sessions } from '@/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { applications, refreshTokens, sessions } from '@/server/db/schema';
+import { and, eq } from 'drizzle-orm';
+import { logAudit } from '@/server/utils/audit-logger';
+import { getClientIp } from '@/server/utils/get-client-ip';
 import { clearSessionCookie, getSessionFromRequest } from '@/server/utils/session';
 
 export const runtime = 'nodejs';
@@ -64,6 +66,54 @@ export async function GET(request: NextRequest) {
 
   if (session) {
     await db.delete(sessions).where(eq(sessions.id, session.id));
+
+    // Borrar la sesion no alcanza: con un refresh token vigente una aplicacion
+    // sigue pidiendo access tokens sin volver a pasar por aca. Si ese token se
+    // filtro antes (un log, un backup), seguiria sirviendo durante todo
+    // `refreshTokenExp` pese a haber cerrado sesion.
+    //
+    // Se revocan los de ESTA aplicacion. Los de otras se dejan vivos a
+    // proposito: cerrar sesion en una no deberia desconectar de las demas sin
+    // avisar. Para un cierre global habria que quitar el filtro por
+    // `applicationId` — o implementar back-channel logout, que es lo correcto
+    // cuando haya varias aplicaciones en produccion.
+    await db
+      .update(refreshTokens)
+      .set({ revoked: true, revokedReason: 'LOGOUT', revokedAt: new Date() })
+      .where(
+        and(
+          eq(refreshTokens.userId, session.userId),
+          eq(refreshTokens.applicationId, app.id),
+          eq(refreshTokens.revoked, false)
+        )
+      );
+
+    logAudit(
+      {
+        type: 'user',
+        session,
+        user: {
+          id: session.userId,
+          email: '',
+          firstName: '',
+          lastName: '',
+          avatar: null,
+          isAdmin: false,
+          status: 'active',
+        },
+        accountId: session.accountId,
+      },
+      {
+        resourceKey: 'auth',
+        actionKey: 'logout',
+        action: 'logout',
+        functionName: 'logout',
+        resourceId: session.userId,
+        status: 'success',
+        ipAddress: getClientIp(request),
+        userAgent: request.headers.get('user-agent'),
+      }
+    );
   }
 
   // 5) Clear session cookie

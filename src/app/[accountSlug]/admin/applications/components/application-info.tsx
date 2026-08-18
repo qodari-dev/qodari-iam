@@ -22,12 +22,12 @@ export function ApplicationInfo({
 }) {
   const { messages } = useI18n();
   const [copiedField, setCopiedField] = useState<
-    'clientId' | 'clientSecret' | 'clientJwtSecret' | null
+    'clientId' | 'clientSecret' | 'clientJwtSecret' | 'jwtKid' | null
   >(null);
 
   const copyToClipboard = async (
     text: string,
-    field: 'clientId' | 'clientSecret' | 'clientJwtSecret'
+    field: 'clientId' | 'clientSecret' | 'clientJwtSecret' | 'jwtKid'
   ) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -54,6 +54,13 @@ export function ApplicationInfo({
   const mfaLabel = application.mfaEnabled
     ? messages.admin.applications.info.labels.mfa.enabled
     : messages.admin.applications.info.labels.mfa.disabled;
+  // Solo lectura: cambiar el algoritmo es una operacion de migracion, no una
+  // edicion de rutina — exige que la aplicacion ya tenga par de llaves y se hace
+  // con `scripts/set-token-alg.ts`, que deja rastro.
+  const firmaConRs256 = application.tokenAlg === 'RS256';
+  const tokenAlgLabel = firmaConRs256
+    ? messages.admin.applications.info.labels.tokenAlg.RS256
+    : messages.admin.applications.info.labels.tokenAlg.HS256;
 
   const sections: DescriptionSection[] = [
     {
@@ -63,6 +70,10 @@ export function ApplicationInfo({
         { label: messages.admin.applications.info.fields.name, value: application.name },
         { label: messages.admin.applications.info.fields.slug, value: application.slug },
         { label: messages.admin.applications.info.fields.clientType, value: clientTypeLabel },
+        {
+          label: messages.admin.applications.info.fields.tokenAlg,
+          value: <Badge variant={firmaConRs256 ? 'default' : 'secondary'}>{tokenAlgLabel}</Badge>,
+        },
         {
           label: messages.admin.applications.info.fields.mfa,
           value: (
@@ -206,6 +217,11 @@ export function ApplicationInfo({
             <div className="space-y-2">
               <label className="text-sm font-medium">
                 {messages.admin.applications.info.credentialsFields.jwtSecret}
+                {firmaConRs256 ? (
+                  <span className="text-muted-foreground ml-2 text-xs font-normal">
+                    {messages.admin.applications.info.credentialsFields.jwtSecretUnusedHint}
+                  </span>
+                ) : null}
               </label>
               <div className="flex items-center gap-2">
                 <code className="bg-muted flex-1 overflow-auto rounded-md p-3 font-mono text-sm">
@@ -224,6 +240,29 @@ export function ApplicationInfo({
                 </Button>
               </div>
             </div>
+            {application.jwtKid ? (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  {messages.admin.applications.info.credentialsFields.jwtKid}
+                </label>
+                <div className="flex items-center gap-2">
+                  <code className="bg-muted flex-1 overflow-auto rounded-md p-3 font-mono text-sm">
+                    {application.jwtKid}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => copyToClipboard(application.jwtKid!, 'jwtKid')}
+                  >
+                    {copiedField === 'jwtKid' ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : null}
             <div className="space-y-2">
               <label className="text-sm font-medium">
                 {messages.admin.applications.info.credentialsFields.clientId}

@@ -2,6 +2,7 @@ import { db } from '@/server/db';
 import { auditLogs, type ActorType, type NewAuditLog } from '@/server/db/schema';
 import type { AuditAction, AuditStatus } from '@/schemas/audit';
 import { UnifiedAuthContext } from './auth-context';
+import { sanitizeAuditValue } from './audit-sanitize';
 
 export type AuditLogParams = {
   accountId?: string;
@@ -68,9 +69,12 @@ export async function logAudit(
         }),
     accountId: session.accountId,
     errorMessage: params.errorMessage,
-    beforeValue: params.beforeValue,
-    afterValue: params.afterValue,
-    metadata: params.metadata,
+    // Los handlers arman estos payloads con `{ ...fila }`, asi que arrastran
+    // columnas sensibles sin quererlo. Se redacta aca, en el unico punto por el
+    // que pasan todos los recursos.
+    beforeValue: sanitizeAuditValue(params.beforeValue),
+    afterValue: sanitizeAuditValue(params.afterValue),
+    metadata: sanitizeAuditValue(params.metadata),
   };
 
   await db
@@ -79,6 +83,5 @@ export async function logAudit(
     .catch((error) => {
       console.error('[AuditLogger] Failed to log audit event:', error);
     });
-  console.log(insertData);
   return;
 }

@@ -1,6 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { and, eq } from 'drizzle-orm';
 
+import { env } from '@/env';
+
 import { db } from '@/server/db';
 import {
   apiClients,
@@ -208,7 +210,10 @@ export async function getM2MAuthContext(
   // 3) Verify the token with the app's JWT secret
   let verifiedPayload: AccessTokenPayload;
   try {
-    verifiedPayload = await verifyAccessToken(token, app.clientJwtSecret);
+    verifiedPayload = await verifyAccessToken(token, app, {
+      issuer: env.IAM_ISSUER,
+      audience: app.clientId,
+    });
   } catch (error) {
     throwHttpError({
       status: 401,

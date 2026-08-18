@@ -38,6 +38,18 @@ export const subscriptionStatusEnum = pgEnum('subscription_status', [
   'canceled',
 ]);
 
+/**
+ * Algoritmo de firma de los access tokens de una aplicacion.
+ *
+ * HS256 es simetrico: la llave que verifica tambien firma, asi que hay que
+ * entregarsela a cada consumidor y ese consumidor puede fabricar tokens de
+ * admin. RS256 firma con la privada (que nunca sale de aqui) y se verifica con
+ * la publica, publicada en `/.well-known/jwks.json`.
+ *
+ * Es por aplicacion para poder migrar de a una, con reversion instantanea.
+ */
+export const tokenAlgEnum = pgEnum('token_alg', ['HS256', 'RS256']);
+
 export const clientTypeEnum = pgEnum('client_type', [
   'public', // SPA, móvil
   'confidential', // backend
@@ -257,7 +269,15 @@ export const applications = pgTable(
     clientType: clientTypeEnum('client_type').notNull(),
     clientId: text('client_id').notNull().unique(),
     clientSecret: text('client_secret').notNull(),
+    /** Secreto HS256. Sigue vivo mientras `tokenAlg` sea 'HS256'. */
     clientJwtSecret: text('client_jwt_secret').notNull(),
+    tokenAlg: tokenAlgEnum('token_alg').notNull().default('HS256'),
+    /** Identificador de la llave dentro del JWKS. Aleatorio: no expone ids. */
+    jwtKid: text('jwt_kid'),
+    /** Llave publica RSA (PEM SPKI). Se publica en el JWKS. */
+    jwtPublicKey: text('jwt_public_key'),
+    /** Llave privada RSA (PEM PKCS8). NUNCA sale del IAM. */
+    jwtPrivateKey: text('jwt_private_key'),
     homeUrl: varchar('home_url', { length: 255 }),
     logoutUrl: text('logout_url').array().default([]),
     callbackUrls: text('callback_urls').array().default([]),
@@ -286,6 +306,10 @@ export const applicationsRelations = relations(applications, ({ one, many }) => 
   auditLogs: many(auditLogs),
 }));
 
+export const APPLICATION_SENSITIVE_FIELDS = ['jwtPrivateKey'] as const;
+
+export type ApplicationSensitiveField = (typeof APPLICATION_SENSITIVE_FIELDS)[number];
+
 export type Application = typeof applications.$inferSelect & {
   account?: Account;
   roles?: Role[];
@@ -294,6 +318,16 @@ export type Application = typeof applications.$inferSelect & {
   refreshTokens?: RefreshToken[];
   auditLogs?: AuditLog[];
 };
+
+/**
+ * Lo que la API puede devolver de una aplicacion.
+ *
+ * El contrato declara sus respuestas con `c.type<...>()`, que no valida ni
+ * recorta en runtime — asi que este tipo es la unica barrera, y por eso el
+ * compilador debe rechazar cualquier handler que intente devolver la fila
+ * completa.
+ */
+export type SafeApplication = Omit<Application, ApplicationSensitiveField>;
 export type NewApplication = typeof applications.$inferInsert;
 
 // ---------- roles ----------

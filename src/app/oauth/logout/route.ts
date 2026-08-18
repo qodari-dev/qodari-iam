@@ -45,11 +45,13 @@ export async function GET(request: NextRequest) {
   // Otherwise, use app.logoutUrl as default
   const configuredLogoutUrl = app.logoutUrl;
 
-  if (
-    postLogoutRedirectUri &&
-    configuredLogoutUrl &&
-    configuredLogoutUrl.includes(postLogoutRedirectUri)
-  ) {
+  // La condicion estaba invertida: rechazaba cuando la URL SI estaba en la
+  // lista permitida y dejaba pasar cuando NO estaba, redirigiendo a cualquier
+  // destino que llegara por query. Open redirect.
+  //
+  // Tambien se rechaza si la aplicacion no tiene ninguna URL configurada: sin
+  // lista contra la cual comparar no hay nada que valide el destino.
+  if (postLogoutRedirectUri && !configuredLogoutUrl?.includes(postLogoutRedirectUri)) {
     return new NextResponse('post_logout_redirect_uri does not match the configured logout URL', {
       status: 400,
     });

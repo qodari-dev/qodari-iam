@@ -99,7 +99,9 @@ export async function getAuthContextFromRequest(
       db
         .select(applicationSelect)
         .from(applications)
-        .where(and(eq(applications.accountId, currentAccountId), eq(applications.status, 'active'))),
+        .where(
+          and(eq(applications.accountId, currentAccountId), eq(applications.status, 'active'))
+        ),
       db
         .selectDistinct({ applicationId: permissionsTable.applicationId })
         .from(permissionsTable)
@@ -199,10 +201,10 @@ export async function getM2MAuthContext(
     where: eq(applications.id, payload.appId),
   });
 
-  if (!app) {
+  if (!app || app.status !== 'active') {
     throwHttpError({
       status: 401,
-      message: 'Application not found',
+      message: 'Application not found or inactive',
       code: 'APP_NOT_FOUND',
     });
   }
@@ -241,6 +243,18 @@ export async function getM2MAuthContext(
       status: 401,
       message: 'API Client not found or inactive',
       code: 'API_CLIENT_NOT_FOUND',
+    });
+  }
+
+  if (
+    verifiedPayload.appId !== app.id ||
+    verifiedPayload.accountId !== app.accountId ||
+    apiClient.accountId !== app.accountId
+  ) {
+    throwHttpError({
+      status: 401,
+      message: 'Token scope does not match the application and API client',
+      code: 'INVALID_TOKEN_SCOPE',
     });
   }
 

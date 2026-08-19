@@ -481,7 +481,12 @@ export const auth = tsr.router(contract.auth, {
         }
 
         const now = new Date();
-        if (authCode.applicationId !== app.id || authCode.used || authCode.expiresAt < now) {
+        if (
+          authCode.applicationId !== app.id ||
+          authCode.accountId !== app.accountId ||
+          authCode.used ||
+          authCode.expiresAt < now
+        ) {
           return {
             status: 400,
             body: {
@@ -630,6 +635,16 @@ export const auth = tsr.router(contract.auth, {
         });
 
         if (!existingRefresh) {
+          return {
+            status: 401,
+            body: { message: 'Refresh token invalido', code: 'invalid_grant' },
+          };
+        }
+
+        // Defensa para tokens históricos o datos inconsistentes: un refresh de
+        // otra cuenta nunca puede renovarse usando esta aplicación, aunque el
+        // applicationId de la fila estuviera mal asociado.
+        if (existingRefresh.accountId !== app.accountId) {
           return {
             status: 401,
             body: { message: 'Refresh token invalido', code: 'invalid_grant' },

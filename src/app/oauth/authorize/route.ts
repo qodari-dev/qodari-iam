@@ -63,14 +63,21 @@ export async function GET(request: NextRequest) {
   // 3) Determinar redirect_uri final
   const callbackUrls = app.callbackUrls ?? [];
 
-  // Si el cliente manda redirect_uri, debe estar en la lista de callbacks permitidos
+  // Si el cliente manda redirect_uri, debe estar en la lista de callbacks permitidos.
+  //
+  // Aca NO se redirige: hacerlo mandaria al navegador a la misma URL que se
+  // acaba de rechazar, que es un destino sin validar y por lo tanto un open
+  // redirect (`?redirect_uri=https://malo.example` sacaria al usuario del IAM).
+  // Ademas confunde el diagnostico: la aplicacion recibe un callback sin `code`
+  // y reporta "falta el code" en vez del motivo real.
+  //
+  // El resto de errores de mas abajo si se devuelven por redirect, porque para
+  // entonces el destino ya quedo validado.
   if (redirectUri && !callbackUrls.includes(redirectUri)) {
-    return buildErrorRedirect({
-      redirectUri: redirectUri,
-      error: "invalid_request",
-      errorDescription: "redirect_uri is not in the list of allowed callbacks",
-      state,
-    });
+    return new NextResponse(
+      `redirect_uri no registrado para esta aplicacion: ${redirectUri}`,
+      { status: 400 }
+    );
   }
 
   // Si no hay redirect_uri, usar el primero de la lista

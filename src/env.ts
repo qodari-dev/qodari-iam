@@ -9,7 +9,6 @@ export const env = createEnv({
   server: {
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     DATABASE_URL: z.string().url(),
-    IAM_JWT_SECRET: z.string(),
     IAM_ISSUER: z.string(),
     IAM_APP_SLUG: z.string(),
     APP_ENV: z.enum(['prod', 'dev']).default('dev'),
@@ -49,7 +48,6 @@ export const env = createEnv({
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     DATABASE_URL: process.env.DATABASE_URL,
-    IAM_JWT_SECRET: process.env.IAM_JWT_SECRET,
     IAM_ISSUER: process.env.IAM_ISSUER,
     IAM_APP_SLUG: process.env.IAM_APP_SLUG,
     APP_ENV: process.env.APP_ENV,

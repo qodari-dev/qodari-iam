@@ -33,6 +33,8 @@ jobs:
 
       - name: Lint
         run: npm run lint
+      - name: Native delivery checks
+        run: npm run test:native
 
   build-and-push:
     runs-on: ubuntu-latest

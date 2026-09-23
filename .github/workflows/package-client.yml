@@ -1,0 +1,83 @@
+name: Package IAM client server
+run-name: Package IAM · ${{ inputs.installation }} · ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      installation:
+        description: Public profile in deploy/native/profiles (no .json)
+        type: string
+        default: cafamaz-production
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-package-${{ inputs.installation }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    # Build on Debian 12/glibc, matching Cafamaz. Docker is used only in CI.
+    container: node:24-bookworm
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:18-bookworm
+        env:
+          POSTGRES_USER: native_test
+          POSTGRES_PASSWORD: native_test_only
+          POSTGRES_DB: iam_native_test
+        options: >-
+          --health-cmd "pg_isready -U native_test -d iam_native_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      NATIVE_INSTALLATION: ${{ inputs.installation }}
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Read public installation profile
+        id: config
+        run: node scripts/native-config.mjs
+      - run: npm ci --include=dev
+      - run: npm run lint
+      - run: npx next typegen
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+      - run: npx tsc --noEmit
+      - run: npm run test:native
+      - name: Build application (no client secrets)
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          PAUSE_SCHEDULER: '1'
+        run: npm run build
+      - name: Package application, migrations and operator tools
+        run: npm run package:native
+      - name: Verify delivery on disposable PostgreSQL 18
+        env:
+          NATIVE_TEST_DATABASE_URL: postgresql://native_test:native_test_only@postgres:5432/iam_native_test?sslmode=disable
+          NATIVE_RELEASE: dist-native/${{ steps.config.outputs.version }}
+        run: npm run test:native:postgres
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.config.outputs.version }}
+          path: |
+            dist-native/*.tar.gz
+            dist-native/*.sha256
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+      - name: Delivery instructions
+        env:
+          VERSION: ${{ steps.config.outputs.version }}
+        run: |
+          {
+            echo "### Package ready: $VERSION"
+            echo "Download the artifact, retain the archive and checksum, then follow INSTALL.md."
+            echo "Cafamaz URLs are provisional until its profile is confirmed."
+            echo "This workflow does not connect to the client, migrate its database, or deploy via Dokploy."
+          } >> "$GITHUB_STEP_SUMMARY"

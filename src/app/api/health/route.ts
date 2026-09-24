@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 
 import { env } from '@/env';
+import { postgresConfig } from '@/server/db/postgres-config.mjs';
 import { createDatabaseReadinessCheck, createHealthResponse } from '@/server/utils/health';
 
 export const runtime = 'nodejs';
@@ -10,8 +11,7 @@ let pool: Pool | undefined;
 
 const checkDatabase = createDatabaseReadinessCheck(() => {
   pool ??= new Pool({
-    connectionString: env.DATABASE_URL,
-    ssl: env.NODE_ENV === 'production',
+    ...postgresConfig(env.DATABASE_URL, env.NODE_ENV === 'production'),
     max: 1,
     connectionTimeoutMillis: 1_000,
     query_timeout: 1_000,

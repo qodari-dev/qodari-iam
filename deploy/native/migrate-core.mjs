@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { readMigrationFiles } from 'drizzle-orm/migrator';
 import { OperatorError, databaseTarget } from './runtime.mjs';
+import { postgresConfig } from '../../src/server/db/postgres-config.mjs';
 
 export function checkHistory(files, rows) {
   if (rows.length > files.length) throw new OperatorError('Database is newer than this release');
@@ -22,8 +23,7 @@ export async function migrateDatabase(env, folder, { checkOnly = false } = {}) {
   databaseTarget(env);
   const files = readMigrationFiles({ migrationsFolder: folder });
   const client = new Client({
-    connectionString: env.DATABASE_URL,
-    ssl: true, // Same default as the production app; URL sslmode may override.
+    ...postgresConfig(env.DATABASE_URL, true),
     connectionTimeoutMillis: 10_000,
     application_name: 'iam-release-migrator',
   });

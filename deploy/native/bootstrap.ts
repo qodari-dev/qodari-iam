@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import { Client } from 'pg';
+import { postgresConfig } from '../../src/server/db/postgres-config.mjs';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
@@ -59,8 +60,7 @@ export async function bootstrap(
   const config = parsed.data;
   const required = permissionSchema.parse(permissionInput);
   const client = new Client({
-    connectionString: env.DATABASE_URL,
-    ssl: true,
+    ...postgresConfig(env.DATABASE_URL, true),
     connectionTimeoutMillis: 10_000,
   });
   try {

@@ -10,7 +10,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "package:native": "node scripts/package-native.mjs",
-    "test:native": "node --import tsx --test scripts/native-deployment.test.mjs src/server/utils/health.test.ts",
+    "test:native": "node --import tsx --test scripts/native-deployment.test.mjs src/server/utils/health.test.ts src/server/db/postgres-config.test.mjs",
     "test:native:postgres": "node --test scripts/native-postgres.test.mjs"
   },
   "dependencies": {
@@ -56,6 +56,7 @@
     "next": "16.2.10",
     "next-themes": "^0.4.6",
     "pg": "^8.22.0",
+    "pg-connection-string": "^2.14.0",
     "react": "19.2.7",
     "react-day-picker": "^9.13.0",
     "react-dom": "19.2.7",

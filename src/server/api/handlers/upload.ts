@@ -1,6 +1,10 @@
 import { genericTsRestErrorResponse, throwHttpError } from '@/server/utils/generic-ts-rest-error';
 import { requireAdminPermission } from '@/server/utils/require-permission';
-import { generatePresignedUploadUrl, deleteObject } from '@/server/utils/spaces';
+import {
+  generatePresignedUploadUrl,
+  publicUploadHeaders,
+  deleteObject,
+} from '@/server/utils/spaces';
 import {
   buildManagedUploadKey,
   extractAccountIdFromManagedStorageKey,
@@ -43,6 +47,7 @@ export const upload = tsr.router(contract.upload, {
         status: 200 as const,
         body: {
           uploadUrl,
+          headers: publicUploadHeaders(fileType),
           key,
         },
       };

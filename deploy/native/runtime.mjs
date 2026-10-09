@@ -73,13 +73,13 @@ export function validateAppEnv(env, manifest) {
     Number(env.PORT) > 65535
   )
     throw new OperatorError('Use HOSTNAME=127.0.0.1 and an unprivileged port behind Nginx');
+  validateEmailEnv(env);
+  validateStorageEnv(env);
   for (const key of [
     'DATABASE_URL',
     'IAM_ISSUER',
     'IAM_APP_SLUG',
     'IAM_DEFAULT_ACCOUNT_SLUG',
-    'RESEND_API_KEY',
-    'RESEND_MAIL_FROM',
     'DO_SPACES_ENDPOINT',
     'DO_SPACES_REGION',
     'DO_SPACES_BUCKET',
@@ -120,4 +120,50 @@ export function databaseTarget(env) {
       throw new OperatorError('Only sslmode and sslrootcert query parameters are supported');
   }
   return `${url.hostname}:${url.port || '5432'}/${database}`;
+}
+
+// Keep provider requirements in sync with src/env.ts; covered by email tests.
+export function validateEmailEnv(env) {
+  const provider = env.EMAIL_PROVIDER ?? 'resend';
+  if (!['resend', 'graph'].includes(provider))
+    throw new OperatorError('EMAIL_PROVIDER must be resend or graph');
+  const required =
+    provider === 'graph'
+      ? ['EMAIL_FROM_EMAIL', 'MS_GRAPH_TENANT_ID', 'MS_GRAPH_CLIENT_ID', 'MS_GRAPH_CLIENT_SECRET']
+      : ['RESEND_API_KEY'];
+  if (provider === 'resend' && !env.EMAIL_FROM_EMAIL) required.push('RESEND_MAIL_FROM');
+  for (const key of required) {
+    if (!env[key]?.trim() || env[key].includes('CHANGE_ME'))
+      throw new OperatorError(`Configure ${key} before deploying`);
+  }
+  if (
+    env.EMAIL_FROM_EMAIL !== undefined &&
+    !/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(env.EMAIL_FROM_EMAIL)
+  ) {
+    throw new OperatorError('EMAIL_FROM_EMAIL must be a plain email address');
+  }
+}
+
+export function validateStorageEnv(env) {
+  const mode = env.STORAGE_PUBLIC_DELIVERY ?? 'direct';
+  if (!['direct', 'proxy'].includes(mode))
+    throw new OperatorError('STORAGE_PUBLIC_DELIVERY must be direct or proxy');
+  if (
+    env.DO_SPACES_FORCE_PATH_STYLE !== undefined &&
+    !['true', 'false'].includes(env.DO_SPACES_FORCE_PATH_STYLE)
+  )
+    throw new OperatorError('DO_SPACES_FORCE_PATH_STYLE must be true or false');
+  if (
+    env.AWS_REQUEST_CHECKSUM_CALCULATION !== undefined &&
+    !['WHEN_SUPPORTED', 'WHEN_REQUIRED'].includes(env.AWS_REQUEST_CHECKSUM_CALCULATION)
+  )
+    throw new OperatorError(
+      'AWS_REQUEST_CHECKSUM_CALCULATION must be WHEN_SUPPORTED or WHEN_REQUIRED'
+    );
+  const expected = `${(env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/+$/, '')}/api/public-assets`;
+  const proxyUrl = (env.NEXT_PUBLIC_STORAGE_URL ?? '').replace(/\/+$/, '') === expected;
+  if ((mode === 'proxy') !== proxyUrl)
+    throw new OperatorError(
+      'Proxy delivery requires NEXT_PUBLIC_STORAGE_URL=<app origin>/api/public-assets and STORAGE_PUBLIC_DELIVERY=proxy'
+    );
 }

@@ -109,10 +109,7 @@ export function useImageUpload(options?: UploadOptions) {
           body: {
             fileName: compressedFile.name,
             fileType: compressedFile.type as
-              | 'image/jpeg'
-              | 'image/png'
-              | 'image/webp'
-              | 'image/svg+xml',
+              'image/jpeg' | 'image/png' | 'image/webp' | 'image/svg+xml',
             fileSize: compressedFile.size,
             uploadType: opts.uploadType,
           },
@@ -129,10 +126,7 @@ export function useImageUpload(options?: UploadOptions) {
         const uploadResponse = await fetch(uploadUrl, {
           method: 'PUT',
           body: compressedFile,
-          headers: {
-            'Content-Type': compressedFile.type,
-            'x-amz-acl': 'public-read',
-          },
+          headers: presignResult.body.headers,
         });
 
         if (!uploadResponse.ok) {

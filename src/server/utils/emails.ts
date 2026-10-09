@@ -1,11 +1,10 @@
 import { env } from '@/env';
 import type { Locale } from '@/i18n/config';
 import type * as React from 'react';
-import { Resend } from 'resend';
-import {
-  renderMfaCodeEmailTemplate,
-  renderPasswordResetEmailTemplate,
-} from './email-template';
+import 'server-only';
+import { render } from '@react-email/render';
+import { createEmailClient } from './email-client';
+import { renderMfaCodeEmailTemplate, renderPasswordResetEmailTemplate } from './email-template';
 
 type PasswordResetEmailArgs = {
   to: string | string[];
@@ -43,29 +42,15 @@ type SendEmailMessageArgs = {
     }
 );
 
+let client: ReturnType<typeof createEmailClient> | undefined;
+
 export async function sendEmailMessage({ to, subject, react, html, text }: SendEmailMessageArgs) {
-  const resend = new Resend(env.RESEND_API_KEY);
   if (react) {
-    await resend.emails.send({
-      from: env.RESEND_MAIL_FROM,
-      to,
-      subject,
-      react,
-    });
-    return;
+    [html, text] = await Promise.all([render(react), render(react, { plainText: true })]);
   }
-
-  if (!html) {
-    throw new Error('HTML email content is required when no React template is provided');
-  }
-
-  await resend.emails.send({
-    from: env.RESEND_MAIL_FROM,
-    to,
-    subject,
-    html,
-    text,
-  });
+  if (!html) throw new Error('HTML email content is required');
+  client ??= createEmailClient(env);
+  await client({ to, subject, html, text });
 }
 
 export async function sendPasswordResetEmail({

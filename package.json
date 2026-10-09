@@ -10,13 +10,17 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "package:native": "node scripts/package-native.mjs",
-    "test:native": "node --import tsx --test scripts/native-deployment.test.mjs src/server/utils/health.test.ts src/server/db/postgres-config.test.mjs",
-    "test:native:postgres": "node --test scripts/native-postgres.test.mjs"
+    "test:native": "node --import tsx --test scripts/native-deployment.test.mjs src/server/utils/health.test.ts src/server/db/postgres-config.test.mjs && npm run test:email && npm run test:storage",
+    "test:native:postgres": "node --test scripts/native-postgres.test.mjs",
+    "test:email": "node --test scripts/email.test.mjs",
+    "test:storage": "node --test scripts/storage.test.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1085.0",
     "@aws-sdk/s3-request-presigner": "^3.1085.0",
+    "@azure/identity": "^4.13.3",
     "@hookform/resolvers": "^5.4.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
     "@radix-ui/react-alert-dialog": "^1.1.19",
     "@radix-ui/react-avatar": "^1.2.2",
     "@radix-ui/react-checkbox": "^1.3.7",
@@ -76,6 +80,7 @@
     "@types/react-dom": "^19",
     "baseline-browser-mapping": "^2.10.42",
     "drizzle-kit": "^0.31.10",
+    "esbuild": "0.25.12",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "prettier": "^3.9.5",
@@ -83,8 +88,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.0",
     "tw-animate-css": "^1.4.0",
-    "typescript": "^5",
-    "esbuild": "0.25.12"
+    "typescript": "^5"
   },
   "overrides": {
     "@ts-rest/react-query": {

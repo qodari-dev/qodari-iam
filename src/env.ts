@@ -14,13 +14,24 @@ export const env = createEnv({
     IAM_APP_SLUG: z.string(),
     APP_ENV: z.enum(['prod', 'dev']).default('dev'),
     IAM_DEFAULT_ACCOUNT_SLUG: z.string(),
-    RESEND_API_KEY: z.string(),
-    RESEND_MAIL_FROM: z.string(),
+    // Email provider is configured per installation. Existing deployments use Resend.
+    EMAIL_PROVIDER: z.enum(['resend', 'graph']).default('resend'),
+    EMAIL_FROM_EMAIL: z.string().email().optional(),
+    RESEND_API_KEY: z.string().optional(),
+    RESEND_MAIL_FROM: z.string().optional(),
+    MS_GRAPH_TENANT_ID: z.string().optional(),
+    MS_GRAPH_CLIENT_ID: z.string().optional(),
+    MS_GRAPH_CLIENT_SECRET: z.string().optional(),
+
     PAUSE_SCHEDULER: z
       .union([z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')])
       .optional(),
     SCHEDULER_TIMEZONE: z.string().default('America/Toronto'),
     // DigitalOcean Spaces
+    /** direct preserves existing public-read/CDN deployments; proxy keeps new assets private. */
+    STORAGE_PUBLIC_DELIVERY: z.enum(['direct', 'proxy']).default('direct'),
+    DO_SPACES_FORCE_PATH_STYLE: z.enum(['true', 'false']).default('false'),
+    AWS_REQUEST_CHECKSUM_CALCULATION: z.enum(['WHEN_SUPPORTED', 'WHEN_REQUIRED']).optional(),
     DO_SPACES_ENDPOINT: z.string().url(),
     DO_SPACES_REGION: z.string().min(1),
     DO_SPACES_BUCKET: z.string().min(1),
@@ -54,11 +65,19 @@ export const env = createEnv({
     IAM_APP_SLUG: process.env.IAM_APP_SLUG,
     APP_ENV: process.env.APP_ENV,
     IAM_DEFAULT_ACCOUNT_SLUG: process.env.IAM_DEFAULT_ACCOUNT_SLUG,
+    EMAIL_PROVIDER: process.env.EMAIL_PROVIDER,
+    EMAIL_FROM_EMAIL: process.env.EMAIL_FROM_EMAIL,
+    MS_GRAPH_TENANT_ID: process.env.MS_GRAPH_TENANT_ID,
+    MS_GRAPH_CLIENT_ID: process.env.MS_GRAPH_CLIENT_ID,
+    MS_GRAPH_CLIENT_SECRET: process.env.MS_GRAPH_CLIENT_SECRET,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_MAIL_FROM: process.env.RESEND_MAIL_FROM,
     PAUSE_SCHEDULER: process.env.PAUSE_SCHEDULER,
     SCHEDULER_TIMEZONE: process.env.SCHEDULER_TIMEZONE,
     // DigitalOcean Spaces
+    STORAGE_PUBLIC_DELIVERY: process.env.STORAGE_PUBLIC_DELIVERY,
+    DO_SPACES_FORCE_PATH_STYLE: process.env.DO_SPACES_FORCE_PATH_STYLE,
+    AWS_REQUEST_CHECKSUM_CALCULATION: process.env.AWS_REQUEST_CHECKSUM_CALCULATION,
     DO_SPACES_ENDPOINT: process.env.DO_SPACES_ENDPOINT,
     DO_SPACES_REGION: process.env.DO_SPACES_REGION,
     DO_SPACES_BUCKET: process.env.DO_SPACES_BUCKET,
@@ -69,5 +88,41 @@ export const env = createEnv({
   // experimental__runtimeEnv: {
   //   NEXT_PUBLIC_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_PUBLISHABLE_KEY,
   // }
+  createFinalSchema: (shape, isServer) =>
+    z.object(shape).superRefine((values, ctx) => {
+      if (!isServer) return;
+      const proxyUrl = `${values.NEXT_PUBLIC_APP_URL.replace(/\/+$/, '')}/api/public-assets`;
+      const usesProxyUrl = values.NEXT_PUBLIC_STORAGE_URL.replace(/\/+$/, '') === proxyUrl;
+      if ((values.STORAGE_PUBLIC_DELIVERY === 'proxy') !== usesProxyUrl) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['NEXT_PUBLIC_STORAGE_URL'],
+          message:
+            'Proxy delivery requires NEXT_PUBLIC_STORAGE_URL=<app origin>/api/public-assets and STORAGE_PUBLIC_DELIVERY=proxy',
+        });
+      }
+
+      const required =
+        values.EMAIL_PROVIDER === 'graph'
+          ? [
+              'EMAIL_FROM_EMAIL',
+              'MS_GRAPH_TENANT_ID',
+              'MS_GRAPH_CLIENT_ID',
+              'MS_GRAPH_CLIENT_SECRET',
+            ]
+          : ['RESEND_API_KEY'];
+      if (values.EMAIL_PROVIDER !== 'graph' && !values.EMAIL_FROM_EMAIL)
+        required.push('RESEND_MAIL_FROM');
+      for (const key of required) {
+        const value = (values as Record<string, unknown>)[key];
+        if (typeof value !== 'string' || !value.trim() || value.includes('CHANGE_ME')) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [key],
+            message: `Configure ${key} for the selected email provider`,
+          });
+        }
+      }
+    }),
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });

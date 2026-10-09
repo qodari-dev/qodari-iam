@@ -1,7 +1,7 @@
 import { env } from '@/env';
 
 /**
- * Builds the full URL for a storage key.
+ * Builds the public asset URL (CDN or application proxy) for a storage key.
  * If the value is already a URL (legacy), returns it as-is.
  * If the value is a key (e.g., 'dev/qodari-iam/acc_123/account-logo/abc.webp'), builds the full URL.
  */

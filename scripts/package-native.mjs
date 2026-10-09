@@ -50,6 +50,11 @@ export function renderTemplates(config, output) {
     APP_HOST: new URL(config.publicEnv.NEXT_PUBLIC_APP_URL).hostname,
     API_URL: config.publicEnv.NEXT_PUBLIC_API_URL,
     STORAGE_URL: config.publicEnv.NEXT_PUBLIC_STORAGE_URL,
+    STORAGE_PUBLIC_DELIVERY:
+      config.publicEnv.NEXT_PUBLIC_STORAGE_URL.replace(/\/+$/, '') ===
+      `${config.publicEnv.NEXT_PUBLIC_APP_URL.replace(/\/+$/, '')}/api/public-assets`
+        ? 'proxy'
+        : 'direct',
   };
   mkdirSync(output, { recursive: true });
   const templates = resolve(repo, 'deploy/native/templates');

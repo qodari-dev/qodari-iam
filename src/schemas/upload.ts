@@ -23,6 +23,7 @@ export const PresignUploadBodySchema = z.object({
 
 export const PresignUploadResponseSchema = z.object({
   uploadUrl: z.string().url(),
+  headers: z.record(z.string(), z.string()),
   key: z.string(),
 });
 

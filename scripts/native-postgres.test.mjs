@@ -99,6 +99,11 @@ test(
         PORT: '31847',
         PAUSE_SCHEDULER: '1',
         ...manifest.publicEnv,
+        STORAGE_PUBLIC_DELIVERY: manifest.publicEnv.NEXT_PUBLIC_STORAGE_URL.endsWith(
+          '/api/public-assets'
+        )
+          ? 'proxy'
+          : 'direct',
         DATABASE_URL: runtimeUrl.href,
         EXPECTED_DATABASE: 'iam_native_test',
         EXPECTED_DB_HOST: url.hostname,

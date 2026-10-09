@@ -4,6 +4,6 @@
   "publicEnv": {
     "NEXT_PUBLIC_APP_URL": "https://iam.cafamaz.com",
     "NEXT_PUBLIC_API_URL": "https://iam.cafamaz.com",
-    "NEXT_PUBLIC_STORAGE_URL": "https://archivos.cafamaz.com"
+    "NEXT_PUBLIC_STORAGE_URL": "https://iam.cafamaz.com/api/public-assets"
   }
 }
